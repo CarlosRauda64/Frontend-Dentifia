@@ -1,6 +1,6 @@
 import React, { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createBrowserRouter, RouterProvider} from 'react-router'
+import { createBrowserRouter, RouterProvider, Navigate} from 'react-router'
 import './index.css'
 import App from './App.jsx'
 import Login from './pages/Login/Login.jsx'
@@ -10,19 +10,19 @@ import AuthProvider from './auth/AuthProvider.jsx'
 const router = createBrowserRouter([
     {
       path: '/',
-      element: <App />,
-    },
-    {
-      path: '/login',
       element: <Login />,
     },
     {
+      path: '/login',
+      element: <Navigate to="/" replace />, // Redirige a la página de inicio de sesión
+    },
+    {
       path: '/',
-      element: <ProtectedRoute />, // Assuming you have a ProtectedRoute component
+      element: <ProtectedRoute />, 
       children: [
         {
           path: '/app',
-          element: <App />, // Replace with your protected component
+          element: <App />,
         },
       ],
     },

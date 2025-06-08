@@ -12,8 +12,10 @@ import {
 } from "flowbite-react";
 
 const Navegacion = () => {
+
+
   return (
-    <Navbar fluid rounded>
+    <Navbar fluid className="rounded-b-sm">
       <NavbarBrand href="https://flowbite-react.com">
         <img src="https://flowbite-react.com/favicon.svg" className="mr-3 h-6 sm:h-9" alt="Flowbite React Logo" />
         <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-white">Flowbite React</span>
@@ -34,13 +36,13 @@ const Navegacion = () => {
           <DropdownItem>Settings</DropdownItem>
           <DropdownItem>Earnings</DropdownItem>
           <DropdownDivider />
-          <DropdownItem>Sign out</DropdownItem>
+          <DropdownItem>Cerrar Sesión</DropdownItem>
         </Dropdown>
         <NavbarToggle />
       </div>
       <NavbarCollapse>
-        <NavbarLink href="/login" active>
-          Login
+        <NavbarLink href="#" >
+          Home
         </NavbarLink>
         <NavbarLink href="#">About</NavbarLink>
         <NavbarLink href="#">Services</NavbarLink>

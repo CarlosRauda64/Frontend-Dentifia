@@ -1,13 +1,14 @@
 import React from 'react'
 import { Button, Checkbox, Label, TextInput } from "flowbite-react";
-import { useAuth } from '../../auth/AuthProvider';
+import { useAuth } from '../../auth/useAuth';
 import { API_URL } from '../../api/api';
+import { useNavigate } from 'react-router';
 
 const Login = () => {
     const [usuario, setUsuario] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [errorResponse, setErrorResponse] = React.useState(null);
-
+    const navigate = useNavigate();
     const auth = useAuth();
 
     async function handleSubmit(event) {
@@ -26,13 +27,14 @@ const Login = () => {
                 }),
             });
 
-            if (response.ok) {
-                console.log('Inicio de sesión exitoso');
-                console.log(response);
+            if (response.ok) {         
+                const usuario = await response.json();
+                if (usuario && usuario.token) {
+                    auth.saveTokenUser(JSON.stringify(usuario));
+                    navigate('/app');
+                }
             }else{
-                const json = await response.json();
-                console.error('Error al iniciar sesión:', json);
-                setErrorResponse(json);
+                setErrorResponse("Usuario o contraseña incorrectos");
                 return;
             }
         }
@@ -56,6 +58,11 @@ const Login = () => {
                         </div>
                         <h1 className="text-2xl font-bold text-white">Iniciar Sesión</h1>
                         {/* Formulario de inicio de sesión para acceder al sistema. */}
+                        {errorResponse && (
+                            <div className="text-red-500">
+                                {errorResponse}
+                            </div>
+                        )}
                         <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit}>
                             <div>
                                 <div className="mb-2 block">
