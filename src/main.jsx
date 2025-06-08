@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider, Navigate} from 'react-router'
 import './index.css'
 import App from './App.jsx'
 import Login from './pages/Login/Login.jsx'
+import Loading from './pages/Common/Loading.jsx'
 import ProtectedRoute from './routes/ProtectedRoute.jsx'
 import AuthProvider from './auth/AuthProvider.jsx'
 
@@ -14,11 +15,11 @@ const router = createBrowserRouter([
     },
     {
       path: '/login',
-      element: <Navigate to="/" replace />, // Redirige a la página de inicio de sesión
+      element: <Navigate to="/" replace />,
     },
     {
       path: '/',
-      element: <ProtectedRoute />, 
+      element: <ProtectedRoute />,
       children: [
         {
           path: '/app',

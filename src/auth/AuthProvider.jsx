@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import React from 'react'
 import { API_URL } from '../api/api';
 import AuthContext from './AuthContext';
+import Loading from '../pages/Common/Loading.jsx';
 
 //Proveedor de autenticación que maneja el estado de autenticación del usuario
 const AuthProvider = ({ children }) => {
@@ -83,15 +84,8 @@ const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  useEffect(() => {
-    console.log("isAuthenticated cambió a", isAuthenticated)
-  }, [isAuthenticated])
-  useEffect(() => {
-    console.log("user cambió a", user)
-  }, [user])
-
   if (loading) {
-    return <div>Loading...</div>; // Puedes mostrar un spinner o algo mientras se carga
+    return <Loading />;
   }
 
   return (
