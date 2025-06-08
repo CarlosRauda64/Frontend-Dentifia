@@ -8,6 +8,7 @@ const Login = () => {
     const [usuario, setUsuario] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [errorResponse, setErrorResponse] = React.useState(null);
+
     const navigate = useNavigate();
     const auth = useAuth();
 
@@ -35,13 +36,15 @@ const Login = () => {
                 }
             }else{
                 setErrorResponse("Usuario o contraseña incorrectos");
+                setUsuario('');
+                setPassword('');
                 return;
             }
         }
         catch (error) {
             // Manejo de errores en caso de que el inicio de sesión falle.
             console.error("Error al iniciar sesión:", error);
-            alert("Usuario o contraseña incorrectos");
+            alert("Error del Servidor, por favor intente más tarde.");
         }
     }
     return (
@@ -66,25 +69,37 @@ const Login = () => {
                         <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit}>
                             <div>
                                 <div className="mb-2 block">
-                                    <Label htmlFor="usuario">Usuario</Label>
+                                    <Label htmlFor="usuario" color={errorResponse ? 'failure' : ''}>
+                                        Usuario
+                                    </Label>
                                 </div>
                                 <TextInput 
                                 id="usuario" 
                                 type="text" 
                                 placeholder="Usuario" 
                                 required 
-                                value={usuario} onChange={(e) => setUsuario(e.target.value)} />
+                                value={usuario} 
+                                onChange={(e) => setUsuario(e.target.value)} 
+                                color={errorResponse ? 'failure' : 'gray'}
+
+                                />
                             </div>
                             <div>
                                 <div className="mb-2 block">
-                                    <Label htmlFor="password">Contraseña</Label>
+                                    <Label htmlFor="password" 
+                                    color={errorResponse ? 'failure' : ''}>
+                                        Contraseña
+                                    </Label>
                                 </div>
                                 <TextInput 
                                 id="password" 
                                 type="password" 
                                 placeholder="Contraseña" 
                                 required 
-                                value={password} onChange={(e) => setPassword(e.target.value)} />
+                                value={password} 
+                                onChange={(e) => setPassword(e.target.value)} 
+                                color={errorResponse ? 'failure' : 'gray'}
+                                />
                             </div>
                             <Button type="submit" color="blue" className='mt-4'>Iniciar Sesión</Button>
                         </form>

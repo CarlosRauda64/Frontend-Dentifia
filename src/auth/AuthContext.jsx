@@ -5,6 +5,8 @@ const AuthContext = createContext({
     getAccessToken: () => "",
     saveUser: (userData) => {},
     getRefreshToken: () => {},
+    getUser: () => {},
+    signout: () => {},
 });
 
 export default AuthContext;

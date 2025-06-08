@@ -60,6 +60,18 @@ const AuthProvider = ({ children }) => {
     setUser(user.usuario);
   }
 
+  // Obtiene el usuario del estado
+  function getUser() {
+    return user;
+  }
+
+  function signout(){
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
+    setAccessToken('');
+    setUser('');
+  }
+
   // Verifica si el usuario está autenticado al cargar el componente
   async function checkAuth() {
     const token = getRefreshToken();
@@ -89,7 +101,15 @@ const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, getAccessToken, saveTokenUser, getRefreshToken, saveUser }}>
+    <AuthContext.Provider value={
+      { 
+        isAuthenticated,
+         getAccessToken, 
+         saveTokenUser, 
+         getRefreshToken, 
+         saveUser,
+         getUser,
+         signout}}>
       {children}
     </AuthContext.Provider>
   )
