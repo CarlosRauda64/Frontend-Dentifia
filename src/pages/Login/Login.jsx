@@ -17,7 +17,7 @@ const Login = () => {
         console.log("Usuario:", usuario);
         console.log("Contraseña:", password);
         try {
-            const response = await fetch(`${API_URL}/usuarios/login`, {
+            const response = await fetch(`${API_URL}/usuarios/token`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -29,17 +29,23 @@ const Login = () => {
             });
 
             if (response.ok) {         
-                const usuario = await response.json();
-                if (usuario && usuario.token) {
-                    auth.saveTokenUser(JSON.stringify(usuario));
+                const token = await response.json();
+                console.log("Token recibido:", token);
+                if(token.access && token.refresh){
+                    auth.saveToken(token);
                     navigate('/app');
+                }else{
+                    setErrorResponse("Usuario o contraseña incorrectos");
+                    setUsuario('');
+                    setPassword('');
+                    return;
                 }
-            }else{
-                setErrorResponse("Usuario o contraseña incorrectos");
-                setUsuario('');
-                setPassword('');
-                return;
-            }
+            } else{
+                    setErrorResponse("Usuario o contraseña incorrectos");
+                    setUsuario('');
+                    setPassword('');
+                    return;
+                }
         }
         catch (error) {
             // Manejo de errores en caso de que el inicio de sesión falle.
