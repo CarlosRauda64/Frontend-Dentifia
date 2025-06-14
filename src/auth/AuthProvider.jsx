@@ -24,10 +24,11 @@ const AuthProvider = ({ children }) => {
     return null;
   }
 
-  // Guarda el usuario en el estado y en el almacenamiento local
-  function saveToken(userData) {
-    setAccessToken(userData.access);
-    localStorage.setItem('token', userData.refresh);
+  // Guarda el token en el estado y en el almacenamiento local
+  function saveToken(token, user) {
+    setAccessToken(token.access);
+    setUser(user)
+    localStorage.setItem('token', token.refresh);
     setIsAuthenticated(true);
   }
 
@@ -142,9 +143,6 @@ const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  if (loading) {
-    return <Loading />;
-  }
 
   return (
     <AuthContext.Provider value={
@@ -157,7 +155,7 @@ const AuthProvider = ({ children }) => {
         getUser,
         signout
       }}>
-      {children}
+      {loading ? <Loading />: children}
     </AuthContext.Provider>
   )
 }

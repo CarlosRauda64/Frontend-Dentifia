@@ -28,24 +28,32 @@ const Login = () => {
                 }),
             });
 
-            if (response.ok) {         
-                const token = await response.json();
-                console.log("Token recibido:", token);
-                if(token.access && token.refresh){
-                    auth.saveToken(token);
+            if (response.ok) {
+                const token = await response.json()
+                console.log("Token recibido:", token)
+                if (token.access && token.refresh) {
+                    const responseUser = await fetch(`${API_URL}/usuarios/profile`, {
+                        method: 'POST',
+                        headers: {
+                            "Content-Type": 'application/json',
+                            "Authorization": `Bearer ${token.access}`
+                        },
+                    });
+                    const user = await responseUser.json()
+                    auth.saveToken(token, user);
                     navigate('/app');
-                }else{
+                } else {
                     setErrorResponse("Usuario o contraseña incorrectos");
                     setUsuario('');
                     setPassword('');
                     return;
                 }
-            } else{
-                    setErrorResponse("Usuario o contraseña incorrectos");
-                    setUsuario('');
-                    setPassword('');
-                    return;
-                }
+            } else {
+                setErrorResponse("Usuario o contraseña incorrectos");
+                setUsuario('');
+                setPassword('');
+                return;
+            }
         }
         catch (error) {
             // Manejo de errores en caso de que el inicio de sesión falle.
@@ -79,32 +87,32 @@ const Login = () => {
                                         Usuario
                                     </Label>
                                 </div>
-                                <TextInput 
-                                id="usuario" 
-                                type="text" 
-                                placeholder="Usuario" 
-                                required 
-                                value={usuario} 
-                                onChange={(e) => setUsuario(e.target.value)} 
-                                color={errorResponse ? 'failure' : 'gray'}
+                                <TextInput
+                                    id="usuario"
+                                    type="text"
+                                    placeholder="Usuario"
+                                    required
+                                    value={usuario}
+                                    onChange={(e) => setUsuario(e.target.value)}
+                                    color={errorResponse ? 'failure' : 'gray'}
 
                                 />
                             </div>
                             <div>
                                 <div className="mb-2 block">
-                                    <Label htmlFor="password" 
-                                    color={errorResponse ? 'failure' : ''}>
+                                    <Label htmlFor="password"
+                                        color={errorResponse ? 'failure' : ''}>
                                         Contraseña
                                     </Label>
                                 </div>
-                                <TextInput 
-                                id="password" 
-                                type="password" 
-                                placeholder="Contraseña" 
-                                required 
-                                value={password} 
-                                onChange={(e) => setPassword(e.target.value)} 
-                                color={errorResponse ? 'failure' : 'gray'}
+                                <TextInput
+                                    id="password"
+                                    type="password"
+                                    placeholder="Contraseña"
+                                    required
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    color={errorResponse ? 'failure' : 'gray'}
                                 />
                             </div>
                             <Button type="submit" color="blue" className='mt-4'>Iniciar Sesión</Button>
