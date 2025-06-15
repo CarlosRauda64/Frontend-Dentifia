@@ -63,7 +63,6 @@ const TableUsuarios = () => {
                             </TableCell>
                         </TableRow>
                     ))}
-                    
                 </TableBody>
             </Table>
         </div>

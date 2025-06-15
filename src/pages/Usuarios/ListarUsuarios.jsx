@@ -9,7 +9,7 @@ const ListarUsuarios = () => {
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold mb-4">Lista de Usuarios</h1>
                     <div className="mb-4">
-                        <Button href="#" color="blue">
+                        <Button href="/usuarios/nuevo" color="blue">
                             Agregar Usuario
                         </Button>
                     </div>
