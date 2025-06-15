@@ -68,8 +68,8 @@ const Navegacion = ({ children }) => {
               </SidebarItem>
               {
                 user.rol == "administrador" &&
-                <SidebarItem href="#" icon={HiShoppingBag}>
-                  Crear Usuarios
+                <SidebarItem href="/usuarios" icon={HiShoppingBag}>
+                  Gestión de Usuarios
                 </SidebarItem>
               }
             </SidebarItemGroup>
