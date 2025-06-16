@@ -3,11 +3,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow, Modal,
 import { useAuth } from "../../auth/useAuth";
 import { API_URL } from '../../api/api';
 import { HiOutlinePencilAlt, HiOutlineTrash, HiOutlineExclamationCircle } from "react-icons/hi";
+import { useNavigate } from "react-router";
 
 const TableUsuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
     const [usuario, setUsuario] = useState('');
     const [openModal, setOpenModal] = useState(false);
+    const navigate = useNavigate();
     const auth = useAuth();
 
     const modalHandler = (usuario) => {
@@ -93,7 +95,9 @@ const TableUsuarios = () => {
                                 <TableCell className="max-xl:hidden">{usuario.apellido}</TableCell>
                                 <TableCell className="max-sm:hidden">{usuario.rol}</TableCell>
                                 <TableCell>
-                                    <HiOutlinePencilAlt href="#" size={25} className="cursor-pointer text-gray-500 hover:text-gray-700 mx-auto" />
+                                    <HiOutlinePencilAlt href="#" size={25} className="cursor-pointer text-gray-500 hover:text-gray-700 mx-auto" 
+                                        onClick={() => navigate(`/usuarios/editar/${usuario.id}`)}
+                                    />
                                 </TableCell>
                                 <TableCell>
                                     <HiOutlineTrash size={25} className="cursor-pointer text-gray-500 hover:text-gray-700 mx-auto"
@@ -115,7 +119,7 @@ const TableUsuarios = () => {
                                 ¿Estás seguro de que deseas eliminar el usuario <span className="font-semibold">{usuario.usuario}</span>?
                             </h3>
                             <div className="flex justify-center gap-4">
-                                <Button onClick={() => aceptarModal()}>
+                                <Button color="green" onClick={() => aceptarModal()}>
                                     Aceptar
                                 </Button>
                                 <Button color="red" onClick={() => cancelarModal()}>

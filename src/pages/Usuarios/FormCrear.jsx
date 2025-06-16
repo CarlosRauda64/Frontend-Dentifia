@@ -41,10 +41,7 @@ const FormUsuario = () => {
     }
 
     const onSubmit = async (data) => {
-        console.log("Datos del formulario:", data);
-        console.log(JSON.stringify(data));
         await crearUsuario(data);
-
         reset();
     }
     return (
