@@ -18,8 +18,8 @@ import {
   HiUser,
   HiViewBoards,
   HiOutlineViewList,
-  HiArrowNarrowRight,
-  HiArrowNarrowLeft
+  HiOutlineArrowCircleRight,
+  HiOutlineArrowCircleLeft
 } from "react-icons/hi";
 
 const Navegacion = ({ children }) => {
@@ -46,8 +46,8 @@ const Navegacion = ({ children }) => {
     <>
       <div className="max-sm:relative sm:flex flex-row">
         <Sidebar className={`${visible ? "max-sm:-translate-x-[100%]" : ""} transition delay-150 duration-300 ease-in-out max-sm:fixed sm:sticky top-0 h-screen z-10`}>
-          <Button className="sm:hidden absolute left-68 bg-white dark:bg-gray-800 shadow-md z-10" onClick={() => toggleVisible()}>
-            {visible ? <HiArrowNarrowRight className="w-8 h-8" /> : <HiArrowNarrowLeft className="w-8 h-8" />}
+          <Button className="sm:hidden absolute left-67 bg-white dark:bg-gray-800 shadow-md z-10 p-2" onClick={() => toggleVisible()}>
+            {visible ? <HiOutlineArrowCircleRight size={32}/> : <HiOutlineArrowCircleLeft size={32} />}
           </Button>
           <SidebarItems className="flex flex-col items-between justify-between h-full">
             <SidebarItemGroup>

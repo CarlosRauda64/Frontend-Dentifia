@@ -48,7 +48,7 @@ const FormUsuario = () => {
         <Navegacion>
             <div className="flex flex-col items-center justify-center w-full h-full max-sm:mt-10">
                 <h1 className="text-2xl font-bold mb-4">Crear Usuario</h1>
-                <form className="flex flex-col gap-4 bg-gray-900 p-10 rounded-2xl w-[75%] max-w-md" onSubmit={handleSubmit(onSubmit)}>
+                <form className="flex flex-col gap-4 bg-gray-900 p-10 rounded-2xl w-[75%] max-w-md lg:grid lg:grid-cols-2 lg:max-w-4xl" onSubmit={handleSubmit(onSubmit)}>
                     {/* Usuario Input */}
                     <div className="max-w-md">
                         <div className="mb-2 block">
@@ -122,7 +122,7 @@ const FormUsuario = () => {
                                 }
                             })}
                         />
-                        {errors.email && <span className="font-medium text-red-500">{errors.correo.message}</span>}
+                        {errors.email && <span className="font-medium text-red-500">{errors.email.message}</span>}
                     </div>
                     {/* Nombre Input */}
                     <div className="max-w-md">
@@ -196,7 +196,7 @@ const FormUsuario = () => {
                         
                     </div>
                     {/* Botones en el formulario */}
-                    <div className='flex gap-2 justify-evenly '>
+                    <div className='flex gap-2 justify-evenly items-center col-span-2'>
                         <Button type="submit" className="mt-4">Agregar</Button>
                         <Button href="/usuarios" className="mt-4" color="red">Cancelar</Button>
                     </div>

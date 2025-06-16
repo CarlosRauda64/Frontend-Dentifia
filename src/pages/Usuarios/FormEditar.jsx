@@ -1,10 +1,10 @@
 import { useForm } from 'react-hook-form'
-import { Button, Label, TextInput, Select } from "flowbite-react";
+import { Button, Label, TextInput, Select, HelperText } from "flowbite-react";
 import Navegacion from '../Common/Navegacion';
 import {
     HiMail,
 } from "react-icons/hi";
-import {API_URL} from '../../api/api';
+import { API_URL } from '../../api/api';
 import { useAuth } from '../../auth/useAuth';
 import { useNavigate } from 'react-router';
 import { useParams } from 'react-router';
@@ -13,7 +13,7 @@ import { useEffect } from 'react';
 const FormUsuario = () => {
     const auth = useAuth();
     const navigate = useNavigate();
-    const { id } = useParams(); 
+    const { id } = useParams();
 
     const {
         register,
@@ -37,14 +37,14 @@ const FormUsuario = () => {
             }
             const usuario = await response.json();
             console.log("Usuario obtenido:", usuario);
-            reset({...usuario, password: ''}); // Resetea el formulario con los datos del usuario
+            reset({ ...usuario, password: '' }); // Resetea el formulario con los datos del usuario
         } catch (error) {
             console.error('Error al obtener el usuario:', error);
         }
     };
 
     const editarUsuario = async (data) => {
-        try{
+        try {
             console.log("Datos del formulario para editar:", data);
             const response = await fetch(`${API_URL}/usuarios/editar/${id}`, {
                 method: 'PUT',
@@ -57,10 +57,10 @@ const FormUsuario = () => {
 
             if (!response.ok) {
                 throw new Error('Error al editar el usuario');
-            }else{
+            } else {
                 navigate('/usuarios');
             }
-        }catch (error) {
+        } catch (error) {
             console.error('Error al editar el usuario:', error);
         }
     }
@@ -80,7 +80,7 @@ const FormUsuario = () => {
         <Navegacion>
             <div className="flex flex-col items-center justify-center w-full h-full max-sm:mt-10">
                 <h1 className="text-2xl font-bold mb-4">Editar Usuario</h1>
-                <form className="flex flex-col gap-4 bg-gray-900 p-10 rounded-2xl w-[75%] max-w-md" onSubmit={handleSubmit(onSubmit)}>
+                <form className="flex flex-col gap-4 bg-gray-900 p-10 rounded-2xl w-[75%] max-w-md lg:grid lg:grid-cols-2 lg:max-w-4xl" onSubmit={handleSubmit(onSubmit)}>
                     {/* Usuario Input */}
                     <div className="max-w-md">
                         <div className="mb-2 block">
@@ -123,6 +123,9 @@ const FormUsuario = () => {
                             name='password'
                             {...register("password")}
                         />
+                        <HelperText>
+                            <span className="text-sm text-gray-400">Dejar en blanco si no se desea cambiar la contraseña</span>
+                        </HelperText>
                     </div>
                     {/* Correo Electrónico Input */}
                     <div className="max-w-md">
@@ -147,7 +150,7 @@ const FormUsuario = () => {
                                 }
                             })}
                         />
-                        {errors.email && <span className="font-medium text-red-500">{errors.correo.message}</span>}
+                        {errors.email && <span className="font-medium text-red-500">{errors.email.message}</span>}
                     </div>
                     {/* Nombre Input */}
                     <div className="max-w-md">
@@ -218,10 +221,10 @@ const FormUsuario = () => {
                             <option>secretaria</option>
                         </Select>
                         {errors.rol && <span className="font-medium text-red-500">{errors.rol.message}</span>}
-                        
+
                     </div>
                     {/* Botones en el formulario */}
-                    <div className='flex gap-2 justify-evenly '>
+                    <div className='flex gap-2 justify-evenly items-center col-span-2'>
                         <Button type="submit" className="mt-4">Editar</Button>
                         <Button href="/usuarios" className="mt-4" color="red">Cancelar</Button>
                     </div>
