@@ -3,6 +3,9 @@ import { Button, Label, TextInput, Select } from "flowbite-react";
 import Navegacion from '../Common/Navegacion';
 import {
     HiMail,
+    HiUser,
+    HiOutlineClipboard,
+    HiLockClosed,
 } from "react-icons/hi";
 import {API_URL} from '../../api/api';
 import { useAuth } from '../../auth/useAuth';
@@ -46,7 +49,7 @@ const FormUsuario = () => {
     }
     return (
         <Navegacion>
-            <div className="flex flex-col items-center justify-center w-full h-full max-sm:mt-10">
+            <div className="flex flex-col items-center sm:justify-center w-full h-full max-sm:mt-10">
                 <h1 className="text-2xl font-bold mb-4">Crear Usuario</h1>
                 <form className="flex flex-col gap-4 bg-gray-900 p-10 rounded-2xl w-[75%] max-w-md lg:grid lg:grid-cols-2 lg:max-w-4xl" onSubmit={handleSubmit(onSubmit)}>
                     {/* Usuario Input */}
@@ -57,7 +60,7 @@ const FormUsuario = () => {
                         <TextInput
                             id="user"
                             type="text"
-                            icon={HiMail}
+                            icon={HiUser}
                             placeholder="Usuario"
                             name='usuario'
                             {
@@ -86,7 +89,7 @@ const FormUsuario = () => {
                         <TextInput
                             id="password"
                             type="password"
-                            icon={HiMail}
+                            icon={HiLockClosed}
                             placeholder="Contraseña"
                             name='password'
                             {
@@ -132,7 +135,7 @@ const FormUsuario = () => {
                         <TextInput
                             id="name"
                             type="text"
-                            icon={HiMail}
+                            icon={HiOutlineClipboard}
                             placeholder="Nombre "
                             name='nombre'
                             {
@@ -157,7 +160,7 @@ const FormUsuario = () => {
                         <TextInput
                             id="apellido"
                             type="text"
-                            icon={HiMail}
+                            icon={HiOutlineClipboard}
                             placeholder="Apellido "
                             name='apellido'
                             {

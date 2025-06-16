@@ -17,9 +17,12 @@ import {
   HiTable,
   HiUser,
   HiViewBoards,
-  HiOutlineViewList,
   HiOutlineArrowCircleRight,
-  HiOutlineArrowCircleLeft
+  HiOutlineArrowCircleLeft,
+  /* Usados en el proyecto */
+  HiUsers,
+  HiOutlineLogout,
+  HiPuzzle,
 } from "react-icons/hi";
 
 const Navegacion = ({ children }) => {
@@ -68,21 +71,21 @@ const Navegacion = ({ children }) => {
               </SidebarItem>
               {
                 user.rol == "administrador" &&
-                <SidebarItem href="/usuarios" icon={HiShoppingBag}>
+                <SidebarItem href="/usuarios" icon={HiUsers}>
                   Gestión de Usuarios
                 </SidebarItem>
               }
             </SidebarItemGroup>
             <SidebarItemGroup>
-              <SidebarLogo img="https://tinyurl.com/y6dvz8jy" imgAlt="DentiFia Logo">
+              <SidebarItem href="#" icon={HiUser}>
                 {user.nombre}
                 <br />
                 {user.apellido}
-              </SidebarLogo>
-              <SidebarItem href="#" icon={HiUser}>
+              </SidebarItem>
+              <SidebarItem href="#" icon={HiPuzzle}>
                 {user.rol}
               </SidebarItem>
-              <SidebarItem icon={HiTable} onClick={() => handleLogout()} className="cursor-pointer">
+              <SidebarItem icon={HiOutlineLogout} onClick={() => handleLogout()} className="cursor-pointer">
                 Cerrar Sesion
               </SidebarItem>
             </SidebarItemGroup>
