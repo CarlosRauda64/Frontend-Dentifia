@@ -5,8 +5,13 @@ import {
     HiMail,
 } from "react-icons/hi";
 import {API_URL} from '../../api/api';
+import { useAuth } from '../../auth/useAuth';
+import { useNavigate } from 'react-router';
 
 const FormUsuario = () => {
+    const auth = useAuth();
+    const navigate = useNavigate();
+
     const {
         register,
         handleSubmit,
@@ -20,16 +25,16 @@ const FormUsuario = () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${auth.getAccessToken()}`
                 },
                 body: JSON.stringify(data),
             });
 
             if (!response.ok) {
                 throw new Error('Error al crear el usuario');
+            }else{
+                navigate('/usuarios');
             }
-
-            const result = await response.json();
-            console.log("Usuario creado:", result);
         }catch (error) {
             console.error('Error al crear el usuario:', error);
         }
@@ -175,7 +180,7 @@ const FormUsuario = () => {
                     {/* Rol Input */}
                     <div className="max-w-md">
                         <div className="mb-2 block">
-                            <Label htmlFor="rol">Select your country</Label>
+                            <Label htmlFor="rol">Seleccionar el rol</Label>
                         </div>
                         <Select id="rol" name="rol"
                             {...register("rol", {
@@ -193,8 +198,11 @@ const FormUsuario = () => {
                         {errors.rol && <span className="font-medium text-red-500">{errors.rol.message}</span>}
                         
                     </div>
-                    {/* Botón para enviar el formulario */}
-                    <Button type="submit" className="mt-4">Submit</Button>
+                    {/* Botones en el formulario */}
+                    <div className='flex gap-2 justify-evenly '>
+                        <Button type="submit" className="mt-4">Agregar</Button>
+                        <Button href="/usuarios" className="mt-4" color="red">Cancelar</Button>
+                    </div>
                 </form>
             </div>
         </Navegacion>
