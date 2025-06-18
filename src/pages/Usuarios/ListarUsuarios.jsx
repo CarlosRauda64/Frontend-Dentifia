@@ -7,7 +7,7 @@ const ListarUsuarios = () => {
         <Navegacion>
             <div className="p-4 max-sm:pt-20 max-sm:px-2">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold mb-4">Lista de Usuarios</h1>
+                    <h1 className="text-2xl font-bold mb-4 dark:text-gray-600">Lista de Usuarios</h1>
                     <div className="mb-4">
                         <Button href="/usuarios/nuevo" color="blue">
                             Agregar Usuario

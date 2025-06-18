@@ -65,7 +65,7 @@ const Navegacion = ({ children }) => {
       <div className="max-sm:relative sm:flex flex-row">
         <Sidebar className={`${visible ? "max-sm:-translate-x-[100%]" : ""} transition delay-150 duration-300 ease-in-out max-sm:fixed sm:sticky top-0 h-screen z-10`}>
           <Button className="sm:hidden absolute left-67 bg-white dark:bg-gray-800 shadow-md z-10 p-2" onClick={() => toggleVisible()}>
-            {visible ? <HiOutlineArrowCircleRight size={32} /> : <HiOutlineArrowCircleLeft size={32} />}
+            {visible ? <HiOutlineArrowCircleRight size={32} className="text-black dark:text-white"/> : <HiOutlineArrowCircleLeft size={32} className="text-black dark:text-white"/>}
           </Button>
           <SidebarItems className="flex flex-col items-between justify-between h-full">
             <SidebarItemGroup>
@@ -98,7 +98,7 @@ const Navegacion = ({ children }) => {
               </SidebarItem>
             </SidebarItemGroup>
             <SidebarItemGroup>
-              <SidebarItem href="#" icon={HiUser}>
+              <SidebarItem href="/usuarios/configuracion" icon={HiUser}>
                 {user.nombre}
                 <br />
                 {user.apellido}
@@ -113,7 +113,7 @@ const Navegacion = ({ children }) => {
           </SidebarItems>
         </Sidebar>
         <div className={`${visible ? "hidden" : "sm:hidden"} bg-black opacity-[50%] w-full h-full fixed z-1`} onClick={() => toggleVisible()}></div>
-        <div className="shrink w-full max-sm:absolute max-sm:inset-0 max-sm:h-screen">
+        <div className="shrink w-full max-sm:absolute max-sm:inset-0 max-sm:h-screen dark:bg-gray-900 bg-gray-100">
           {children}
         </div>
       </div>

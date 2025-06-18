@@ -10,6 +10,7 @@ import AuthProvider from './auth/AuthProvider.jsx'
 import ListarUsuarios from './pages/Usuarios/ListarUsuarios.jsx'
 import FormCrearUsuario from './pages/Usuarios/FormCrear.jsx'
 import FormEditarUsuario from './pages/Usuarios/FormEditar.jsx'
+import ConfigUsuario from './pages/Usuarios/ConfigUsuario.jsx'
 
 const router = createBrowserRouter([
   {
@@ -40,6 +41,10 @@ const router = createBrowserRouter([
       {
         path: '/usuarios/editar/:id',
         element: <FormEditarUsuario />,
+      },
+      {
+        path: '/usuarios/configuracion',
+        element: <ConfigUsuario />,
       },
     ],
   },

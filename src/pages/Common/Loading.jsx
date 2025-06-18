@@ -13,9 +13,9 @@ const custonTheme = {
 
 const Loading = () => {
   return (
-    <div className="flex flex-col flex-wrap items-center gap-2 h-screen justify-center bg-gray-200">
+    <div className="flex flex-col flex-wrap items-center gap-2 h-screen justify-center bg-gray-200 dark:bg-gray-900">
       <Spinner aria-label="Extra large spinner example" className={custonTheme.spinner.base + " " + custonTheme.spinner.xl} />
-      <span className="text-xl font-semibold sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl">Cargando...</span>
+      <span className="text-xl font-semibold sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl text-gray-900 dark:text-gray-100">Cargando...</span>
     </div>
   )
 }

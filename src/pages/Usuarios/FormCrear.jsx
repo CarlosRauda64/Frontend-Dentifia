@@ -50,8 +50,8 @@ const FormUsuario = () => {
     return (
         <Navegacion>
             <div className="flex flex-col items-center sm:justify-center w-full h-full max-sm:mt-10">
-                <h1 className="text-2xl font-bold mb-4">Crear Usuario</h1>
-                <form className="flex flex-col gap-4 bg-gray-900 p-10 rounded-2xl w-[75%] max-w-md lg:grid lg:grid-cols-2 lg:max-w-4xl" onSubmit={handleSubmit(onSubmit)}>
+                <h1 className="text-2xl font-bold mb-4 text-black dark:text-white">Crear Usuario</h1>
+                <form className="flex flex-col gap-4 dark:bg-gray-800 bg-white p-10 rounded-2xl w-[75%] max-w-md lg:grid lg:grid-cols-2 lg:max-w-4xl" onSubmit={handleSubmit(onSubmit)}>
                     {/* Usuario Input */}
                     <div className="max-w-md">
                         <div className="mb-2 block">
