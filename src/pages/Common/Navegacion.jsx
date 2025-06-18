@@ -7,22 +7,23 @@ import {
   SidebarItemGroup,
   SidebarItems,
   SidebarLogo,
-  Button
+  Button,
+  ToggleSwitch,
 } from "flowbite-react";
 import {
-  HiArrowSmRight,
-  HiChartPie,
-  HiInbox,
-  HiShoppingBag,
-  HiTable,
   HiUser,
-  HiViewBoards,
   HiOutlineArrowCircleRight,
   HiOutlineArrowCircleLeft,
-  /* Usados en el proyecto */
+  HiCalendar,
+  HiClipboard,
+  HiCurrencyDollar,
+  HiClipboardList,
+  HiDocumentReport,
   HiUsers,
   HiOutlineLogout,
   HiPuzzle,
+  HiMoon,
+  HiSun
 } from "react-icons/hi";
 
 const Navegacion = ({ children }) => {
@@ -30,6 +31,7 @@ const Navegacion = ({ children }) => {
   const navigate = useNavigate();
   const [user, setUser] = useState('');
   const [visible, setVisible] = useState(true)
+  const [theme, setTheme] = useState(localStorage.getItem('theme') === 'dark' ? true : false);
 
   const handleLogout = () => {
     auth.signout();
@@ -42,6 +44,19 @@ const Navegacion = ({ children }) => {
   }
 
   useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme) {
+      root.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+      setTheme(true);
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+      setTheme(false);
+    }
+  }, [theme]);
+
+  useEffect(() => {
     setUser(auth.getUser());
   }, []);
 
@@ -50,31 +65,37 @@ const Navegacion = ({ children }) => {
       <div className="max-sm:relative sm:flex flex-row">
         <Sidebar className={`${visible ? "max-sm:-translate-x-[100%]" : ""} transition delay-150 duration-300 ease-in-out max-sm:fixed sm:sticky top-0 h-screen z-10`}>
           <Button className="sm:hidden absolute left-67 bg-white dark:bg-gray-800 shadow-md z-10 p-2" onClick={() => toggleVisible()}>
-            {visible ? <HiOutlineArrowCircleRight size={32}/> : <HiOutlineArrowCircleLeft size={32} />}
+            {visible ? <HiOutlineArrowCircleRight size={32} /> : <HiOutlineArrowCircleLeft size={32} />}
           </Button>
           <SidebarItems className="flex flex-col items-between justify-between h-full">
             <SidebarItemGroup>
               <SidebarLogo href="#" img="https://tinyurl.com/y6dvz8jy" imgAlt="DentiFia Logo">
                 DentiFia
               </SidebarLogo>
-              <SidebarItem href="#" icon={HiChartPie}>
-                Dashboard
-              </SidebarItem>
-              <SidebarItem href="#" icon={HiViewBoards}>
-                Kanban
-              </SidebarItem>
-              <SidebarItem href="#" icon={HiInbox}>
-                Inbox
-              </SidebarItem>
-              <SidebarItem href="#" icon={HiShoppingBag}>
-                Products
-              </SidebarItem>
               {
                 user.rol == "administrador" &&
                 <SidebarItem href="/usuarios" icon={HiUsers}>
                   Gestión de Usuarios
                 </SidebarItem>
               }
+              <SidebarItem href="#" icon={HiCalendar}>
+                Agendación de Citas
+              </SidebarItem>
+              <SidebarItem href="#" icon={HiClipboard}>
+                Diagnóstico
+              </SidebarItem>
+              <SidebarItem href="#" icon={HiCurrencyDollar}>
+                Facturación
+              </SidebarItem>
+              <SidebarItem href="#" icon={HiClipboardList}>
+                Inventario
+              </SidebarItem>
+              <SidebarItem href="#" icon={HiDocumentReport}>
+                Reportes
+              </SidebarItem>
+              <SidebarItem icon={!theme ? HiSun : HiMoon} className="flex items-center">
+                <ToggleSwitch checked={theme} onChange={setTheme} label="Modo Oscuro" />
+              </SidebarItem>
             </SidebarItemGroup>
             <SidebarItemGroup>
               <SidebarItem href="#" icon={HiUser}>
@@ -82,7 +103,7 @@ const Navegacion = ({ children }) => {
                 <br />
                 {user.apellido}
               </SidebarItem>
-              <SidebarItem href="#" icon={HiPuzzle}>
+              <SidebarItem icon={HiPuzzle}>
                 {user.rol}
               </SidebarItem>
               <SidebarItem icon={HiOutlineLogout} onClick={() => handleLogout()} className="cursor-pointer">
