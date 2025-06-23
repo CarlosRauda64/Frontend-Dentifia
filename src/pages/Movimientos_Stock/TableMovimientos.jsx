@@ -11,6 +11,8 @@ const TableMovimientos = () => {
     const [openModal, setOpenModal] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
+    const [insumos, setInsumos] = useState([]);
+
 
     const navigate = useNavigate();
     const auth = useAuth();
@@ -51,7 +53,20 @@ const TableMovimientos = () => {
             console.error('Error al cancelar movimiento:', error);
         }
     }
-
+    const fetchInsumos = async () => {
+        try {
+            const response = await fetch(`${API_URL}/inventario/insumos/`, {
+                headers: {
+                    'Authorization': `Bearer ${auth.getAccessToken()}`
+                }
+            });
+            if (!response.ok) throw new Error("Error al cargar insumos");
+            const data = await response.json();
+            setInsumos(data); // Suponiendo que cada insumo tiene id y nombre
+        } catch (error) {
+            console.error("Error cargando insumos:", error);
+        }
+    };
     const fetchMovimientos = async () => {
         try {
             const response = await fetch(`${API_URL}/inventario/movimientos_stock`, {
@@ -72,8 +87,14 @@ const TableMovimientos = () => {
         }
     }
 
+    const getNombreInsumo = (id) => {
+        const insumo = insumos.find((i) => i.id === id);
+        return insumo ? insumo.nombre : `ID: ${id}`;
+    };
+
     useEffect(() => {
         fetchMovimientos();
+        fetchInsumos();
     }, []);
 
     return (
@@ -103,7 +124,7 @@ const TableMovimientos = () => {
                                 </TableCell>
                                 <TableCell className="max-xl:hidden">{movimiento.fecha}</TableCell>
                                 <TableCell className="max-xl:hidden">{movimiento.cantidad}</TableCell>
-                                <TableCell className="max-xl:hidden">{movimiento.insumo}</TableCell>
+                                <TableCell className="max-xl:hidden">{getNombreInsumo(movimiento.insumo)}</TableCell>
                                 <TableCell className="max-sm:hidden">{movimiento.nombre_usuario}</TableCell>
                                 <TableCell className="max-sm:hidden">{movimiento.rol_usuario}</TableCell>
                                 <TableCell className="max-sm:hidden">{movimiento.activo ? "Realizado" : "Cancelado"}</TableCell>
