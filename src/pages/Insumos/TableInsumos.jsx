@@ -114,10 +114,10 @@ const TableInsumos = () => {
                                 ¿Estás seguro de que deseas eliminar el insumo <span className="font-semibold">{insumo.nombre}</span>?
                             </h3>
                             <div className="flex justify-center gap-4">
-                                <Button color="failure" onClick={() => aceptarModal()}>
+                                <Button color="green" onClick={() => aceptarModal()}>
                                     Sí, eliminar
                                 </Button>
-                                <Button color="gray" onClick={() => cancelarModal()}>
+                                <Button color="red" onClick={() => cancelarModal()}>
                                     Cancelar
                                 </Button>
                             </div>

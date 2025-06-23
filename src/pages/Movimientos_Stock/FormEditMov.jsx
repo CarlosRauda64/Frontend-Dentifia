@@ -11,6 +11,7 @@ const FormEditMovimiento = () => {
     const auth = useAuth();
     const navigate = useNavigate();
     const { id } = useParams(); // <-- obtenemos el id desde la URL
+    const [errorResponse, setErrorResponse] = useState("");
 
     const {
         register,
@@ -59,12 +60,14 @@ const FormEditMovimiento = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Error al actualizar el movimiento');
+                const errorData = await response.json();
+                setErrorResponse(errorData.error || 'Error al actualizar el movimiento');
+                throw new Error(errorData.error || 'Error al actualizar el movimiento');
             } else {
                 navigate('/inventario/movimientos_stock');
             }
         } catch (error) {
-            console.error('Error al actualizar el movimiento', error);
+            console.error('Error al actualizar el movimiento:', error.message);
         }
     };
 
@@ -110,6 +113,7 @@ const FormEditMovimiento = () => {
                     </div>
 
                     {/* Botones */}
+                    {errorResponse && <div className="col-span-2 text-center font-medium text-red-500 bg-red-100 p-2 rounded-lg">{errorResponse}</div>}
                     <div className='flex gap-2 justify-evenly items-center col-span-2'>
                         <Button type="submit" className="mt-4">Actualizar</Button>
                         <Button href="/inventario/movimientos_stock" className="mt-4" color="red">Cancelar</Button>
