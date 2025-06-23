@@ -11,6 +11,10 @@ import ListarUsuarios from './pages/Usuarios/ListarUsuarios.jsx'
 import FormCrearUsuario from './pages/Usuarios/FormCrear.jsx'
 import FormEditarUsuario from './pages/Usuarios/FormEditar.jsx'
 import ConfigUsuario from './pages/Usuarios/ConfigUsuario.jsx'
+import MenuInventario from './pages/Inventario/MenuInventario.jsx'
+import ListarMovimientosStock from './pages/Movimientos_Stock/ListarMovimientos.jsx'
+import FormInsertarMov from './pages/Movimientos_Stock/FormInsertarMov.jsx'
+import FormEditMov from './pages/Movimientos_Stock/FormEditMov.jsx'
 
 const router = createBrowserRouter([
   {
@@ -45,6 +49,22 @@ const router = createBrowserRouter([
       {
         path: '/usuarios/configuracion',
         element: <ConfigUsuario />,
+      },
+      {
+        path: '/inventario',
+        element: <MenuInventario/>,
+      },
+      {
+        path:'/inventario/movimientos_stock',
+        element: <ListarMovimientosStock />,
+      },
+      {
+        path:'/inventario/movimientos_stock/nuevo',
+        element: <FormInsertarMov/>,
+      },
+      {
+        path: '/inventario/movimientos_stock/editar/:id',
+        element: <FormEditMov />,
       },
     ],
   },
