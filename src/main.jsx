@@ -12,6 +12,9 @@ import FormCrearUsuario from './pages/Usuarios/FormCrear.jsx'
 import FormEditarUsuario from './pages/Usuarios/FormEditar.jsx'
 import ConfigUsuario from './pages/Usuarios/ConfigUsuario.jsx'
 import MenuInventario from './pages/Inventario/MenuInventario.jsx'
+import ListarInsumos from './pages/Insumos/ListarInsumos.jsx'
+import FormCrearInsumo from './pages/Insumos/FormCrearInsumo.jsx'
+import FormEditarInsumo from './pages/Insumos/FormEditarInsumo.jsx'
 import ListarMovimientosStock from './pages/Movimientos_Stock/ListarMovimientos.jsx'
 import FormInsertarMov from './pages/Movimientos_Stock/FormInsertarMov.jsx'
 import FormEditMov from './pages/Movimientos_Stock/FormEditMov.jsx'
@@ -53,6 +56,19 @@ const router = createBrowserRouter([
       {
         path: '/inventario',
         element: <MenuInventario/>,
+        element: <MenuInventario/>,
+      },
+      {
+        path: '/inventario/insumos',
+        element: <ListarInsumos />,
+      },
+      {
+        path: '/inventario/insumos/nuevo',
+        element: <FormCrearInsumo />,
+      },
+      {
+        path: '/inventario/insumos/editar/:id',
+        element: <FormEditarInsumo />,
       },
       {
         path:'/inventario/movimientos_stock',
