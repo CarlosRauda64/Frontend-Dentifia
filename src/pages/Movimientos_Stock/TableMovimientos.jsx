@@ -124,7 +124,10 @@ const TableMovimientos = () => {
                                 </TableCell>
                                 <TableCell className="max-xl:hidden">{movimiento.fecha}</TableCell>
                                 <TableCell className="max-xl:hidden">{movimiento.cantidad}</TableCell>
-                                <TableCell className="max-xl:hidden">{getNombreInsumo(movimiento.insumo)}</TableCell>
+                                <TableCell>
+                                    {movimiento.insumo_data?.nombre || 'Insumo no encontrado'}
+                                    {!movimiento.insumo_data?.activo && <span className="text-sm font-semibold text-red-500 ml-2">(Descatalogado)</span>}
+                                </TableCell>
                                 <TableCell className="max-sm:hidden">{movimiento.nombre_usuario}</TableCell>
                                 <TableCell className="max-sm:hidden">{movimiento.rol_usuario}</TableCell>
                                 <TableCell className="max-sm:hidden">{movimiento.activo ? "Realizado" : "Cancelado"}</TableCell>

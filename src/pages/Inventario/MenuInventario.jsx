@@ -7,7 +7,10 @@ import { Label, TextInput } from "flowbite-react";
 
 const MenuInventario = () => {
     const irAGestionMovimientos = () => {
-        window.location.href = "inventario/movimientos_stock";
+        window.location.href = "/inventario/movimientos_stock";
+    };
+    const irAGestionInsumos = () => {
+        window.location.href = "/inventario/insumos";
     };
   return (
     <Navegacion>
@@ -16,7 +19,7 @@ const MenuInventario = () => {
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
     
     {/* Botón de Gestión de Insumos */}
-    <button className="w-48 h-48 flex flex-col items-center justify-center bg-white dark:bg-gray-800 shadow-lg rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900 transition-all">
+    <button onClick={irAGestionInsumos} className="w-48 h-48 flex flex-col items-center justify-center bg-white dark:bg-gray-800 shadow-lg rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900 transition-all">
       <FaBox className="text-blue-600 dark:text-blue-400 text-6xl mb-4" />
       <span className="text-lg font-semibold text-gray-800 dark:text-white">
         Gestión de Insumos
