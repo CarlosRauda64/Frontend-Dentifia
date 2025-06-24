@@ -84,7 +84,7 @@ const Navegacion = ({ children }) => {
               <SidebarItem href="#" icon={HiClipboard}>
                 Diagnóstico
               </SidebarItem>
-              <SidebarItem href="#" icon={HiCurrencyDollar}>
+              <SidebarItem href="/factura" icon={HiCurrencyDollar}>
                 Facturación
               </SidebarItem>
               <SidebarItem href="/inventario" icon={HiClipboardList}>
