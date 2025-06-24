@@ -5,6 +5,7 @@ import { API_URL } from "../../api/api";
 import { useAuth } from "../../auth/useAuth";
 import Navegacion from "../Common/Navegacion";
 
+
 const CancelarFactura = () => {
   const { id } = useParams();
   const navigate = useNavigate();

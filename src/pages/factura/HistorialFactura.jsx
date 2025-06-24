@@ -9,19 +9,48 @@ import {
   Card,
   Spinner,
   Alert,
-  Button,
+  Button, Modal, ModalBody, ModalHeader
 } from "flowbite-react";
 import { useAuth } from "../../auth/useAuth";
 import { API_URL } from "../../api/api";
 import Navegacion from "../Common/Navegacion";
 import { useNavigate } from "react-router-dom";
+import { HiOutlineExclamationCircle } from "react-icons/hi";
 
 const HistorialFactura = () => {
+  const [SelectId, setSelectId] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
   const [facturas, setFacturas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const auth = useAuth();
   const navigate = useNavigate();
+
+  const handleOpenModal = (id) => {
+    setSelectId(id);
+    setOpenModal(true);
+  };
+
+const eliminarFactura = async (id) => {
+    try {
+      const response = await fetch(`${API_URL}/facturacion/eliminar/${id}/`, {
+        method: "DELETE",
+        headers: {
+          'Content-Type': "application/json",
+          'Authorization': `Bearer ${auth.getAccessToken()}`,
+        },
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Error al eliminar la factura");
+      }
+      fetchFacturas();
+    } catch (error) {
+      setError( "Error desconocido");
+    } finally {
+      setOpenModal(false);
+    }
+  };
 
   const fetchFacturas = async () => {
     try {
@@ -91,7 +120,7 @@ const HistorialFactura = () => {
                         color="red"
                         size="xs"
                         onClick={() =>
-                          navigate(`/factura/cancelar/${factura.idfactura}`)
+                          handleOpenModal(factura.idfactura)
                         }
                       >
                         Cancelar
@@ -112,13 +141,12 @@ const HistorialFactura = () => {
                   <p>
                     <strong className="text-cyan-400">Estado:</strong>{" "}
                     <span
-                      className={`font-semibold ${
-                        factura.estado === "CANCELADA"
+                      className={`font-semibold ${factura.estado === "CANCELADA"
                           ? "text-red-500"
                           : factura.estado === "PENDIENTE"
-                          ? "text-yellow-400"
-                          : "text-green-400"
-                      }`}
+                            ? "text-yellow-400"
+                            : "text-green-400"
+                        }`}
                     >
                       {factura.estado}
                     </span>
@@ -160,6 +188,25 @@ const HistorialFactura = () => {
           </div>
         )}
       </div>
+      <Modal show={openModal} size="md" onClose={() => setOpenModal(false)} popup>
+        <ModalHeader />
+        <ModalBody>
+          <div className="text-center">
+            <HiOutlineExclamationCircle className="mx-auto mb-4 h-14 w-14 text-gray-400 dark:text-gray-200" />
+            <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+                ¿Deseas cancelar esta factura?
+            </h3>
+            <div className="flex justify-center gap-4">
+              <Button color="green" onClick={() => eliminarFactura(SelectId)}>
+                ACEPTAR
+              </Button>
+              <Button color="red" onClick={() => setOpenModal(false)}>
+                CANCELAR
+              </Button>
+            </div>
+          </div>
+        </ModalBody>
+      </Modal>
     </Navegacion>
   );
 };
