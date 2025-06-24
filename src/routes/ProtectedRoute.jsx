@@ -14,9 +14,7 @@ export default function ProtectedRoute(){
 
 export function ProtectedAdministrador(){
     const auth = useAuth();
-    console.log("ProtectedAdministrador", auth.isAuthenticated, auth.getUser());
     if(!auth.isAuthenticated || auth.getUser().rol !== 'administrador') {
-        console.log("No está autenticado o no es administrador, redirigiendo a la página de autorización.");
         return <Navigate to="/autorizacion" replace />;
     }
     return <Outlet />;
@@ -24,9 +22,7 @@ export function ProtectedAdministrador(){
 
 export function ProtectedSecretaria(){
     const auth = useAuth();
-    console.log("ProtectedSecretaria", auth.isAuthenticated, auth.getUser());
     if(!auth.isAuthenticated || auth.getUser().rol !== 'secretaria' && auth.getUser().rol !== 'administrador') {
-        console.log("No está autenticado o no es secretaria, redirigiendo a la página de autorización.");
         return <Navigate to="/autorizacion" replace />;
     }
     return <Outlet />;
@@ -34,9 +30,7 @@ export function ProtectedSecretaria(){
 
 export function ProtectedDoctor(){
     const auth = useAuth();
-    console.log("ProtectedDoctor", auth.isAuthenticated, auth.getUser());
     if(!auth.isAuthenticated || auth.getUser().rol !== 'doctor' && auth.getUser().rol !== 'administrador') {
-        console.log("No está autenticado o no es doctor, redirigiendo a la página de autorización.");
         return <Navigate to="/autorizacion" replace />;
     }
     return <Outlet />;
