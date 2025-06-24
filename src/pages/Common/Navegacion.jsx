@@ -65,11 +65,11 @@ const Navegacion = ({ children }) => {
       <div className="max-sm:relative sm:flex flex-row">
         <Sidebar className={`${visible ? "max-sm:-translate-x-[100%]" : ""} transition delay-150 duration-300 ease-in-out max-sm:fixed sm:sticky top-0 h-screen z-10`}>
           <Button className="sm:hidden absolute left-67 bg-white dark:bg-gray-800 shadow-md z-10 p-2" onClick={() => toggleVisible()}>
-            {visible ? <HiOutlineArrowCircleRight size={32} className="text-black dark:text-white"/> : <HiOutlineArrowCircleLeft size={32} className="text-black dark:text-white"/>}
+            {visible ? <HiOutlineArrowCircleRight size={32} className="text-black dark:text-white" /> : <HiOutlineArrowCircleLeft size={32} className="text-black dark:text-white" />}
           </Button>
           <SidebarItems className="flex flex-col items-between justify-between h-full">
             <SidebarItemGroup>
-              <SidebarLogo href="#" img="https://tinyurl.com/y6dvz8jy" imgAlt="DentiFia Logo">
+              <SidebarLogo href="/app" img="https://tinyurl.com/y6dvz8jy" imgAlt="DentiFia Logo">
                 DentiFia
               </SidebarLogo>
               {
@@ -78,15 +78,24 @@ const Navegacion = ({ children }) => {
                   Gestión de Usuarios
                 </SidebarItem>
               }
-              <SidebarItem href="#" icon={HiCalendar}>
-                Agendación de Citas
-              </SidebarItem>
-              <SidebarItem href="#" icon={HiClipboard}>
-                Diagnóstico
-              </SidebarItem>
-              <SidebarItem href="/factura" icon={HiCurrencyDollar}>
-                Facturación
-              </SidebarItem>
+              {
+                (user.rol == "secretaria" || user.rol == "administrador") &&
+                <SidebarItem href="#" icon={HiCalendar}>
+                  Agendación de Citas
+                </SidebarItem>
+              }
+              {
+                (user.rol == "doctor" || user.rol == "administrador") &&
+                <SidebarItem href="#" icon={HiClipboard}>
+                  Diagnóstico
+                </SidebarItem>
+              }
+              {
+                (user.rol == "secretaria" || user.rol == "administrador") &&
+                <SidebarItem href="/factura" icon={HiCurrencyDollar}>
+                  Facturación
+                </SidebarItem>
+              }
               <SidebarItem href="/inventario" icon={HiClipboardList}>
                 Inventario
               </SidebarItem>

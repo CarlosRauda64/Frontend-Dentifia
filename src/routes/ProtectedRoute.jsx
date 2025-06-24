@@ -11,3 +11,27 @@ export default function ProtectedRoute(){
     }
     return <Outlet />;
 }
+
+export function ProtectedAdministrador(){
+    const auth = useAuth();
+    if(!auth.isAuthenticated || auth.getUser().rol !== 'administrador') {
+        return <Navigate to="/autorizacion" replace />;
+    }
+    return <Outlet />;
+}
+
+export function ProtectedSecretaria(){
+    const auth = useAuth();
+    if(!auth.isAuthenticated || auth.getUser().rol !== 'secretaria' && auth.getUser().rol !== 'administrador') {
+        return <Navigate to="/autorizacion" replace />;
+    }
+    return <Outlet />;
+}
+
+export function ProtectedDoctor(){
+    const auth = useAuth();
+    if(!auth.isAuthenticated || auth.getUser().rol !== 'doctor' && auth.getUser().rol !== 'administrador') {
+        return <Navigate to="/autorizacion" replace />;
+    }
+    return <Outlet />;
+}
