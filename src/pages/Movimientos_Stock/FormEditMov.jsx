@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Button, Label, TextInput, Select } from "flowbite-react";
 import Navegacion from '../Common/Navegacion';
 import { HiHashtag, HiOutlineSwitchHorizontal } from "react-icons/hi";
