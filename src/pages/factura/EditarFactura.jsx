@@ -95,7 +95,7 @@ const EditarFactura = () => {
   return (
     <Navegacion>
       <div className="max-w-4xl mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-4 text-white text-center">
+        <h1 className="text-2xl font-bold mb-4 dark:text-white text-gray-800 text-center">
           Editar Factura #{id}
         </h1>
 
@@ -129,9 +129,9 @@ const EditarFactura = () => {
           </div>
 
           <div>
-            <h2 className="font-semibold mb-2 text-white">Detalles</h2>
+            <h2 className="font-semibold mb-2 dark:text-white text-gray-800">Detalles</h2>
             {fields.map((item, index) => (
-              <Card key={item.id} className="mb-3 bg-gray-800 text-white">
+              <Card key={item.id} className="mb-3 dark:bg-gray-800  text-white">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <TextInput
                     placeholder="Descripción"

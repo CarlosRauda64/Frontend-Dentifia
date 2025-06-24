@@ -14,7 +14,7 @@ import {
 import { useAuth } from "../../auth/useAuth";
 import { API_URL } from "../../api/api";
 import Navegacion from "../Common/Navegacion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 
 const HistorialFactura = () => {
@@ -80,8 +80,8 @@ const HistorialFactura = () => {
   return (
     <Navegacion>
       <div className="p-6 max-w-6xl mx-auto text-white">
-        <h1 className="text-3xl font-extrabold text-center mb-8 text-cyan-400">
-          📄 Historial de Facturas
+        <h1 className="text-3xl font-extrabold text-center mb-8 text-gray-800 dark:text-gray-200">
+          Historial de Facturas
         </h1>
 
         {loading && <Spinner size="xl" className="mx-auto" color="info" />}
@@ -97,10 +97,10 @@ const HistorialFactura = () => {
             {facturas.map((factura, i) => (
               <Card
                 key={`${factura.idfactura}-${i}`}
-                className="bg-gradient-to-br from-gray-800 to-gray-900 text-white border border-cyan-600 shadow-xl"
+                className="bg-gradient-to-br text-gray-800 dark:text-gray-200 dark:bg-gray-750 border shadow-xl"
               >
                 <div className="flex justify-between items-center mb-3">
-                  <h2 className="text-xl font-semibold text-cyan-300">
+                  <h2 className="text-xl font-semibold">
                     🧾 Factura #{factura.idfactura}
                   </h2>
 
@@ -132,15 +132,15 @@ const HistorialFactura = () => {
 
                 <div className="text-sm space-y-1">
                   <p>
-                    <strong className="text-cyan-400">Fecha:</strong>{" "}
+                    <strong>Fecha:</strong>{" "}
                     {factura.fecha_emision}
                   </p>
                   <p>
-                    <strong className="text-cyan-400">Método de Pago:</strong>{" "}
+                    <strong>Método de Pago:</strong>{" "}
                     {factura.metodo_pago}
                   </p>
                   <p>
-                    <strong className="text-cyan-400">Estado:</strong>{" "}
+                    <strong>Estado:</strong>{" "}
                     <span
                       className={`font-semibold ${factura.estado === "CANCELADA"
                         ? "text-red-500"
@@ -153,17 +153,17 @@ const HistorialFactura = () => {
                     </span>
                   </p>
                   <p>
-                    <strong className="text-cyan-400">Monto Total:</strong> $
+                    <strong>Monto Total:</strong> $
                     {factura.monto_total}
                   </p>
                 </div>
 
                 <div className="mt-4">
-                  <h3 className="font-medium mb-2 text-cyan-400">
+                  <h3 className="font-medium mb-2">
                     📋 Detalles:
                   </h3>
                   <Table striped hoverable>
-                    <TableHead className="bg-cyan-800 text-white">
+                    <TableHead className="dark:text-white text-gray-800 bg-opacity-50">
                       <TableRow>
                         <TableHeadCell>Descripción</TableHeadCell>
                         <TableHeadCell>Precio Unitario</TableHeadCell>
@@ -174,7 +174,7 @@ const HistorialFactura = () => {
                       {factura.detalles?.map((detalle, index) => (
                         <TableRow
                           key={index}
-                          className="bg-gray-700 hover:bg-gray-600 text-white"
+                          className=" dark:text-white text-gray-800"
                         >
                           <TableCell>{detalle.descripcion}</TableCell>
                           <TableCell>${detalle.precio_unitario}</TableCell>

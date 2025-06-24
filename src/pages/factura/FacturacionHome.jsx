@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import {
   HiPlusCircle,
   HiClipboardList,
@@ -29,7 +29,7 @@ const FacturacionHome = () => {
   return (
     <Navegacion>
       <div className="flex flex-col items-center justify-center min-h-screen p-6 dark:text-white">
-        <h1 className="text-4xl font-extrabold mb-10 text-center text-cyan-400">
+        <h1 className="text-4xl font-extrabold mb-10 text-center text-gray-800 dark:text-gray-200">
           💼 Gestión de Facturación
         </h1>
 

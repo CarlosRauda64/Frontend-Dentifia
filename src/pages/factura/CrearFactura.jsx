@@ -23,7 +23,7 @@ const CrearFactura = () => {
       metodo_pago: "efectivo",
       estado: "ACEPTADA",
       activo: true,
-      detalles: [{ descripcion: "", precio_unitario: 0, cantidad: 1 }]
+      detalles: [{ descripcion: "", precio_unitario: null, cantidad: null }]
     }
   });
 
@@ -119,7 +119,7 @@ navigate('/factura/historial');
           {/* Botones */}
           <div className='flex gap-2 justify-evenly items-center'>
             <Button type="submit" className="mt-4">Guardar Factura</Button>
-            <Button href="/facturacion/facturas" className="mt-4" color="red">Cancelar</Button>
+            <Button href="/factura" className="mt-4" color="red">Cancelar</Button>
           </div>
         </form>
       </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { Alert, Button, Spinner } from "flowbite-react";
 import { API_URL } from "../../api/api";
 import { useAuth } from "../../auth/useAuth";
