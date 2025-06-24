@@ -101,22 +101,6 @@ const FormEditarInsumo = () => {
                         {errors.descripcion && <span className="font-medium text-red-500">{errors.descripcion.message}</span>}
                     </div>
                     
-                    <div>
-                        <div className="mb-2 block">
-                            <Label htmlFor="stock_actual">Stock Actual:</Label>
-                        </div>
-                        <TextInput
-                            id="stock_actual"
-                            type="number"
-                            icon={HiHashtag}
-                            {...register("stock_actual", {
-                                required: "Este campo es obligatorio",
-                                min: { value: 0, message: "El stock no puede ser negativo" }
-                            })}
-                        />
-                        {errors.stock_actual && <span className="font-medium text-red-500">{errors.stock_actual.message}</span>}
-                    </div>
-
                     <div className='flex gap-2 justify-evenly items-center col-span-2'>
                         <Button type="submit" className="mt-4">Actualizar</Button>
                         <Button href="/inventario/insumos" className="mt-4" color="red">Cancelar</Button>

@@ -5,7 +5,7 @@ import { API_URL } from '../../api/api';
 import { HiOutlinePencilAlt, HiOutlineTrash, HiOutlineExclamationCircle } from "react-icons/hi";
 import { useNavigate } from "react-router";
 
-const TableInsumos = () => {
+const TableInsumos = ({ searchTerm }) => {
     const [insumos, setInsumos] = useState([]);
     const [insumo, setInsumo] = useState('');
     const [openModal, setOpenModal] = useState(false);
@@ -57,7 +57,9 @@ const TableInsumos = () => {
                 throw new Error('Error al obtener los insumos');
             }
             const data = await response.json();
-            setInsumos(data);
+            // Ordenar los insumos por stock_actual de mayor a menor
+            const sortedData = data.sort((a, b) => b.stock_actual - a.stock_actual);
+            setInsumos(sortedData);
         }
         catch (error) {
             console.error('Error fetching insumos:', error);
@@ -67,6 +69,11 @@ const TableInsumos = () => {
     useEffect(() => {
         fetchInsumos();
     }, []);
+
+    // Filtrar insumos basados en el término de búsqueda
+    const filteredInsumos = insumos.filter(insumo =>
+        insumo.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
         <>
@@ -82,7 +89,7 @@ const TableInsumos = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody className="divide-y">
-                        {insumos.map((insumo) => (
+                        {filteredInsumos.map((insumo) => (
                             <TableRow key={insumo.id} className="bg-white dark:border-gray-700 dark:bg-gray-800">
                                 <TableCell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
                                     {insumo.nombre}
