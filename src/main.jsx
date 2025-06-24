@@ -5,7 +5,7 @@ import './index.css'
 import App from './App.jsx'
 import Login from './pages/Login/Login.jsx'
 import Loading from './pages/Common/Loading.jsx'
-import ProtectedRoute from './routes/ProtectedRoute.jsx'
+import ProtectedRoute, { ProtectedAdministrador, ProtectedSecretaria } from './routes/ProtectedRoute.jsx'
 import CrearFactura from './pages/factura/CrearFactura.jsx'
 import CancelarFactura from './pages/factura/CancelarFactura.jsx'
 import EditarFactura from './pages/factura/EditarFactura.jsx'
@@ -23,6 +23,7 @@ import FormEditarInsumo from './pages/Insumos/FormEditarInsumo.jsx'
 import ListarMovimientosStock from './pages/Movimientos_Stock/ListarMovimientos.jsx'
 import FormInsertarMov from './pages/Movimientos_Stock/FormInsertarMov.jsx'
 import FormEditMov from './pages/Movimientos_Stock/FormEditMov.jsx'
+import Autorizacion from './routes/Autorizacion.jsx'
 
 console.log("Componente HistorialFactura:", HistorialFactura);
 
@@ -35,7 +36,10 @@ const router = createBrowserRouter([
     path: '/login',
     element: <Navigate to="/" replace />,
   },
-
+  {
+    path: '/autorizacion',
+    element: <Autorizacion />,
+  },
   {
     path: '/',
     element: <ProtectedRoute />,
@@ -45,43 +49,54 @@ const router = createBrowserRouter([
         element: <App />,
       },
       {
-        path: '/factura',
-        element: <FacturacionHome />,
+        path: '/',
+        element: <ProtectedSecretaria />,
+        children: [
+          {
+            path: '/factura',
+            element: <FacturacionHome />,
+          },
+          {
+            path: '/factura/crear',
+            element: <CrearFactura />,
+          },
+          {
+            path: '/factura/editar/:id',
+            element: <EditarFactura />,
+          },
+          {
+            path: '/factura/cancelar/:id',
+            element: <CancelarFactura />, // O puedes llamarlo CancelarFactura si es más semántico
+          },
+          {
+            path: '/factura/historial',
+            element: <HistorialFactura />,
+          },
+        ]
       },
       {
-        path: '/factura/crear',
-        element: <CrearFactura />,
-      },
-      {
-        path: '/factura/editar/:id',
-        element: <EditarFactura />,
-      },
-      {
-        path: '/factura/cancelar/:id',
-        element: <CancelarFactura />, // O puedes llamarlo CancelarFactura si es más semántico
-      },
-      {
-        path: '/factura/historial',
-        element: <HistorialFactura />,
+        path: '/',
+        element: <ProtectedAdministrador />,
+        children: [
+          {
+            path: '/usuarios',
+            element: <ListarUsuarios />,
+          },
+          {
+            path: '/usuarios/nuevo',
+            element: <FormCrearUsuario />,
+          },
+          {
+            path: '/usuarios/editar/:id',
+            element: <FormEditarUsuario />,
+          },
+          {
+            path: '/usuarios/configuracion',
+            element: <ConfigUsuario />,
+          },
+        ]
       },
 
-      {
-        path: '/usuarios',
-
-        element: <ListarUsuarios />,
-      },
-      {
-        path: '/usuarios/nuevo',
-        element: <FormCrearUsuario />,
-      },
-      {
-        path: '/usuarios/editar/:id',
-        element: <FormEditarUsuario />,
-      },
-      {
-        path: '/usuarios/configuracion',
-        element: <ConfigUsuario />,
-      },
       {
         path: '/inventario',
         element: <MenuInventario />,
@@ -99,12 +114,12 @@ const router = createBrowserRouter([
         element: <FormEditarInsumo />,
       },
       {
-        path:'/inventario/movimientos_stock',
+        path: '/inventario/movimientos_stock',
         element: <ListarMovimientosStock />,
       },
       {
-        path:'/inventario/movimientos_stock/nuevo',
-        element: <FormInsertarMov/>,
+        path: '/inventario/movimientos_stock/nuevo',
+        element: <FormInsertarMov />,
       },
       {
         path: '/inventario/movimientos_stock/editar/:id',
