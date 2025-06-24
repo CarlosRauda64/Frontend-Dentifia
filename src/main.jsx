@@ -9,7 +9,7 @@ import ProtectedRoute from './routes/ProtectedRoute.jsx'
 import CrearFactura from './pages/factura/CrearFactura.jsx'
 import CancelarFactura from './pages/factura/CancelarFactura.jsx'
 import EditarFactura from './pages/factura/EditarFactura.jsx'
-import HistorialFactura from './pages/factura/HistoriaLFactura.jsx'
+import HistorialFactura from './pages/factura/HistorialFactura.jsx'
 import FacturacionHome from './pages/factura/FacturacionHome.jsx';
 import AuthProvider from './auth/AuthProvider.jsx'
 import ListarUsuarios from './pages/Usuarios/ListarUsuarios.jsx'
@@ -23,6 +23,8 @@ import FormEditarInsumo from './pages/Insumos/FormEditarInsumo.jsx'
 import ListarMovimientosStock from './pages/Movimientos_Stock/ListarMovimientos.jsx'
 import FormInsertarMov from './pages/Movimientos_Stock/FormInsertarMov.jsx'
 import FormEditMov from './pages/Movimientos_Stock/FormEditMov.jsx'
+
+console.log("Componente HistorialFactura:", HistorialFactura);
 
 const router = createBrowserRouter([
   {
