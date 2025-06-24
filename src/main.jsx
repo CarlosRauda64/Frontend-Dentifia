@@ -84,7 +84,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/inventario',
-        element: <MenuInventario/>,
+        element: <MenuInventario />,
       },
       {
         path: '/inventario/insumos',
