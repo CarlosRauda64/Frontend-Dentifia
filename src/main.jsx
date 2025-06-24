@@ -90,11 +90,11 @@ const router = createBrowserRouter([
             path: '/usuarios/editar/:id',
             element: <FormEditarUsuario />,
           },
-          {
-            path: '/usuarios/configuracion',
-            element: <ConfigUsuario />,
-          },
         ]
+      },
+      {
+        path: '/usuarios/configuracion',
+        element: <ConfigUsuario />,
       },
 
       {
