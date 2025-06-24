@@ -69,7 +69,7 @@ const Navegacion = ({ children }) => {
           </Button>
           <SidebarItems className="flex flex-col items-between justify-between h-full">
             <SidebarItemGroup>
-              <SidebarLogo href="#" img="https://tinyurl.com/y6dvz8jy" imgAlt="DentiFia Logo">
+              <SidebarLogo href="/app" img="https://tinyurl.com/y6dvz8jy" imgAlt="DentiFia Logo">
                 DentiFia
               </SidebarLogo>
               {

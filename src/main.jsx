@@ -66,7 +66,7 @@ const router = createBrowserRouter([
           },
           {
             path: '/factura/cancelar/:id',
-            element: <CancelarFactura />, // O puedes llamarlo CancelarFactura si es más semántico
+            element: <CancelarFactura />,
           },
           {
             path: '/factura/historial',
