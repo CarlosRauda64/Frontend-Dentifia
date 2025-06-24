@@ -31,7 +31,7 @@ const HistorialFactura = () => {
     setOpenModal(true);
   };
 
-const eliminarFactura = async (id) => {
+  const eliminarFactura = async (id) => {
     try {
       const response = await fetch(`${API_URL}/facturacion/eliminar/${id}/`, {
         method: "DELETE",
@@ -46,7 +46,7 @@ const eliminarFactura = async (id) => {
       }
       fetchFacturas();
     } catch (error) {
-      setError( "Error desconocido");
+      setError("Error desconocido");
     } finally {
       setOpenModal(false);
     }
@@ -105,15 +105,16 @@ const eliminarFactura = async (id) => {
                   </h2>
 
                   <div className="flex gap-2">
-                    <Button
-                      color="blue"
-                      size="xs"
-                      onClick={() =>
-                        navigate(`/factura/editar/${factura.idfactura}`)
-                      }
-                    >
-                      Editar
-                    </Button>
+
+                    {factura.estado !== "CANCELADA" && (
+                      <Button
+                        color="blue"
+                        size="xs"
+                        onClick={() => navigate(`/factura/editar/${factura.idfactura}`)}
+                      >
+                        Editar
+                      </Button>
+                    )}
 
                     {factura.estado !== "CANCELADA" && (
                       <Button
@@ -142,10 +143,10 @@ const eliminarFactura = async (id) => {
                     <strong className="text-cyan-400">Estado:</strong>{" "}
                     <span
                       className={`font-semibold ${factura.estado === "CANCELADA"
-                          ? "text-red-500"
-                          : factura.estado === "PENDIENTE"
-                            ? "text-yellow-400"
-                            : "text-green-400"
+                        ? "text-red-500"
+                        : factura.estado === "PENDIENTE"
+                          ? "text-yellow-400"
+                          : "text-green-400"
                         }`}
                     >
                       {factura.estado}
@@ -194,7 +195,7 @@ const eliminarFactura = async (id) => {
           <div className="text-center">
             <HiOutlineExclamationCircle className="mx-auto mb-4 h-14 w-14 text-gray-400 dark:text-gray-200" />
             <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-                ¿Deseas cancelar esta factura?
+              ¿Deseas cancelar esta factura?
             </h3>
             <div className="flex justify-center gap-4">
               <Button color="green" onClick={() => eliminarFactura(SelectId)}>

@@ -53,6 +53,9 @@ const EditarFactura = () => {
 
   const onSubmit = async (data) => {
     try {
+      if (!data.detalles || data.detalles.length === 0) {
+      throw new Error("Debe agregar al menos un detalle a la factura.");
+    }
       const monto_total = data.detalles.reduce((total, item) => {
         const precio = parseFloat(item.precio_unitario) || 0;
         const cantidad = parseInt(item.cantidad) || 0;
@@ -122,7 +125,6 @@ const EditarFactura = () => {
             <Select {...register("estado")} required>
               <option value="ACEPTADA">Aceptada</option>
               <option value="PENDIENTE">Pendiente</option>
-              <option value="CANCELADA">Cancelada</option>
             </Select>
           </div>
 

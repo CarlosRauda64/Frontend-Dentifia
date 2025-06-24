@@ -97,7 +97,6 @@ navigate('/factura/historial');
             <Select id="estado" {...register("estado", { required: true })}>
               <option value="ACEPTADA">Aceptada</option>
               <option value="PENDIENTE">Pendiente</option>
-              <option value="CANCELADA">Cancelada</option>
             </Select>
           </div>
 
