@@ -46,7 +46,7 @@ const HistorialFactura = () => {
       }
       fetchFacturas();
     } catch (error) {
-      setError("Error desconocido");
+      setError("Error desconocido", error.message || "Error al eliminar la factura");
     } finally {
       setOpenModal(false);
     }
