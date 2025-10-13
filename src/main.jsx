@@ -5,7 +5,7 @@ import './index.css'
 import App from './App.jsx'
 import Login from './pages/Login/Login.jsx'
 import Loading from './pages/Common/Loading.jsx'
-import ProtectedRoute, { ProtectedAdministrador, ProtectedSecretaria } from './routes/ProtectedRoute.jsx'
+import ProtectedRoute, { ProtectedAdministrador, ProtectedSecretaria, ProtectedDoctor } from './routes/ProtectedRoute.jsx'
 import CrearFactura from './pages/factura/CrearFactura.jsx'
 import CancelarFactura from './pages/factura/CancelarFactura.jsx'
 import EditarFactura from './pages/factura/EditarFactura.jsx'
@@ -24,6 +24,7 @@ import ListarMovimientosStock from './pages/Movimientos_Stock/ListarMovimientos.
 import FormInsertarMov from './pages/Movimientos_Stock/FormInsertarMov.jsx'
 import FormEditMov from './pages/Movimientos_Stock/FormEditMov.jsx'
 import Autorizacion from './routes/Autorizacion.jsx'
+import Odontrograma from './pages/Odontograma/Odontrograma.jsx'
 
 console.log("Componente HistorialFactura:", HistorialFactura);
 
@@ -89,6 +90,16 @@ const router = createBrowserRouter([
           {
             path: '/usuarios/editar/:id',
             element: <FormEditarUsuario />,
+          },
+        ]
+      },
+      {
+        path: '/',
+        element: <ProtectedDoctor />,
+        children: [
+          {
+            path: '/odontograma',
+            element: <Odontrograma />,
           },
         ]
       },
