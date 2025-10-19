@@ -57,7 +57,7 @@ const Odontrograma = () => {
     useEffect(() => {
         const inicializarDientes = () => {
             const dientesIniciales = [];
-            for (let i = 1; i <= 2; i++) {
+            for (let i = 11; i <= 19; i++) {
                 dientesIniciales.push({
                     numero: i,
                     superficies: {
@@ -87,7 +87,7 @@ const Odontrograma = () => {
     return (
         <Navegacion>
             <div className="p-4">
-                <h1 className="text-2xl font-bold mb-4">Odontograma Interactivo</h1>
+                <h1 className="text-2xl font-bold mb-4 dark:text-white">Odontograma Interactivo</h1>
                 <div className="grid grid-cols-4 gap-4">
                     {dientes.map((diente) => (
                         <Diente
