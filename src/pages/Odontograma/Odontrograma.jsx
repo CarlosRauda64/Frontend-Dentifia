@@ -53,6 +53,28 @@ const Odontrograma = () => {
         console.log(`Acción '${opcion.label}' en Diente ${numero}, Superficie: ${superficie}`);
     };
 
+    const limpiarDiente = (numero) => {
+        setDientes(prevDientes => {
+            const nuevosDientes = [...prevDientes]
+            const index = nuevosDientes.findIndex(d => d.numero === numero);
+            if (index !== -1) {
+                const dienteActual = nuevosDientes[index];
+                const nuevasSuperficies = {
+                    oclusal: '',
+                    mesial: '',
+                    distal: '',
+                    lingual: '',
+                    vestibular: ''
+                };
+                nuevosDientes[index] = {
+                    ...dienteActual,
+                    superficies: nuevasSuperficies
+                };
+            }
+            return nuevosDientes;
+        });
+    }
+
 
     useEffect(() => {
         const inicializarDientes = () => {
@@ -95,6 +117,7 @@ const Odontrograma = () => {
                             numero={diente.numero}
                             superficies={diente.superficies}
                             onCaraClick={handleCaraClick}
+                            limpiarDiente={limpiarDiente}
                         />
                     ))}
                 </div>
