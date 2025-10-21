@@ -171,7 +171,7 @@ const Diente = ({ numero, superficies, onCaraClick, limpiarDiente, size = 64 }) 
     }
 
     return (
-        <div className="border border-gray-400 rounded p-1 m-1 text-center flex flex-col items-center gap-1">
+        <div className="border border-gray-400 rounded p-1 m-1 text-center flex flex-col items-center gap-1 bg-gray-50 dark:bg-gray-800 shadow-md">
             <svg viewBox="0 0 100 100" width={size} height={size} className="m-1">
                 {/* Vestibular (parte superior) */}
                 <polygon

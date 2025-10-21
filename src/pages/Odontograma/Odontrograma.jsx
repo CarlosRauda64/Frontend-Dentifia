@@ -80,13 +80,13 @@ const Odontrograma = () => {
     // Distribución por filas (izquierda→derecha), con separación en la línea media
     const LAYOUT = [
         // Superior permanente
-        { left: [18,17,16,15,14,13,12,11], right: [21,22,23,24,25,26,27,28] },
+        { left: [18, 17, 16, 15, 14, 13, 12, 11], right: [21, 22, 23, 24, 25, 26, 27, 28] },
         // Superior temporal
-        { left: [55,54,53,52,51],          right: [61,62,63,64,65] },
+        { left: [55, 54, 53, 52, 51], right: [61, 62, 63, 64, 65] },
         // Inferior temporal
-        { left: [85,84,83,82,81],          right: [71,72,73,74,75] },
+        { left: [85, 84, 83, 82, 81], right: [71, 72, 73, 74, 75] },
         // Inferior permanente
-        { left: [48,47,46,45,44,43,42,41], right: [31,32,33,34,35,36,37,38] },
+        { left: [48, 47, 46, 45, 44, 43, 42, 41], right: [31, 32, 33, 34, 35, 36, 37, 38] },
     ];
 
     // Inicializa TODAS las piezas del layout
@@ -114,50 +114,34 @@ const Odontrograma = () => {
         };
     }, [menuState.visible]);
 
-    // Tamaño de diente responsive
-    const [toothSize, setToothSize] = useState(48);
-    useEffect(() => {
-        if (!contenedorRef.current) return;
-        const observer = new ResizeObserver(([entry]) => {
-            const width = entry.contentRect.width;
-            let size = 60;
-            if (width < 420) size = 32;
-            else if (width < 520) size = 36;
-            else if (width < 680) size = 40;
-            else if (width < 860) size = 48;
-            else if (width < 1040) size = 56;
-            setToothSize(size);
-        });
-        observer.observe(contenedorRef.current);
-        return () => observer.disconnect();
-    }, []);
-
     return (
         <Navegacion>
             <div className="p-4">
                 <h1 className="text-2xl font-bold mb-4 dark:text-white">Odontograma Interactivo</h1>
-
                 {/* Filas del odontograma con separación en línea media */}
                 <div className="space-y-4">
                     {LAYOUT.map((row, idx) => (
-                        <div key={idx} className="flex items-end justify-center gap-2">
-                            {row.left.map((num) => {
-                                const d = dientes.find(x => x.numero === num);
-                                return (
-                                    <Diente
-                                        key={num}
-                                        numero={num}
-                                        superficies={d?.superficies}
-                                        onCaraClick={handleCaraClick}
-                                        limpiarDiente={limpiarDiente}
-                                        size={48}
-                                    />
-                                );
-                            })}
+                        <div key={idx} className="flex border border-gray-800 justify-center items-center px-4">
+                            <div className="flex flex-wrap justify-center items-center">
+                                {row.left.map((num) => {
+                                    const d = dientes.find(x => x.numero === num);
+                                    return (
+                                        <Diente
+                                            key={num}
+                                            numero={num}
+                                            superficies={d?.superficies}
+                                            onCaraClick={handleCaraClick}
+                                            limpiarDiente={limpiarDiente}
+                                            size={48}
+                                        />
+                                    );
+                                })}
+                            </div>
 
                             {/* Espaciador para la línea media */}
-                            <div className="w-6 sm:w-10" />
+                            <div className="w-6 sm:w-10 flex-none" />
 
+                            <div className="flex flex-wrap justify-center items-center">
                             {row.right.map((num) => {
                                 const d = dientes.find(x => x.numero === num);
                                 return (
@@ -171,6 +155,7 @@ const Odontrograma = () => {
                                     />
                                 );
                             })}
+                            </div>
                         </div>
                     ))}
                 </div>

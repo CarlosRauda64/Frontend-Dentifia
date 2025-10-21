@@ -122,7 +122,7 @@ const Navegacion = ({ children }) => {
           </SidebarItems>
         </Sidebar>
         <div className={`${visible ? "hidden" : "sm:hidden"} bg-black opacity-[50%] w-full h-full fixed z-1`} onClick={() => toggleVisible()}></div>
-        <div className="shrink w-full max-sm:absolute max-sm:inset-0 max-sm:h-screen dark:bg-gray-900 bg-gray-100">
+        <div className="shrink w-full max-sm:absolute max-sm:min-h-screen dark:bg-gray-900 bg-gray-100">
           {children}
         </div>
       </div>
