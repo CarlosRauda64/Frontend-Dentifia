@@ -115,7 +115,7 @@ const Odontrograma = () => {
     }, [menuState.visible]);
 
     return (
-        <Navegacion>
+        
             <div className="p-4">
                 <h1 className="text-2xl font-bold mb-4 dark:text-white">Odontograma Interactivo</h1>
                 {/* Filas del odontograma con separación en línea media */}
@@ -132,7 +132,7 @@ const Odontrograma = () => {
                                             superficies={d?.superficies}
                                             onCaraClick={handleCaraClick}
                                             limpiarDiente={limpiarDiente}
-                                            size={48}
+                                            size={40}
                                         />
                                     );
                                 })}
@@ -151,7 +151,7 @@ const Odontrograma = () => {
                                         superficies={d?.superficies}
                                         onCaraClick={handleCaraClick}
                                         limpiarDiente={limpiarDiente}
-                                        size={48}
+                                        size={40}
                                     />
                                 );
                             })}
@@ -168,7 +168,7 @@ const Odontrograma = () => {
                     />
                 )}
             </div>
-        </Navegacion>
+       
     )
 
 }

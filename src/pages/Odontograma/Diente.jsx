@@ -1,7 +1,7 @@
 import React from 'react'
 import { Dropdown, DropdownItem } from "flowbite-react";
 
-const Diente = ({ numero, superficies, onCaraClick, limpiarDiente, size = 64 }) => {
+const Diente = ({ numero, superficies, onCaraClick, limpiarDiente, size }) => {
 
     const [disabled, setDisabled] = React.useState(false);
     const [estado, setEstado] = React.useState('Normal');

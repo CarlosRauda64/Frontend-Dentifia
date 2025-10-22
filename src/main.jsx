@@ -24,7 +24,7 @@ import ListarMovimientosStock from './pages/Movimientos_Stock/ListarMovimientos.
 import FormInsertarMov from './pages/Movimientos_Stock/FormInsertarMov.jsx'
 import FormEditMov from './pages/Movimientos_Stock/FormEditMov.jsx'
 import Autorizacion from './routes/Autorizacion.jsx'
-import Odontrograma from './pages/Odontograma/Odontrograma.jsx'
+import DatosPaciente from './pages/Paciente_Datos/DatosPaciente.jsx'
 
 console.log("Componente HistorialFactura:", HistorialFactura);
 
@@ -98,8 +98,8 @@ const router = createBrowserRouter([
         element: <ProtectedDoctor />,
         children: [
           {
-            path: '/odontograma',
-            element: <Odontrograma />,
+            path: '/datos_paciente',
+            element: <DatosPaciente />,
           },
         ]
       },
