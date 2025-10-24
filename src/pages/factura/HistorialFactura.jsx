@@ -132,6 +132,12 @@ const HistorialFactura = () => {
 
                 <div className="text-sm space-y-1">
                   <p>
+                    <strong>Paciente:</strong>{" "}
+                    <span className={factura.paciente_nombre ? "text-blue-600 dark:text-blue-400" : "text-gray-500"}>
+                      {factura.paciente_nombre || 'Sin asignar'}
+                    </span>
+                  </p>
+                  <p>
                     <strong>Fecha:</strong>{" "}
                     {factura.fecha_emision}
                   </p>
