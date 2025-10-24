@@ -57,6 +57,7 @@ const TablePacientes = ({ searchTerm }) => {
                 throw new Error('Error al obtener los pacientes');
             }
             const data = await response.json();
+            console.log('Datos de pacientes recibidos:', data.results || data); // Debug
             setPacientes(data.results || data); // Manejar paginación si existe
         }
         catch (error) {
@@ -80,18 +81,6 @@ const TablePacientes = ({ searchTerm }) => {
         );
     });
 
-    // Función para calcular la edad
-    const calcularEdad = (fechaNacimiento) => {
-        if (!fechaNacimiento) return '-';
-        const hoy = new Date();
-        const nacimiento = new Date(fechaNacimiento);
-        let edad = hoy.getFullYear() - nacimiento.getFullYear();
-        const mes = hoy.getMonth() - nacimiento.getMonth();
-        if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-            edad--;
-        }
-        return edad;
-    };
 
     return (
         <>
@@ -115,7 +104,7 @@ const TablePacientes = ({ searchTerm }) => {
                                 </TableCell>
                                 <TableCell className="max-sm:hidden">{paciente.dui || '-'}</TableCell>
                                 <TableCell>{paciente.telefono}</TableCell>
-                                <TableCell className="max-lg:hidden">{calcularEdad(paciente.fecha_nacimiento)} años</TableCell>
+                                <TableCell className="max-lg:hidden">{paciente.edad ? `${paciente.edad} años` : '-'}</TableCell>
                                 <TableCell>
                                     <HiOutlinePencilAlt href="#" size={25} className="cursor-pointer text-gray-500 hover:text-gray-700 mx-auto"
                                         onClick={() => navigate(`/pacientes/editar/${paciente.id}`)}
