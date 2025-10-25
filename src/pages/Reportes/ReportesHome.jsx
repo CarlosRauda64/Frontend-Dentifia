@@ -24,10 +24,104 @@ const ReportesHome = () => {
   // Estados para filtros
   const [pacientes, setPacientes] = useState([]);
   const [selectedPacienteId, setSelectedPacienteId] = useState('');
+  
+  // Filtros específicos por reporte
+  // Pacientes
+  const [filterSexo, setFilterSexo] = useState('');
+  const [filterRangoEdad, setFilterRangoEdad] = useState('');
+  const [filterBusquedaNombre, setFilterBusquedaNombre] = useState('');
+  
+  // Facturación
+  const [filterEstadoFactura, setFilterEstadoFactura] = useState('');
+  const [filterMetodoPago, setFilterMetodoPago] = useState('');
+  const [filterMontoMinimo, setFilterMontoMinimo] = useState('');
+  const [filterMontoMaximo, setFilterMontoMaximo] = useState('');
+  const [filterPacienteFactura, setFilterPacienteFactura] = useState('');
+  
+  // Stock
+  const [filterStockBajo, setFilterStockBajo] = useState(false);
+  const [filterBusquedaInsumo, setFilterBusquedaInsumo] = useState('');
+  
+  // Movimientos
+  const [filterTipoMovimiento, setFilterTipoMovimiento] = useState('');
+  const [filterEstadoMovimiento, setFilterEstadoMovimiento] = useState('');
+  const [filterUsuarioMovimiento, setFilterUsuarioMovimiento] = useState('');
+  const [filterBusquedaInsumoMov, setFilterBusquedaInsumoMov] = useState('');
 
   // Determinar qué filtros mostrar según el tipo de reporte
   const showDateFilters = selectedReportType && selectedReportType !== ReportType.STOCK_INSUMOS;
   const showPacienteFilter = selectedReportType === ReportType.HISTORIAL_CLINICO;
+
+  // Función para generar reporte
+  const handleGenerateReport = useCallback(async () => {
+    if (!selectedReportType) return;
+    
+    setError(null);
+    setIsLoading(true);
+    
+    try {
+      const effectiveFromDate = showDateFilters ? fromDate : '1970-01-01';
+      const effectiveToDate = showDateFilters ? toDate : new Date().toISOString().split('T')[0];
+
+      // Preparar filtros según el tipo de reporte
+      let filters = {};
+      
+      if (selectedReportType === ReportType.PACIENTES) {
+        filters = {
+          sexo: filterSexo,
+          rangoEdad: filterRangoEdad,
+          busquedaNombre: filterBusquedaNombre
+        };
+      } else if (selectedReportType === ReportType.FACTURACION) {
+        filters = {
+          estadoFactura: filterEstadoFactura,
+          metodoPago: filterMetodoPago,
+          montoMinimo: filterMontoMinimo,
+          montoMaximo: filterMontoMaximo,
+          pacienteId: filterPacienteFactura
+        };
+      } else if (selectedReportType === ReportType.STOCK_INSUMOS) {
+        filters = {
+          stockBajo: filterStockBajo,
+          busquedaInsumo: filterBusquedaInsumo
+        };
+      } else if (selectedReportType === ReportType.MOVIMIENTOS_INVENTARIO) {
+        filters = {
+          tipoMovimiento: filterTipoMovimiento,
+          estadoMovimiento: filterEstadoMovimiento,
+          usuarioMovimiento: filterUsuarioMovimiento,
+          busquedaInsumo: filterBusquedaInsumoMov
+        };
+      }
+
+      const accessToken = auth.getAccessToken();
+      const data = await generateReport(
+        selectedReportType,
+        effectiveFromDate,
+        effectiveToDate,
+        filters,
+        accessToken
+      );
+      
+      setReportData(data);
+    } catch (err) {
+      console.error("Error generando reporte:", err);
+      setError(err.message || "Ocurrió un error al generar el reporte. Intente nuevamente.");
+      setReportData(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [
+    selectedReportType, fromDate, toDate, selectedPacienteId, showDateFilters, showPacienteFilter, auth,
+    // Filtros de pacientes
+    filterSexo, filterRangoEdad, filterBusquedaNombre,
+    // Filtros de facturación
+    filterEstadoFactura, filterMetodoPago, filterMontoMinimo, filterMontoMaximo, filterPacienteFactura,
+    // Filtros de stock
+    filterStockBajo, filterBusquedaInsumo,
+    // Filtros de movimientos
+    filterTipoMovimiento, filterEstadoMovimiento, filterUsuarioMovimiento, filterBusquedaInsumoMov
+  ]);
 
   // Cargar pacientes al montar el componente
   useEffect(() => {
@@ -43,35 +137,26 @@ const ReportesHome = () => {
     loadPacientes();
   }, [auth]);
 
-  // Función para generar reporte
-  const handleGenerateReport = useCallback(async () => {
-    if (!selectedReportType) return;
-    
-    setError(null);
-    setIsLoading(true);
-    
-    try {
-      const effectiveFromDate = showDateFilters ? fromDate : '1970-01-01';
-      const effectiveToDate = showDateFilters ? toDate : new Date().toISOString().split('T')[0];
-
-      const accessToken = auth.getAccessToken();
-      const data = await generateReport(
-        selectedReportType,
-        effectiveFromDate,
-        effectiveToDate,
-        showPacienteFilter ? selectedPacienteId : undefined,
-        accessToken
-      );
+  // Regenerar reporte automáticamente al cambiar filtros (solo para búsquedas de texto)
+  useEffect(() => {
+    if (reportData && selectedReportType) {
+      // Solo regenerar automáticamente para campos de búsqueda de texto
+      const textSearchFields = [filterBusquedaNombre, filterBusquedaInsumo, filterBusquedaInsumoMov, filterUsuarioMovimiento];
+      const hasTextSearch = textSearchFields.some(field => field && field.trim() !== '');
       
-      setReportData(data);
-    } catch (err) {
-      console.error("Error generando reporte:", err);
-      setError(err.message || "Ocurrió un error al generar el reporte. Intente nuevamente.");
-      setReportData(null);
-    } finally {
-      setIsLoading(false);
+      if (hasTextSearch) {
+        const timer = setTimeout(() => {
+          handleGenerateReport();
+        }, 300); // Debounce para búsquedas de texto
+        return () => clearTimeout(timer);
+      }
     }
-  }, [selectedReportType, fromDate, toDate, selectedPacienteId, showDateFilters, showPacienteFilter, auth]);
+  }, [
+    // Solo filtros de búsqueda de texto
+    filterBusquedaNombre, filterBusquedaInsumo, filterBusquedaInsumoMov, filterUsuarioMovimiento,
+    // Dependencias de la función (sin reportData para evitar bucle)
+    handleGenerateReport, selectedReportType
+  ]);
 
   // Función para descargar PDF
   const handleDownloadPDF = () => {
@@ -156,7 +241,8 @@ const ReportesHome = () => {
         {selectedReportType && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
             <h3 className="text-lg font-semibold mb-4 dark:text-gray-200">Filtros</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {/* Filtros de fechas (para reportes que los necesiten) */}
               {showDateFilters && (
                 <>
                   <div>
@@ -179,6 +265,8 @@ const ReportesHome = () => {
                   </div>
                 </>
               )}
+              
+              {/* Filtro de paciente para historial clínico */}
               {showPacienteFilter && (
                 <div>
                   <label className="block text-sm font-medium mb-2 dark:text-gray-300">Paciente</label>
@@ -194,6 +282,184 @@ const ReportesHome = () => {
                     ))}
                   </Select>
                 </div>
+              )}
+
+              {/* Filtros específicos para Listado de Pacientes */}
+              {selectedReportType === ReportType.PACIENTES && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Buscar por nombre</label>
+                    <TextInput
+                      placeholder="Nombre o apellido..."
+                      value={filterBusquedaNombre}
+                      onChange={(e) => setFilterBusquedaNombre(e.target.value)}
+                      icon={HiSearch}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Sexo</label>
+                    <Select
+                      value={filterSexo}
+                      onChange={(e) => setFilterSexo(e.target.value)}
+                    >
+                      <option value="">Todos los sexos</option>
+                      <option value="M">Masculino</option>
+                      <option value="F">Femenino</option>
+                      <option value="X">Otro</option>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Rango de edad</label>
+                    <Select
+                      value={filterRangoEdad}
+                      onChange={(e) => setFilterRangoEdad(e.target.value)}
+                    >
+                      <option value="">Todas las edades</option>
+                      <option value="0-18">0-18 años</option>
+                      <option value="19-35">19-35 años</option>
+                      <option value="36-50">36-50 años</option>
+                      <option value="51-65">51-65 años</option>
+                      <option value="65+">65+ años</option>
+                    </Select>
+                  </div>
+                </>
+              )}
+
+              {/* Filtros específicos para Reporte de Facturación */}
+              {selectedReportType === ReportType.FACTURACION && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Estado</label>
+                    <Select
+                      value={filterEstadoFactura}
+                      onChange={(e) => setFilterEstadoFactura(e.target.value)}
+                    >
+                      <option value="">Todos los estados</option>
+                      <option value="PAGADA">Pagada</option>
+                      <option value="PENDIENTE">Pendiente</option>
+                      <option value="CANCELADA">Cancelada</option>
+                      <option value="ACEPTADA">Aceptada</option>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Método de pago</label>
+                    <Select
+                      value={filterMetodoPago}
+                      onChange={(e) => setFilterMetodoPago(e.target.value)}
+                    >
+                      <option value="">Todos los métodos</option>
+                      <option value="Efectivo">Efectivo</option>
+                      <option value="Tarjeta">Tarjeta</option>
+                      <option value="Transferencia">Transferencia</option>
+                      <option value="Cheque">Cheque</option>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Monto mínimo</label>
+                    <TextInput
+                      type="number"
+                      placeholder="0.00"
+                      value={filterMontoMinimo}
+                      onChange={(e) => setFilterMontoMinimo(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Monto máximo</label>
+                    <TextInput
+                      type="number"
+                      placeholder="999999.99"
+                      value={filterMontoMaximo}
+                      onChange={(e) => setFilterMontoMaximo(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Paciente</label>
+                    <Select
+                      value={filterPacienteFactura}
+                      onChange={(e) => setFilterPacienteFactura(e.target.value)}
+                    >
+                      <option value="">Todos los pacientes</option>
+                      {pacientes.map(paciente => (
+                        <option key={paciente.id} value={paciente.id}>
+                          {paciente.nombre}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                </>
+              )}
+
+              {/* Filtros específicos para Stock de Insumos */}
+              {selectedReportType === ReportType.STOCK_INSUMOS && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Buscar insumo</label>
+                    <TextInput
+                      placeholder="Nombre o descripción..."
+                      value={filterBusquedaInsumo}
+                      onChange={(e) => setFilterBusquedaInsumo(e.target.value)}
+                      icon={HiSearch}
+                    />
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="stockBajo"
+                      checked={filterStockBajo}
+                      onChange={(e) => setFilterStockBajo(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="stockBajo" className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                      Solo stock bajo (&lt; 10)
+                    </label>
+                  </div>
+                </>
+              )}
+
+              {/* Filtros específicos para Movimientos de Inventario */}
+              {selectedReportType === ReportType.MOVIMIENTOS_INVENTARIO && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Tipo de movimiento</label>
+                    <Select
+                      value={filterTipoMovimiento}
+                      onChange={(e) => setFilterTipoMovimiento(e.target.value)}
+                    >
+                      <option value="">Todos los tipos</option>
+                      <option value="entrada">Entrada</option>
+                      <option value="salida">Salida</option>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Estado</label>
+                    <Select
+                      value={filterEstadoMovimiento}
+                      onChange={(e) => setFilterEstadoMovimiento(e.target.value)}
+                    >
+                      <option value="">Todos los estados</option>
+                      <option value="realizado">Realizado</option>
+                      <option value="cancelado">Cancelado</option>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Usuario</label>
+                    <TextInput
+                      placeholder="Nombre de usuario..."
+                      value={filterUsuarioMovimiento}
+                      onChange={(e) => setFilterUsuarioMovimiento(e.target.value)}
+                      icon={HiSearch}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Buscar insumo</label>
+                    <TextInput
+                      placeholder="Nombre del insumo..."
+                      value={filterBusquedaInsumoMov}
+                      onChange={(e) => setFilterBusquedaInsumoMov(e.target.value)}
+                      icon={HiSearch}
+                    />
+                  </div>
+                </>
               )}
             </div>
           </div>

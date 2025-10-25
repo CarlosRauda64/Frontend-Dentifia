@@ -67,7 +67,7 @@ const formatCurrency = (amount) => {
 };
 
 // Función principal para generar reportes
-export const generateReport = async (reportType, desde, hasta, pacienteId = null, accessToken = null) => {
+export const generateReport = async (reportType, desde, hasta, filters = {}, accessToken = null) => {
   const reportId = `REP-${Date.now()}`;
   const fecha_generacion = new Date().toISOString();
 
@@ -77,22 +77,67 @@ export const generateReport = async (reportType, desde, hasta, pacienteId = null
         return await generateCitasReport(reportId, fecha_generacion, desde, hasta);
       
       case ReportType.PACIENTES:
-        return await generatePacientesReport(reportId, fecha_generacion, desde, hasta, accessToken);
+        return await generatePacientesReport(
+          reportId, 
+          fecha_generacion, 
+          desde, 
+          hasta, 
+          filters.sexo, 
+          filters.rangoEdad, 
+          filters.busquedaNombre,
+          accessToken
+        );
       
       case ReportType.HISTORIAL_CLINICO:
-        return await generateHistorialClinicoReport(reportId, fecha_generacion, desde, hasta, pacienteId, accessToken);
+        return await generateHistorialClinicoReport(
+          reportId, 
+          fecha_generacion, 
+          desde, 
+          hasta, 
+          filters.pacienteId || null, 
+          accessToken
+        );
       
       case ReportType.FACTURACION:
-        return await generateFacturacionReport(reportId, fecha_generacion, desde, hasta, accessToken);
+        return await generateFacturacionReport(
+          reportId, 
+          fecha_generacion, 
+          desde, 
+          hasta, 
+          filters.estadoFactura,
+          filters.metodoPago,
+          filters.montoMinimo,
+          filters.montoMaximo,
+          filters.pacienteId,
+          accessToken
+        );
       
       case ReportType.ENCUESTAS_SATISFACCION:
         return await generateEncuestasReport(reportId, fecha_generacion, desde, hasta);
       
       case ReportType.STOCK_INSUMOS:
-        return await generateStockReport(reportId, fecha_generacion, desde, hasta, accessToken);
+        return await generateStockReport(
+          reportId, 
+          fecha_generacion, 
+          desde, 
+          hasta, 
+          filters.stockBajo,
+          filters.busquedaInsumo,
+          accessToken
+        );
       
       case ReportType.MOVIMIENTOS_INVENTARIO:
-        return await generateMovimientosReport(reportId, fecha_generacion, desde, hasta, accessToken);
+        return await generateMovimientosReport(
+          reportId, 
+          fecha_generacion, 
+          desde, 
+          hasta, 
+          filters.tipoMovimiento,
+          filters.estadoMovimiento,
+          filters.usuarioMovimiento,
+          filters.busquedaInsumo,
+          accessToken
+        );
       
       default:
         throw new Error(`Tipo de reporte no implementado: ${reportType}`);
@@ -132,7 +177,7 @@ const generateCitasReport = async (reportId, fecha_generacion, desde, hasta) => 
 };
 
 // Reporte de Pacientes (Real - Backend)
-const generatePacientesReport = async (reportId, fecha_generacion, desde, hasta, accessToken) => {
+const generatePacientesReport = async (reportId, fecha_generacion, desde, hasta, sexo, rangoEdad, busquedaNombre, accessToken) => {
   try {
     const response = await fetch(`${API_URL}/pacientes/`, {
       method: 'GET',
@@ -149,9 +194,45 @@ const generatePacientesReport = async (reportId, fecha_generacion, desde, hasta,
     const data = await response.json();
     const pacientes = data.results || data;
     
-    const pacientesFiltrados = pacientes.filter(p => 
+    // Aplicar filtros
+    let pacientesFiltrados = pacientes.filter(p => 
       isInDateRange(p.created_at?.split('T')[0], desde, hasta)
     );
+
+    // Filtro por sexo
+    if (sexo) {
+      pacientesFiltrados = pacientesFiltrados.filter(p => p.sexo === sexo);
+    }
+
+    // Filtro por rango de edad
+    if (rangoEdad) {
+      pacientesFiltrados = pacientesFiltrados.filter(p => {
+        const edad = p.edad || calcularEdad(p.fecha_nacimiento);
+        switch (rangoEdad) {
+          case '0-18':
+            return edad >= 0 && edad <= 18;
+          case '19-35':
+            return edad >= 19 && edad <= 35;
+          case '36-50':
+            return edad >= 36 && edad <= 50;
+          case '51-65':
+            return edad >= 51 && edad <= 65;
+          case '65+':
+            return edad >= 65;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Filtro por búsqueda de nombre
+    if (busquedaNombre) {
+      const busqueda = busquedaNombre.toLowerCase();
+      pacientesFiltrados = pacientesFiltrados.filter(p => {
+        const nombreCompleto = `${p.nombres} ${p.apellidos}`.toLowerCase();
+        return nombreCompleto.includes(busqueda);
+      });
+    }
 
     return {
       id: reportId,
@@ -177,6 +258,19 @@ const generatePacientesReport = async (reportId, fecha_generacion, desde, hasta,
     console.error('Error obteniendo pacientes:', error);
     throw new Error('Error al obtener datos de pacientes');
   }
+};
+
+// Función auxiliar para calcular edad
+const calcularEdad = (fechaNacimiento) => {
+  if (!fechaNacimiento) return 0;
+  const hoy = new Date();
+  const nacimiento = new Date(fechaNacimiento);
+  let edad = hoy.getFullYear() - nacimiento.getFullYear();
+  const mes = hoy.getMonth() - nacimiento.getMonth();
+  if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+    edad--;
+  }
+  return edad;
 };
 
 // Reporte de Historial Clínico (Real - Backend)
@@ -235,7 +329,7 @@ const generateHistorialClinicoReport = async (reportId, fecha_generacion, desde,
 };
 
 // Reporte de Facturación (Real - Backend)
-const generateFacturacionReport = async (reportId, fecha_generacion, desde, hasta, accessToken) => {
+const generateFacturacionReport = async (reportId, fecha_generacion, desde, hasta, estadoFactura, metodoPago, montoMinimo, montoMaximo, pacienteId, accessToken) => {
   try {
     const response = await fetch(`${API_URL}/facturacion/facturas/`, {
       method: 'GET',
@@ -252,9 +346,33 @@ const generateFacturacionReport = async (reportId, fecha_generacion, desde, hast
     const data = await response.json();
     const facturas = Array.isArray(data) ? data : (data.results || []);
     
-    const facturasFiltradas = facturas.filter(f => 
+    // Aplicar filtros
+    let facturasFiltradas = facturas.filter(f => 
       isInDateRange(f.fecha_emision, desde, hasta)
     );
+
+    // Filtro por estado
+    if (estadoFactura) {
+      facturasFiltradas = facturasFiltradas.filter(f => f.estado === estadoFactura);
+    }
+
+    // Filtro por método de pago
+    if (metodoPago) {
+      facturasFiltradas = facturasFiltradas.filter(f => f.metodo_pago === metodoPago);
+    }
+
+    // Filtro por rango de monto
+    if (montoMinimo) {
+      facturasFiltradas = facturasFiltradas.filter(f => parseFloat(f.monto_total) >= parseFloat(montoMinimo));
+    }
+    if (montoMaximo) {
+      facturasFiltradas = facturasFiltradas.filter(f => parseFloat(f.monto_total) <= parseFloat(montoMaximo));
+    }
+
+    // Filtro por paciente
+    if (pacienteId) {
+      facturasFiltradas = facturasFiltradas.filter(f => f.paciente == pacienteId);
+    }
 
     const facturacionRows = [];
     facturasFiltradas.forEach(factura => {
@@ -327,7 +445,7 @@ const generateEncuestasReport = async (reportId, fecha_generacion, desde, hasta)
 };
 
 // Reporte de Stock de Insumos (Real - Backend)
-const generateStockReport = async (reportId, fecha_generacion, desde, hasta, accessToken) => {
+const generateStockReport = async (reportId, fecha_generacion, desde, hasta, stockBajo, busquedaInsumo, accessToken) => {
   try {
     const response = await fetch(`${API_URL}/inventario/insumos/`, {
       method: 'GET',
@@ -344,8 +462,22 @@ const generateStockReport = async (reportId, fecha_generacion, desde, hasta, acc
     const data = await response.json();
     const insumos = Array.isArray(data) ? data : (data.results || []);
     
-    // El stock de insumos no se filtra por fechas, es el estado actual
-    const insumosActivos = insumos.filter(i => i.activo);
+    // Aplicar filtros
+    let insumosActivos = insumos.filter(i => i.activo);
+
+    // Filtro por stock bajo
+    if (stockBajo) {
+      insumosActivos = insumosActivos.filter(i => (i.stock_actual || 0) < 10);
+    }
+
+    // Filtro por búsqueda de insumo
+    if (busquedaInsumo) {
+      const busqueda = busquedaInsumo.toLowerCase();
+      insumosActivos = insumosActivos.filter(i => 
+        i.nombre.toLowerCase().includes(busqueda) || 
+        i.descripcion.toLowerCase().includes(busqueda)
+      );
+    }
 
     return {
       id: reportId,
@@ -369,7 +501,7 @@ const generateStockReport = async (reportId, fecha_generacion, desde, hasta, acc
 };
 
 // Reporte de Movimientos de Inventario (Real - Backend)
-const generateMovimientosReport = async (reportId, fecha_generacion, desde, hasta, accessToken) => {
+const generateMovimientosReport = async (reportId, fecha_generacion, desde, hasta, tipoMovimiento, estadoMovimiento, usuarioMovimiento, busquedaInsumo, accessToken) => {
   try {
     const response = await fetch(`${API_URL}/inventario/movimientos_stock/`, {
       method: 'GET',
@@ -386,9 +518,37 @@ const generateMovimientosReport = async (reportId, fecha_generacion, desde, hast
     const data = await response.json();
     const movimientos = data.results || data;
     
-    const movimientosFiltrados = movimientos.filter(m => 
+    // Aplicar filtros
+    let movimientosFiltrados = movimientos.filter(m => 
       isInDateRange(m.fecha, desde, hasta)
     );
+
+    // Filtro por tipo de movimiento
+    if (tipoMovimiento) {
+      movimientosFiltrados = movimientosFiltrados.filter(m => m.tipo === tipoMovimiento);
+    }
+
+    // Filtro por estado del movimiento
+    if (estadoMovimiento) {
+      const esRealizado = estadoMovimiento === 'realizado';
+      movimientosFiltrados = movimientosFiltrados.filter(m => m.activo === esRealizado);
+    }
+
+    // Filtro por usuario
+    if (usuarioMovimiento) {
+      const busqueda = usuarioMovimiento.toLowerCase();
+      movimientosFiltrados = movimientosFiltrados.filter(m => 
+        (m.nombre_usuario || '').toLowerCase().includes(busqueda)
+      );
+    }
+
+    // Filtro por búsqueda de insumo
+    if (busquedaInsumo) {
+      const busqueda = busquedaInsumo.toLowerCase();
+      movimientosFiltrados = movimientosFiltrados.filter(m => 
+        (m.insumo_data?.nombre || '').toLowerCase().includes(busqueda)
+      );
+    }
 
     const totalEntradas = movimientosFiltrados
       .filter(m => m.tipo === 'entrada')
