@@ -1,134 +1,172 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { TextInput, Button } from 'flowbite-react';
 import { HiUser, HiX } from 'react-icons/hi';
 import { API_URL } from '../../api/api';
 import { useAuth } from '../../auth/useAuth';
 
 const BuscarPacienteInput = ({ onPacienteSelected, pacienteSeleccionado }) => {
-  const [inputValue, setInputValue] = useState('');
-  const [pacientes, setPacientes] = useState([]);
-  const [isOpen, setIsOpen] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const inputRef = useRef(null);
   const auth = useAuth();
 
-  // Cuando se selecciona un paciente, mostrar su nombre
+  // Inicializar con paciente seleccionado
   useEffect(() => {
     if (pacienteSeleccionado) {
-      setInputValue(pacienteSeleccionado.nombre_completo);
-      setIsOpen(false);
+      setSearchTerm(pacienteSeleccionado.nombre_completo);
+      setShowSuggestions(false);
     } else {
-      setInputValue('');
+      setSearchTerm('');
     }
   }, [pacienteSeleccionado]);
 
-  // Buscar pacientes cuando el usuario escribe
+  // Búsqueda con debounce desde el primer carácter
   useEffect(() => {
-    if (inputValue.length === 0) {
-      setPacientes([]);
-      setIsOpen(false);
+    if (searchTerm.length === 0) {
+      setSuggestions([]);
+      setShowSuggestions(false);
       return;
     }
 
-    const timeoutId = setTimeout(async () => {
+    const searchPacientes = async () => {
+      setLoading(true);
       try {
         const response = await fetch(
-          `${API_URL}/pacientes/busqueda_rapida/?q=${encodeURIComponent(inputValue)}`,
+          `${API_URL}/pacientes/busqueda_rapida/?q=${encodeURIComponent(searchTerm)}`,
           {
             headers: {
               'Authorization': `Bearer ${auth.getAccessToken()}`
             }
           }
         );
-
+        
         if (response.ok) {
           const data = await response.json();
-          setPacientes(data);
-          // Solo mostrar resultados si el input está enfocado
-          setIsOpen(data.length > 0 && isFocused);
+          setSuggestions(data);
+          setShowSuggestions(data.length > 0);
+        } else {
+          setSuggestions([]);
+          setShowSuggestions(false);
         }
       } catch (error) {
-        console.error('Error:', error);
-        setPacientes([]);
-        setIsOpen(false);
+        console.error('Error al buscar pacientes:', error);
+        setSuggestions([]);
+        setShowSuggestions(false);
+      } finally {
+        setLoading(false);
       }
-    }, 300);
+    };
 
-    return () => clearTimeout(timeoutId);
-  }, [inputValue, auth, isFocused]);
+    // Debounce de 200ms para búsqueda más ágil
+    const timer = setTimeout(searchPacientes, 200);
+    return () => clearTimeout(timer);
+  }, [searchTerm, auth]);
 
   const handleInputChange = (e) => {
     const value = e.target.value;
-    setInputValue(value);
+    setSearchTerm(value);
     
-    // Si el usuario borra o cambia el texto, deseleccionar paciente
+    // Si hay paciente seleccionado y el usuario empieza a escribir diferente, deseleccionar
     if (pacienteSeleccionado && value !== pacienteSeleccionado.nombre_completo) {
       onPacienteSelected(null);
     }
   };
 
-  const handleSelectPaciente = (paciente) => {
+  const handleSuggestionClick = (paciente) => {
     onPacienteSelected(paciente);
-    setInputValue(paciente.nombre_completo);
-    setIsOpen(false);
+    setSearchTerm(paciente.nombre_completo);
+    setShowSuggestions(false);
+    // Mantener el foco en el input
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   const handleClear = () => {
     onPacienteSelected(null);
-    setInputValue('');
-    setIsOpen(false);
-  };
-
-  const handleFocus = () => {
-    setIsFocused(true);
-    // Si hay pacientes cargados, mostrar la lista
-    if (pacientes.length > 0) {
-      setIsOpen(true);
+    setSearchTerm('');
+    setSuggestions([]);
+    setShowSuggestions(false);
+    // Mantener el foco en el input
+    if (inputRef.current) {
+      inputRef.current.focus();
     }
   };
 
-  const handleBlur = () => {
-    setIsFocused(false);
-    // Delay para permitir clicks en las opciones
+  const handleInputFocus = () => {
+    if (suggestions.length > 0) {
+      setShowSuggestions(true);
+    }
+  };
+
+  const handleInputBlur = () => {
+    // Delay para permitir clicks en sugerencias
     setTimeout(() => {
-      setIsOpen(false);
+      setShowSuggestions(false);
     }, 150);
   };
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <div className="flex gap-2">
-        <TextInput
-          icon={HiUser}
-          placeholder="Buscar paciente..."
-          value={inputValue}
-          onChange={handleInputChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          className="flex-1"
-        />
+        <div className="flex-1">
+          <TextInput
+            ref={inputRef}
+            icon={HiUser}
+            placeholder="Buscar paciente (nombre, DUI)..."
+            value={searchTerm}
+            onChange={handleInputChange}
+            onFocus={handleInputFocus}
+            onBlur={handleInputBlur}
+            disabled={loading}
+            className="w-full"
+          />
+        </div>
         {pacienteSeleccionado && (
-          <Button size="sm" color="gray" onClick={handleClear}>
+          <Button 
+            size="sm" 
+            color="gray" 
+            onClick={handleClear}
+            className="px-3"
+            type="button"
+          >
             <HiX className="h-4 w-4" />
           </Button>
         )}
       </div>
-
-      {isOpen && pacientes.length > 0 && (
-        <div className="absolute z-50 w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg mt-1 shadow-lg max-h-60 overflow-y-auto">
-          {pacientes.map((paciente) => (
-            <div
-              key={paciente.id}
-              className="p-3 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600 last:border-b-0"
-              onClick={() => handleSelectPaciente(paciente)}
-            >
-              <div className="font-medium text-gray-900 dark:text-white">
-                {paciente.nombre_completo}
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                {paciente.dui || 'Sin DUI'} • {paciente.telefono}
+      
+      {showSuggestions && (
+        <div className="absolute z-50 w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg">
+          {loading ? (
+            <div className="p-3 text-center text-gray-500 dark:text-gray-400">
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                Buscando...
               </div>
             </div>
-          ))}
+          ) : suggestions.length > 0 ? (
+            suggestions.map((paciente) => (
+              <div
+                key={paciente.id}
+                className="p-3 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600 last:border-b-0 transition-colors"
+                onClick={() => handleSuggestionClick(paciente)}
+                onMouseDown={(e) => e.preventDefault()} // Prevenir blur del input
+              >
+                <div className="font-medium text-gray-900 dark:text-white">
+                  {paciente.nombre_completo}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  {paciente.dui ? `DUI: ${paciente.dui}` : 'Sin DUI'} • {paciente.telefono}
+                </div>
+              </div>
+            ))
+          ) : searchTerm.length > 0 ? (
+            <div className="p-3 text-center text-gray-500 dark:text-gray-400">
+              No se encontraron pacientes
+            </div>
+          ) : null}
         </div>
       )}
     </div>

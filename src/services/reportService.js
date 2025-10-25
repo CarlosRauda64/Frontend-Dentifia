@@ -237,7 +237,7 @@ const generateHistorialClinicoReport = async (reportId, fecha_generacion, desde,
 // Reporte de Facturación (Real - Backend)
 const generateFacturacionReport = async (reportId, fecha_generacion, desde, hasta, accessToken) => {
   try {
-    const response = await fetch(`${API_URL}/facturacion/`, {
+    const response = await fetch(`${API_URL}/facturacion/facturas/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -250,7 +250,7 @@ const generateFacturacionReport = async (reportId, fecha_generacion, desde, hast
     }
     
     const data = await response.json();
-    const facturas = data.results || data;
+    const facturas = Array.isArray(data) ? data : (data.results || []);
     
     const facturasFiltradas = facturas.filter(f => 
       isInDateRange(f.fecha_emision, desde, hasta)
@@ -264,9 +264,7 @@ const generateFacturacionReport = async (reportId, fecha_generacion, desde, hast
           facturaCorrelativo: factura.idfactura,
           facturaFecha: factura.fecha_emision,
           facturaPrecioTotal: parseFloat(factura.monto_total),
-          pacienteNombre: factura.paciente ? 
-            `${factura.paciente.nombres} ${factura.paciente.apellidos}` : 
-            'Sin paciente asignado',
+          pacienteNombre: factura.paciente_nombre || 'Sin paciente asignado',
           facturaEstado: factura.estado,
           descripcion: detalle.descripcion,
           cantidad: detalle.cantidad,
@@ -331,7 +329,7 @@ const generateEncuestasReport = async (reportId, fecha_generacion, desde, hasta)
 // Reporte de Stock de Insumos (Real - Backend)
 const generateStockReport = async (reportId, fecha_generacion, desde, hasta, accessToken) => {
   try {
-    const response = await fetch(`${API_URL}/inventario/`, {
+    const response = await fetch(`${API_URL}/inventario/insumos/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -344,27 +342,24 @@ const generateStockReport = async (reportId, fecha_generacion, desde, hasta, acc
     }
     
     const data = await response.json();
-    const insumos = data.results || data;
+    const insumos = Array.isArray(data) ? data : (data.results || []);
     
+    // El stock de insumos no se filtra por fechas, es el estado actual
     const insumosActivos = insumos.filter(i => i.activo);
 
     return {
       id: reportId,
       nombreReporte: ReportType.STOCK_INSUMOS,
       fecha_generacion,
-      desde,
-      hasta,
+      desde: 'Estado actual', // Cambiado para indicar que es estado actual
+      hasta: 'Estado actual', // Cambiado para indicar que es estado actual
       total_productos_distintos: insumosActivos.length,
       valor_total_stock: 0, // No calculado por ahora
       rows: insumosActivos.map(i => ({
         id: i.id,
         nombre: i.nombre,
         descripcion: i.descripcion,
-        stockActual: i.stock_actual,
-        stockMinimo: 0, // No disponible en el modelo actual
-        unidadMedida: 'unidad', // Default
-        proveedor: 'N/A', // No disponible en el modelo actual
-        fechaCaducidad: null // No disponible en el modelo actual
+        stockActual: i.stock_actual || 0
       }))
     };
   } catch (error) {
@@ -376,7 +371,7 @@ const generateStockReport = async (reportId, fecha_generacion, desde, hasta, acc
 // Reporte de Movimientos de Inventario (Real - Backend)
 const generateMovimientosReport = async (reportId, fecha_generacion, desde, hasta, accessToken) => {
   try {
-    const response = await fetch(`${API_URL}/inventario/movimientos/`, {
+    const response = await fetch(`${API_URL}/inventario/movimientos_stock/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -417,9 +412,10 @@ const generateMovimientosReport = async (reportId, fecha_generacion, desde, hast
         fecha: m.fecha,
         tipo: m.tipo,
         cantidad: m.cantidad,
-        motivo: m.motivo || 'N/A',
-        insumoNombre: 'Insumo', // Se podría obtener del insumo relacionado
-        responsableNombre: 'Usuario' // Se podría obtener del usuario relacionado
+        insumo: m.insumo_data?.nombre || 'Insumo no encontrado',
+        nombreUsuario: m.nombre_usuario || 'N/A',
+        rolUsuario: m.rol_usuario || 'N/A',
+        estado: m.activo ? 'Realizado' : 'Cancelado'
       }))
     };
   } catch (error) {
