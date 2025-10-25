@@ -27,6 +27,7 @@ import Autorizacion from './routes/Autorizacion.jsx'
 import ListarPacientes from './pages/Pacientes/ListarPacientes.jsx'
 import FormCrearPaciente from './pages/Pacientes/FormCrearPaciente.jsx'
 import FormEditarPaciente from './pages/Pacientes/FormEditarPaciente.jsx'
+import ReportesHome from './pages/Reportes/ReportesHome.jsx'
 
 console.log("Componente HistorialFactura:", HistorialFactura);
 
@@ -139,6 +140,10 @@ const router = createBrowserRouter([
       {
         path: '/pacientes/editar/:id',
         element: <FormEditarPaciente />,
+      },
+      {
+        path: '/reportes',
+        element: <ReportesHome />,
       },
     ],
   },
