@@ -10,8 +10,8 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
         vestibular: '',
     });
     const [localOpcion, setLocalOpcion] = useState({
-        estado: '',
-        estadoNombre: '',
+        estado: 'Normal',
+        estadoNombre: 'limpiarEstado',
     });
     const [selectedTreatment, setSelectedTreatment] = useState(null);
     const [selectedGlobal, setSelectedGlobal] = useState(null);
@@ -119,7 +119,7 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
             vestibular: localSuperficies.vestibular || '',
         };
         /* onSave({ numero: diente.numero, superficies: nuevas, globalAction: selectedGlobal }); */
-        if (selectedGlobal !== null) {
+        if (selectedGlobal !== null && selectedGlobal.id !== 'limpiarEstado') {
             const nuevas = {
                 oclusal: '',
                 mesial: '',
@@ -129,7 +129,7 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
             };
             onSave({ numero: diente.numero, superficies: nuevas, globalAction: selectedGlobal });
         } else {
-            onSave({ numero: diente.numero, superficies: nuevas, globalAction: null });
+            onSave({ numero: diente.numero, superficies: nuevas, globalAction: selectedGlobal });
         }
     };
 
@@ -145,6 +145,7 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
 
     const disenoEstado = (estadoNombre, estado) => {
         const color = menuGlobales.find(op => op.id === estadoNombre)?.color || 'gray';
+        const numero = diente.numero;
         switch (estadoNombre) {
             case 'exodoncia':
                 return <text
@@ -307,7 +308,11 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
                                         key={op.id}
                                         onClick={() => { setSelectedTreatment(op) }}
                                         disabled={disabledTreatments}
-                                        className={`p-2 rounded ${selectedTreatment?.id === op.id ? 'ring-2 ring-offset-1' : ''} ${op.color}`}>
+                                        className={
+                                            !disabledTreatments ? 
+                                            `p-2 rounded ${selectedTreatment?.id === op.id ? 'ring-2 ring-offset-1' : ''} ${op.color}` 
+                                            : `p-2 rounded ${op.color} opacity-50 cursor-not-allowed`
+                                        }>
                                         {op.label}
                                     </button>
                                 ))}
@@ -318,8 +323,10 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
                                 {menuGlobales.map(op => (
                                     <button
                                         key={op.id}
-                                        onClick={() => {
+                                        onClick={(e) => {
                                             setSelectedGlobal(op)
+                                            setSelectedTreatment(null)
+                                            document.activeElement?.blur();
                                             setLocalOpcion({ estado: op.texto, estadoNombre: op.id })
                                             op.id === 'limpiarEstado' ? setDisabledTreatments(false) : setDisabledTreatments(true)
                                         }}
