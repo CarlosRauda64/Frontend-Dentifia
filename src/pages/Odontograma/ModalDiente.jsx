@@ -52,7 +52,7 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
                     palatino: diente.superficies?.palatino || '',
                     vestibular: diente.superficies?.vestibular || '',
                 });
-            } else{
+            } else {
                 setLocalSuperficies({
                     oclusal: '',
                     mesial: '',
@@ -66,11 +66,9 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
                 });
                 if (diente.estadoNombre === 'limpiarEstado') {
                     setDisabledTreatments(false);
-                }else{
+                } else {
                     setDisabledTreatments(true);
                 }
-                        // ensure previous surface-treatment selection is cleared when the tooth has a global estado
-                        setSelectedTreatment(null);
             }
         }
     }, [diente]);
@@ -131,7 +129,7 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
             };
             onSave({ numero: diente.numero, superficies: nuevas, globalAction: selectedGlobal });
         } else {
-            onSave({ numero: diente.numero, superficies: nuevas });
+            onSave({ numero: diente.numero, superficies: nuevas, globalAction: null });
         }
     };
 
@@ -145,7 +143,7 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
         zIndex: 2000,
     };
 
-        const disenoEstado = (estadoNombre, estado) => {
+    const disenoEstado = (estadoNombre, estado) => {
         const color = menuGlobales.find(op => op.id === estadoNombre)?.color || 'gray';
         switch (estadoNombre) {
             case 'exodoncia':
@@ -214,8 +212,8 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
                     {estado === 'Normal' ? '' : estado}
                 </text>;
             case 'implanteCoronarealizada':
-                const r = 45;                
-                const imgSize = r * 2;       
+                const r = 45;
+                const imgSize = r * 2;
                 return (
                     <g className="pointer-events-none">
                         <defs>
@@ -305,46 +303,30 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
                             <div className="mb-1">Tratamientos por superficie</div>
                             <div className="grid grid-cols-2 gap-2 mb-4">
                                 {menuOpciones.map(op => (
-                                        <button
-                                            key={op.id}
-                                            onClick={() => {
-                                                // toggle: select or deselect the same treatment
-                                                setSelectedTreatment(prev => prev?.id === op.id ? null : op);
-                                                // selecting a treatment clears any selected global option
-                                                setSelectedGlobal(null);
-                                                setLocalOpcion({ estado: '', estadoNombre: '' });
-                                            }}
-                                            disabled={disabledTreatments}
-                                            aria-pressed={selectedTreatment?.id === op.id}
-                                            className={`p-2 rounded ${selectedTreatment?.id === op.id ? 'ring-2 ring-offset-1' : ''} ${disabledTreatments ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''} ${op.color}`}>
-                                            {op.label}
-                                        </button>
+                                    <button
+                                        key={op.id}
+                                        onClick={() => { setSelectedTreatment(op) }}
+                                        disabled={disabledTreatments}
+                                        className={`p-2 rounded ${selectedTreatment?.id === op.id ? 'ring-2 ring-offset-1' : ''} ${op.color}`}>
+                                        {op.label}
+                                    </button>
                                 ))}
                             </div>
 
                             <div className="mb-1">Acciones globales del diente</div>
                             <div className="grid grid-cols-2 gap-2 mb-4">
                                 {menuGlobales.map(op => (
-                                        <button
-                                            key={op.id}
-                                            onClick={() => setSelectedGlobal(prev => {
-                                                const newVal = prev?.id === op.id ? null : op;
-                                                if (newVal === null) {
-                                                    // deselected
-                                                    setLocalOpcion({ estado: '', estadoNombre: '' });
-                                                    setDisabledTreatments(false);
-                                                } else {
-                                                    // selected a global option
-                                                    setLocalOpcion({ estado: op.texto, estadoNombre: op.id });
-                                                    op.id === 'limpiarEstado' ? setDisabledTreatments(false) : setDisabledTreatments(true);
-                                                    // clear any surface-treatment selection so it doesn't appear stuck
-                                                    setSelectedTreatment(null);
-                                                }
-                                                return newVal;
-                                            })}
-                                            aria-pressed={selectedGlobal?.id === op.id}
-                                            className={`p-2 rounded ${selectedGlobal?.id === op.id ? 'ring-2 ring-offset-1' : ''} ${op.color === 'dark' ? 'bg-gray-700 text-white' : op.color === 'red' ? 'bg-red-500 text-white' : op.color === 'blue' ? 'bg-blue-500 text-white' : ''}`}
-                                        >
+                                    <button
+                                        key={op.id}
+                                        onClick={() => {
+                                            setSelectedGlobal(op)
+                                            setLocalOpcion({ estado: op.texto, estadoNombre: op.id })
+                                            op.id === 'limpiarEstado' ? setDisabledTreatments(false) : setDisabledTreatments(true)
+                                        }}
+
+                                        aria-pressed={selectedGlobal?.id === op.id}
+                                        className={`p-2 rounded ${selectedGlobal?.id === op.id ? 'ring-2 ring-offset-1' : ''} ${op.color === 'dark' ? 'bg-gray-700 text-white' : op.color === 'red' ? 'bg-red-500 text-white' : op.color === 'blue' ? 'bg-blue-500 text-white' : ''}`}
+                                    >
                                         <span className="font-semibold mr-2">{op.texto || ''}</span>
                                         <span className="truncate">{op.label}</span>
                                     </button>
