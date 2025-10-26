@@ -16,7 +16,7 @@ const DatosPaciente = () => {
     return (
         <Navegacion>
             <div className="p-4">
-                <h1 className="text-2xl font-bold mb-4 dark:text-white">Datos del Paciente</h1>
+                <h1 className="text-2xl font-bold mb-4 dark:text-white">Expediente del Paciente</h1>
 
                 <div>
                     <div className="flex items-center p-4 bg-white dark:bg-gray-800 shadow-md rounded-4xl">
@@ -26,12 +26,12 @@ const DatosPaciente = () => {
                         <div className="ml-4">
                             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Juan Pérez</h2>
                             <div className="flex flex-col justify-center items-center md:flex-row md:space-x-1">
-                                <p className="text-gray-600 dark:text-gray-300">Fecha de Creación:</p>
-                                <Datepicker language="es-MX" disabled />
+                                <p className="text-gray-900 dark:text-gray-300">Fecha de Creación:</p>
+                                <Datepicker language="es-MX" disabled className="text-gray-900 dark:text-gray-300"/>
                             </div>
-                            <p className="text-gray-600 dark:text-gray-300">Expediente N°: 123456</p>
-                            <p className="text-gray-600 dark:text-gray-300">Edad: 30 años</p>
-                            <p className="text-gray-600 dark:text-gray-300">Estado: Activo</p>
+                            <p className="text-gray-900 dark:text-gray-300">Expediente N°: 123456</p>
+                            <p className="text-gray-900 dark:text-gray-300">Edad: 30 años</p>
+                            <p className="text-gray-900 dark:text-gray-300">Estado: Activo</p>
                         </div>
                     </div>
                 </div>

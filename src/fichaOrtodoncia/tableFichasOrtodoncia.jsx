@@ -1,5 +1,5 @@
 // ...existing code...
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     Table,
     TableBody,
@@ -13,7 +13,7 @@ import {
     Button,
     Datepicker
 } from "flowbite-react";
-import { HiOutlinePencilAlt, HiOutlineTrash, HiOutlineExclamationCircle, HiOutlinePlus } from "react-icons/hi";
+import { HiOutlinePencilAlt, HiOutlineTrash, HiOutlineExclamationCircle, HiOutlinePlus, HiOutlineDocumentText } from "react-icons/hi";
 import { useNavigate } from "react-router";
 
 const mockFichas = [
@@ -64,6 +64,95 @@ const TableFichas = () => {
     });
     const navigate = useNavigate();
 
+    // Notes modal state
+    const [openNotesModal, setOpenNotesModal] = useState(false);
+    const [selectedFichaForNotas, setSelectedFichaForNotas] = useState(null);
+        const [notas, setNotas] = useState([]);
+    const [openCreateNotaModal, setOpenCreateNotaModal] = useState(false);
+    const [newNota, setNewNota] = useState({ cita_id: "", motivo_visita: "", observaciones_clinicas: "", procedimiento_realizado: "" });
+
+        // Infinite scroll UI state
+        const [page, setPage] = useState(1);
+        const pageSize = 2; // ejemplo pequeño para demo
+        const [displayedNotas, setDisplayedNotas] = useState([]);
+        const [hasMore, setHasMore] = useState(true);
+        const [loadingMore, setLoadingMore] = useState(false);
+        const scrollRef = useRef(null);
+
+    // Mock notes per ficha (UI only)
+    const mockNotas = {
+        1: [
+            { id: 101, ficha_ortodoncia_id: 1, cita_id: 201, motivo_visita: "Ajuste de arco", observaciones_clinicas: "Arco flojo en lado derecho", procedimiento_realizado: "Cambio de ligaduras", created_at: "2025-10-10T09:30:00Z" },
+            { id: 102, ficha_ortodoncia_id: 1, cita_id: 202, motivo_visita: "Control", observaciones_clinicas: "Buen avance", procedimiento_realizado: "Ajuste leve", created_at: "2025-09-05T11:00:00Z" },
+            { id: 103, ficha_ortodoncia_id: 1, cita_id: 202, motivo_visita: "Control", observaciones_clinicas: "Buen avance", procedimiento_realizado: "Ajuste leve", created_at: "2025-09-05T11:00:00Z" },
+            { id: 104, ficha_ortodoncia_id: 1, cita_id: 202, motivo_visita: "Control", observaciones_clinicas: "Buen avance", procedimiento_realizado: "Ajuste leve", created_at: "2025-09-05T11:00:00Z" },
+            { id: 105, ficha_ortodoncia_id: 1, cita_id: 202, motivo_visita: "Control", observaciones_clinicas: "Buen avance", procedimiento_realizado: "Ajuste leve", created_at: "2025-09-05T11:00:00Z" },
+            { id: 106, ficha_ortodoncia_id: 1, cita_id: 202, motivo_visita: "Control", observaciones_clinicas: "Buen avance", procedimiento_realizado: "Ajuste leve", created_at: "2025-09-05T11:00:00Z" },
+        ],
+        2: [
+            { id: 103, ficha_ortodoncia_id: 2, cita_id: 203, motivo_visita: "Colocación de brackets", observaciones_clinicas: "Colocados superiores", procedimiento_realizado: "Colocación brackets", created_at: "2025-09-16T10:00:00Z" },
+        ],
+        3: [],
+    };
+
+    const abrirModalNotas = (f) => {
+        setSelectedFichaForNotas(f);
+            setNotas(mockNotas[f.id] ?? []);
+            // reset infinite scroll
+            setPage(1);
+            setDisplayedNotas((mockNotas[f.id] ?? []).slice(0, pageSize));
+            setHasMore(((mockNotas[f.id] ?? []).length > pageSize));
+        setOpenNotesModal(true);
+    };
+
+    const cerrarModalNotas = () => {
+        setOpenNotesModal(false);
+        setSelectedFichaForNotas(null);
+        setNotas([]);
+    };
+
+    const guardarNuevaNotaUI = () => {
+        // UI-only: log and close
+        // eslint-disable-next-line no-console
+        console.log('Crear nota (UI-only) para ficha', selectedFichaForNotas?.id, newNota);
+        setOpenCreateNotaModal(false);
+        setNewNota({ cita_id: "", motivo_visita: "", observaciones_clinicas: "", procedimiento_realizado: "" });
+    };
+
+        // load more function (UI-only, simulated delay)
+        const loadMoreNotas = () => {
+            if (!selectedFichaForNotas) return;
+            const all = mockNotas[selectedFichaForNotas.id] ?? [];
+            if (loadingMore || !hasMore) return;
+            setLoadingMore(true);
+            // simulate network delay
+            setTimeout(() => {
+                const nextPage = page + 1;
+                const start = (nextPage - 1) * pageSize;
+                const nextChunk = all.slice(start, start + pageSize);
+                setDisplayedNotas((prev) => [...prev, ...nextChunk]);
+                setPage(nextPage);
+                setHasMore(start + pageSize < all.length);
+                setLoadingMore(false);
+            }, 600);
+        };
+
+        // attach scroll listener to container (optional: handled via onScroll)
+        useEffect(() => {
+            const el = scrollRef.current;
+            if (!el) return;
+            const onScroll = () => {
+                if (loadingMore || !hasMore) return;
+                const { scrollTop, scrollHeight, clientHeight } = el;
+                if (scrollTop + clientHeight >= scrollHeight - 40) {
+                    loadMoreNotas();
+                }
+            };
+            el.addEventListener('scroll', onScroll);
+            return () => el.removeEventListener('scroll', onScroll);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [scrollRef, loadingMore, hasMore, page, selectedFichaForNotas]);
+
     const formatDate = (iso) => {
         if (!iso) return "";
         try {
@@ -96,7 +185,7 @@ const TableFichas = () => {
             <div className="flex justify-between items-center mb-4">
                 <div className="flex flex-col justify-center items-center md:flex-row md:space-x-2">
                     <p className="text-gray-600 dark:text-gray-300 font-bold">Busqueda por fecha:</p>
-                    <Datepicker language="es-MX"/>
+                    <Datepicker language="es-MX" />
                 </div>
                 <Button color="purple" onClick={() => setOpenCreateModal(true)}>
                     <div className="flex items-center gap-2">
@@ -116,6 +205,7 @@ const TableFichas = () => {
                             <TableHeadCell className="max-lg:hidden">Plan tratamiento</TableHeadCell>
                             <TableHeadCell className="max-lg:hidden">Estado</TableHeadCell>
                             <TableHeadCell>Creado</TableHeadCell>
+                            <TableHeadCell>Notas</TableHeadCell>
                             <TableHeadCell>Editar</TableHeadCell>
                             <TableHeadCell>Eliminar</TableHeadCell>
                         </TableRow>
@@ -134,12 +224,19 @@ const TableFichas = () => {
                                 <TableCell className="max-lg:hidden">{f.estado_tratamiento ?? ""}</TableCell>
                                 <TableCell>{formatDate(f.created_at)}</TableCell>
                                 <TableCell>
+                                    <HiOutlineDocumentText
+                                        size={18}
+                                        className="cursor-pointer text-gray-500 hover:text-gray-700 mx-auto"
+                                        onClick={() => abrirModalNotas(f)}
+                                    />
+                                </TableCell>
+                                <TableCell>
                                     <HiOutlinePencilAlt
                                         size={18}
                                         className="cursor-pointer text-gray-500 hover:text-gray-700 mx-auto"
                                         onClick={() => navigate(`/fichas/editar/${f.id}`)}
                                     />
-                                </TableCell>
+                                </TableCell>                               
                                 <TableCell>
                                     <HiOutlineTrash
                                         size={18}
@@ -252,6 +349,86 @@ const TableFichas = () => {
                             }}>
                                 Guardar (no funcional)
                             </Button>
+                        </div>
+                    </div>
+                </ModalBody>
+            </Modal>
+
+            {/* Notes modal (UI only) */}
+            <Modal show={openNotesModal} size="lg" onClose={cerrarModalNotas} popup position="center">
+                <ModalHeader />
+                <ModalBody>
+                    <div>
+                        <div className="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 className="text-lg font-semibold">Notas de progreso</h3>
+                                <div className="text-sm text-gray-500">Ficha: {selectedFichaForNotas?.motivo_consulta ?? selectedFichaForNotas?.id}</div>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button color="gray" onClick={cerrarModalNotas}>Cerrar</Button>
+                                <Button color="purple" onClick={() => setOpenCreateNotaModal(true)}>Agregar nota</Button>
+                            </div>
+                        </div>
+
+                                    {notas.length === 0 ? (
+                                        <div className="text-center py-6 text-gray-500">No hay notas para esta ficha.</div>
+                                    ) : (
+                                        <div ref={scrollRef} className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto px-1">
+                                            {displayedNotas.map((n) => (
+                                                <div key={n.id} className="p-3 border rounded bg-white">
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <div className="text-xs text-gray-400">{new Date(n.created_at).toLocaleString()}</div>
+                                                            <div className="font-semibold">{n.motivo_visita}</div>
+                                                            <div className="text-sm text-gray-700 mt-1">{n.observaciones_clinicas}</div>
+                                                            <div className="text-xs text-indigo-600 mt-2">Procedimiento: {n.procedimiento_realizado}</div>
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            <HiOutlinePencilAlt className="text-gray-500 hover:text-gray-700 hover:cursor-pointer" />
+                                                            <HiOutlineTrash className="text-gray-500 hover:text-gray-700 hover:cursor-pointer" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+
+                                            <div className="flex justify-center py-3">
+                                                {loadingMore ? (
+                                                    <div className="text-sm text-gray-500">Cargando...</div>
+                                                ) : hasMore ? (
+                                                    <button className="text-sm text-indigo-600" onClick={loadMoreNotas}>Cargar más</button>
+                                                ) : (
+                                                    <div className="text-sm text-gray-400">No hay más notas</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                    </div>
+                </ModalBody>
+            </Modal>
+
+            {/* Create nota modal (UI only) */}
+            <Modal show={openCreateNotaModal} size="md" onClose={() => setOpenCreateNotaModal(false)} popup position="center">
+                <ModalHeader />
+                <ModalBody>
+                    <div className="text-left">
+                        <h3 className="mb-3 text-lg font-semibold">Crear nota de progreso</h3>
+                        <div className="flex flex-col gap-3">
+                            <label className="text-sm">Cita ID</label>
+                            <input type="text" value={newNota.cita_id} onChange={(e) => setNewNota((s) => ({ ...s, cita_id: e.target.value }))} className="w-full rounded border px-2 py-1" />
+
+                            <label className="text-sm">Motivo visita</label>
+                            <input type="text" value={newNota.motivo_visita} onChange={(e) => setNewNota((s) => ({ ...s, motivo_visita: e.target.value }))} className="w-full rounded border px-2 py-1" />
+
+                            <label className="text-sm">Observaciones clínicas</label>
+                            <textarea value={newNota.observaciones_clinicas} onChange={(e) => setNewNota((s) => ({ ...s, observaciones_clinicas: e.target.value }))} className="w-full rounded border px-2 py-1" rows={3} />
+
+                            <label className="text-sm">Procedimiento realizado</label>
+                            <input type="text" value={newNota.procedimiento_realizado} onChange={(e) => setNewNota((s) => ({ ...s, procedimiento_realizado: e.target.value }))} className="w-full rounded border px-2 py-1" />
+                        </div>
+
+                        <div className="flex justify-end gap-3 mt-4">
+                            <Button color="gray" onClick={() => setOpenCreateNotaModal(false)}>Cancelar</Button>
+                            <Button color="purple" onClick={guardarNuevaNotaUI}>Guardar (no funcional)</Button>
                         </div>
                     </div>
                 </ModalBody>
