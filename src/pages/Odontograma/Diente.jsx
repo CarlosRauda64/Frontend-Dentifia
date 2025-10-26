@@ -1,12 +1,11 @@
 import React from 'react'
-import { Dropdown, DropdownItem } from "flowbite-react";
 
-const Diente = ({ numero, superficies, onCaraClick, limpiarDiente, size }) => {
+const Diente = ({ numero, superficies, onCaraClick, limpiarDiente, size, estado: estadoProp = 'Normal', estadoNombre: estadoNombreProp = '', color: colorProp = '' }) => {
 
     const [disabled, setDisabled] = React.useState(false);
-    const [estado, setEstado] = React.useState('Normal');
-    const [estadoNombre, setEstadoNombre] = React.useState('');
-    const [color, setColor] = React.useState('');
+    const [estado, setEstado] = React.useState(estadoProp || 'Normal');
+    const [estadoNombre, setEstadoNombre] = React.useState(estadoNombreProp || '');
+    const [color, setColor] = React.useState(colorProp || '');
 
     const menuOpciones = [
         { id: 'restosRadiculares', label: 'Restos Radiculares', texto: 'RR', color: 'red' },
@@ -25,20 +24,12 @@ const Diente = ({ numero, superficies, onCaraClick, limpiarDiente, size }) => {
         { id: 'limpiar', label: 'Limpiar Estado', texto: 'Normal', color: '' },
     ]
 
-    const handleClickDropdown = (opcion) => {
-        limpiarDiente(numero);
-        if (opcion.id === 'limpiar') {
-            setDisabled(false);
-            setEstado('Normal');
-            setEstadoNombre('');
-            setColor('');
-        } else {
-            setEstado(opcion.texto);
-            setDisabled(true);
-            setColor(opcion.color);
-            setEstadoNombre(opcion.id);
-        }
-    }
+    React.useEffect(() => {
+        setEstado(estadoProp || 'Normal');
+        setEstadoNombre(estadoNombreProp || '');
+        setColor(colorProp || '');
+        setDisabled(Boolean(estadoNombreProp));
+    }, [estadoProp, estadoNombreProp, colorProp]);
 
     const disenoEstado = (estadoNombre, estado) => {
         switch (estadoNombre) {
@@ -108,8 +99,8 @@ const Diente = ({ numero, superficies, onCaraClick, limpiarDiente, size }) => {
                     {estado === 'Normal' ? '' : estado}
                 </text>;
             case 'implanteCoronarealizada':
-                const r = 45;                 // radio del círculo
-                const imgSize = r * 2;        // imagen cuadrada que cubre el círculo
+                const r = 45;                
+                const imgSize = r * 2;       
                 return (
                     <g className="pointer-events-none">
                         <defs>
@@ -118,7 +109,6 @@ const Diente = ({ numero, superficies, onCaraClick, limpiarDiente, size }) => {
                             </clipPath>
                         </defs>
 
-                        {/* borde del círculo */}
                         <circle
                             cx="50"
                             cy="50"
@@ -128,7 +118,6 @@ const Diente = ({ numero, superficies, onCaraClick, limpiarDiente, size }) => {
                             strokeWidth="7"
                         />
 
-                        {/* imagen recortada por el círculo */}
                         <image
                             href="https://img.icons8.com/?size=100&id=VZE4lkdKnHQr&format=png&color=000000"
                             x={50 - imgSize / 2}
@@ -159,14 +148,8 @@ const Diente = ({ numero, superficies, onCaraClick, limpiarDiente, size }) => {
     }
 
     const handleClick = (superficie, event) => {
-        if (disabled) {
-            event.stopPropagation();
-            console.log(`Diente ${numero} está deshabilitado para cambios.`);
-            return;
-        }
         if (onCaraClick) {
             onCaraClick(numero, superficie, event);
-            console.log(`Diente ${numero}, Superficie: ${superficie}`);
         }
     }
 
@@ -178,7 +161,7 @@ const Diente = ({ numero, superficies, onCaraClick, limpiarDiente, size }) => {
                     points="0,0 100,0 75,25 25,25"
                     className={superficies?.vestibular || "fill-white stroke-gray-400 cursor-pointer pointer-events-auto hover:fill-gray-200"}
                     onClick={(e) => handleClick('vestibular', e)}
-                />
+                />              
 
                 {/* Distal (lado izquierdo) */}
                 <polygon
@@ -208,37 +191,16 @@ const Diente = ({ numero, superficies, onCaraClick, limpiarDiente, size }) => {
                     onClick={(e) => handleClick('palatino', e)}
                 />
                 {disenoEstado(estadoNombre, estado)}
+                <polygon
+                    points="0,0 0,100 100,100 100,0"
+                    className='fill-transparent'
+                    onClick={(e) => handleClick('noImporta', e)}
+                />
             </svg>
 
             <div className="text-center font-bold dark:text-white text-sm">{numero}</div>
+            <div className={`text-center font-bold text-${color}-600 text-sm`}>{estado}</div>
 
-            <Dropdown
-                label=""
-                size="lg"
-                className="z-50"
-                renderTrigger={() =>
-                    <span className={
-                        color ? `cursor-pointer pointer-events-auto dark:text-${color}-400 text-${color}-500` :
-                            `cursor-pointer pointer-events-auto dark:text-white`
-                    }>
-                        {estado}
-                    </span>
-                }
-            >
-                <div className="max-h-56 overflow-y-auto">
-                    {menuOpciones.map(opcion => (
-                        <DropdownItem
-                            key={opcion.id}
-                            color={opcion.color}
-                            onClick={() => handleClickDropdown(opcion)}
-                        >
-                            <span className={`text-${opcion.color}-500`}>{opcion.texto}</span>
-                            -
-                            <span>{opcion.label}</span>
-                        </DropdownItem>
-                    ))}
-                </div>
-            </Dropdown>
         </div>
     )
 }

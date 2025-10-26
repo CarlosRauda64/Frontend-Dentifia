@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Navegacion from '../Common/Navegacion'
 import Diente from './Diente'
-import MenuDiente from './MenuDiente'
+import ModalDiente from './ModalDiente'
 import { Label, Textarea } from "flowbite-react";
 
 const Odontrograma = () => {
@@ -9,50 +9,45 @@ const Odontrograma = () => {
 
     const [dientes, setDientes] = useState([]);
 
-    const [menuState, setMenuState] = useState({
+    const [modalState, setModalState] = useState({
         visible: false,
-        position: { x: 0, y: 0 },
         selectedInfo: null
     });
 
     const handleCaraClick = (numero, superficie, event) => {
         event.stopPropagation();
         console.log(`Posicion del clic: (${event.clientX}, ${event.clientY})`);
-        setMenuState({
+        setModalState({
             visible: true,
-            position: { x: event.clientX, y: event.clientY },
             selectedInfo: { numero, superficie }
         });
     }
 
-    const handleMenuClose = () => {
-        setMenuState({
+    const handleModalClose = () => {
+        setModalState({
             visible: false,
-            position: { x: 0, y: 0 },
             selectedInfo: null
         });
     }
 
-    const handleMenuAction = (opcion) => {
-        const { numero, superficie } = menuState.selectedInfo;
-
+    const handleModalSave = ({ numero, superficies, comentario, globalAction }) => {
         setDientes(prevDientes => {
-            const nuevosDientes = [...prevDientes]
+            const nuevosDientes = [...prevDientes];
             const index = nuevosDientes.findIndex(d => d.numero === numero);
             if (index !== -1) {
-                const dienteActual = nuevosDientes[index];
-                const nuevasSuperficies = { ...dienteActual.superficies };
-                nuevasSuperficies[superficie] = opcion.colorClass;
                 nuevosDientes[index] = {
-                    ...dienteActual,
-                    superficies: nuevasSuperficies
+                    ...nuevosDientes[index],
+                    superficies: superficies,
+                    // aplicar acción global si existe
+                    estado: globalAction ? (globalAction.texto || globalAction.label || nuevosDientes[index].estado) : nuevosDientes[index].estado,
+                    estadoNombre: globalAction ? globalAction.id : nuevosDientes[index].estadoNombre,
+                    color: globalAction ? (globalAction.color || '') : nuevosDientes[index].color,
                 };
             }
             return nuevosDientes;
         });
-
-
-        console.log(`Acción '${opcion.label}' en Diente ${numero}, Superficie: ${superficie}`);
+        console.log(`Guardado diente ${numero}`, superficies, comentario, globalAction);
+        handleModalClose();
     };
 
     const limpiarDiente = (numero) => {
@@ -65,7 +60,7 @@ const Odontrograma = () => {
                     oclusal: '',
                     mesial: '',
                     distal: '',
-                    lingual: '',
+                    palatino: '',
                     vestibular: ''
                 };
                 nuevosDientes[index] = {
@@ -99,21 +94,19 @@ const Odontrograma = () => {
                 oclusal: '',
                 mesial: '',
                 distal: '',
-                lingual: '',
+                palatino: '',
                 vestibular: '',
             },
+            // estado global del diente (para exodoncia, implante, etc.)
+            estado: 'Normal',
+            estadoNombre: '',
+            color: '',
         }));
         setDientes(dientesIniciales);
     }, []);
 
-    useEffect(() => {
-        if (menuState.visible) {
-            window.addEventListener('click', handleMenuClose);
-        }
-        return () => {
-            window.removeEventListener('click', handleMenuClose);
-        };
-    }, [menuState.visible]);
+    // No global click listener needed: Modal handles its own close logic.
+    useEffect(() => {}, []);
 
     return (
 
@@ -130,6 +123,9 @@ const Odontrograma = () => {
                                         key={num}
                                         numero={num}
                                         superficies={d?.superficies}
+                                        estado={d?.estado}
+                                        estadoNombre={d?.estadoNombre}
+                                        color={d?.color}
                                         onCaraClick={handleCaraClick}
                                         limpiarDiente={limpiarDiente}
                                         size={40}
@@ -149,6 +145,9 @@ const Odontrograma = () => {
                                         key={num}
                                         numero={num}
                                         superficies={d?.superficies}
+                                        estado={d?.estado}
+                                        estadoNombre={d?.estadoNombre}
+                                        color={d?.color}
                                         onCaraClick={handleCaraClick}
                                         limpiarDiente={limpiarDiente}
                                         size={40}
@@ -160,11 +159,13 @@ const Odontrograma = () => {
                 ))}
             </div>
 
-            {menuState.visible && (
-                <MenuDiente
-                    posicion={menuState.position}
-                    seleccionOpcion={handleMenuAction}
-                    cerrar={handleMenuClose}
+            {modalState.visible && (
+                <ModalDiente
+                    visible={modalState.visible}
+                    diente={dientes.find(d => d.numero === modalState.selectedInfo?.numero)}
+                    initialSurface={modalState.selectedInfo?.superficie}
+                    onSave={handleModalSave}
+                    onClose={handleModalClose}
                 />
             )}
 
