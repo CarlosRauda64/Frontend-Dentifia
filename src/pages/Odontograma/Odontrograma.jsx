@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import Navegacion from '../Common/Navegacion'
 import Diente from './Diente'
 import MenuDiente from './MenuDiente'
+import { Label, Textarea } from "flowbite-react";
 
 const Odontrograma = () => {
     const contenedorRef = useRef(null);
@@ -115,33 +116,32 @@ const Odontrograma = () => {
     }, [menuState.visible]);
 
     return (
-        
-            <div className="p-4">
-                <h1 className="text-2xl font-bold mb-4 dark:text-white">Odontograma Interactivo</h1>
-                {/* Filas del odontograma con separación en línea media */}
-                <div className="space-y-4">
-                    {LAYOUT.map((row, idx) => (
-                        <div key={idx} className="flex border border-gray-800 justify-center items-center px-4">
-                            <div className="flex flex-wrap justify-center items-center">
-                                {row.left.map((num) => {
-                                    const d = dientes.find(x => x.numero === num);
-                                    return (
-                                        <Diente
-                                            key={num}
-                                            numero={num}
-                                            superficies={d?.superficies}
-                                            onCaraClick={handleCaraClick}
-                                            limpiarDiente={limpiarDiente}
-                                            size={40}
-                                        />
-                                    );
-                                })}
-                            </div>
 
-                            {/* Espaciador para la línea media */}
-                            <div className="w-6 sm:w-10 flex-none" />
+        <div className="p-4 w-full">
+            {/* Filas del odontograma con separación en línea media */}
+            <div className="space-y-4">
+                {LAYOUT.map((row, idx) => (
+                    <div key={idx} className="flex justify-center items-center px-4">
+                        <div className="flex flex-wrap justify-center items-center">
+                            {row.left.map((num) => {
+                                const d = dientes.find(x => x.numero === num);
+                                return (
+                                    <Diente
+                                        key={num}
+                                        numero={num}
+                                        superficies={d?.superficies}
+                                        onCaraClick={handleCaraClick}
+                                        limpiarDiente={limpiarDiente}
+                                        size={40}
+                                    />
+                                );
+                            })}
+                        </div>
 
-                            <div className="flex flex-wrap justify-center items-center">
+                        {/* Espaciador para la línea media */}
+                        <div className="w-6 sm:w-10 flex-none" />
+
+                        <div className="flex flex-wrap justify-center items-center">
                             {row.right.map((num) => {
                                 const d = dientes.find(x => x.numero === num);
                                 return (
@@ -155,20 +155,33 @@ const Odontrograma = () => {
                                     />
                                 );
                             })}
-                            </div>
                         </div>
-                    ))}
-                </div>
-
-                {menuState.visible && (
-                    <MenuDiente
-                        posicion={menuState.position}
-                        seleccionOpcion={handleMenuAction}
-                        cerrar={handleMenuClose}
-                    />
-                )}
+                    </div>
+                ))}
             </div>
-       
+
+            {menuState.visible && (
+                <MenuDiente
+                    posicion={menuState.position}
+                    seleccionOpcion={handleMenuAction}
+                    cerrar={handleMenuClose}
+                />
+            )}
+
+            <div className="w-full my-6 max-w-full px-50">
+                <div className="mb-2 block">
+                    <Label htmlFor="comment">Comentarios adicionales: </Label>
+                </div>
+                <Textarea
+                    id="comment"
+                    placeholder="Insertar comentario..."
+                    required
+                    rows={4}
+                    className='resize-none w-full'
+                />
+            </div>
+        </div>
+
     )
 
 }

@@ -24,7 +24,7 @@ import ListarMovimientosStock from './pages/Movimientos_Stock/ListarMovimientos.
 import FormInsertarMov from './pages/Movimientos_Stock/FormInsertarMov.jsx'
 import FormEditMov from './pages/Movimientos_Stock/FormEditMov.jsx'
 import Autorizacion from './routes/Autorizacion.jsx'
-import DatosPaciente from './pages/Paciente_Datos/DatosPaciente.jsx'
+import ExpedientePaciente from './pages/Expediente/ExpedientePaciente.jsx'
 
 console.log("Componente HistorialFactura:", HistorialFactura);
 
@@ -98,8 +98,8 @@ const router = createBrowserRouter([
         element: <ProtectedDoctor />,
         children: [
           {
-            path: '/datos_paciente',
-            element: <DatosPaciente />,
+            path: '/expediente_paciente',
+            element: <ExpedientePaciente />,
           },
         ]
       },

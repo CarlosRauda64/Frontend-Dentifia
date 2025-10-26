@@ -4,11 +4,11 @@ import {ListGroup, ListGroupItem} from 'flowbite-react';
 const MenuDiente = ({ posicion, seleccionOpcion, cerrar }) => {
 
     const menuOpciones = [
-        { id: 'caries', label: 'Caries', colorClass: 'fill-red-400', color: 'red' },
-        { id: 'obturacion', label: 'Obturación', colorClass: 'fill-blue-400', color: 'blue' },
-        { id: 'cariesRadiograficas', label: 'Caries Radiográficas', colorClass: 'fill-green-400', color: 'green' },
-        { id: 'sellante', label: 'Sellante', colorClass: 'fill-yellow-400', color: 'yellow' },
-        { id: 'limpiar', label: 'Limpiar Superficie', colorClass: '', color: 'gray' },
+        { id: 'caries', label: 'Caries', colorClass: 'fill-red-400', color: 'bg-red-500' },
+        { id: 'obturacion', label: 'Obturación', colorClass: 'fill-blue-400', color: 'bg-blue-500' },
+        { id: 'cariesRadiograficas', label: 'Caries Radiográficas', colorClass: 'fill-green-400', color: 'bg-green-500' },
+        { id: 'sellante', label: 'Sellante', colorClass: 'fill-yellow-400', color: 'bg-yellow-500' },
+        { id: 'limpiar', label: 'Limpiar Superficie', colorClass: '', color: 'bg-gray-500' },
     ]
 
     const handleOpcionClick = (opcion) => {
@@ -36,7 +36,7 @@ const MenuDiente = ({ posicion, seleccionOpcion, cerrar }) => {
                         className='cursor-pointer'
                         onClick={() => handleOpcionClick(opcion)}
                     >
-                        <span className={`w-3 h-3 rounded-full bg-${opcion.color}-500 mr-2`}></span>
+                        <span className={`w-3 h-3 rounded-full ${opcion.color} mr-2`}></span>
                         {opcion.label}
                     </ListGroupItem>
                 ))}
