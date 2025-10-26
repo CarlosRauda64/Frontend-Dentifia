@@ -147,9 +147,9 @@ const Diente = ({ numero, superficies, onCaraClick, limpiarDiente, size, estado:
         }
     }
 
-    const handleClick = (superficie, event) => {
+    const handleClick = (event) => {
         if (onCaraClick) {
-            onCaraClick(numero, superficie, event);
+            onCaraClick(numero, event);
         }
     }
 
@@ -160,41 +160,36 @@ const Diente = ({ numero, superficies, onCaraClick, limpiarDiente, size, estado:
                 <polygon
                     points="0,0 100,0 75,25 25,25"
                     className={superficies?.vestibular || "fill-white stroke-gray-400 cursor-pointer pointer-events-auto hover:fill-gray-200"}
-                    onClick={(e) => handleClick('vestibular', e)}
                 />              
 
                 {/* Distal (lado izquierdo) */}
                 <polygon
                     points="0,0 25,25 25,75 0,100"
                     className={superficies?.distal || "fill-white stroke-gray-400 cursor-pointer pointer-events-auto hover:fill-gray-200"}
-                    onClick={(e) => handleClick('distal', e)}
                 />
 
                 {/* Mesial (lado derecho) */}
                 <polygon
                     points="75,25 100,0 100,100 75,75"
                     className={superficies?.mesial || "fill-white stroke-gray-400 cursor-pointer pointer-events-auto hover:fill-gray-200"}
-                    onClick={(e) => handleClick('mesial', e)}
                 />
 
                 {/* Oclusal (centro) */}
                 <polygon
                     points="25,25 75,25 75,75 25,75"
                     className={superficies?.oclusal || "fill-white stroke-gray-400 cursor-pointer pointer-events-auto hover:fill-gray-200"}
-                    onClick={(e) => handleClick('oclusal', e)}
                 />
 
                 {/* Palatino (parte inferior) */}
                 <polygon
                     points="25,75 75,75 100,100 0,100"
                     className={superficies?.palatino || "fill-white stroke-gray-400 cursor-pointer pointer-events-auto hover:fill-gray-200"}
-                    onClick={(e) => handleClick('palatino', e)}
                 />
                 {disenoEstado(estadoNombre, estado)}
                 <polygon
                     points="0,0 0,100 100,100 100,0"
                     className='fill-transparent'
-                    onClick={(e) => handleClick('noImporta', e)}
+                    onClick={(e) => handleClick(e)}
                 />
             </svg>
 

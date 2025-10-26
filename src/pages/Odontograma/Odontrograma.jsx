@@ -14,12 +14,13 @@ const Odontrograma = () => {
         selectedInfo: null
     });
 
-    const handleCaraClick = (numero, superficie, event) => {
+    const handleCaraClick = (numero, event) => {
         event.stopPropagation();
         console.log(`Posicion del clic: (${event.clientX}, ${event.clientY})`);
+        console.log(dientes.find(d => d.numero === numero))
         setModalState({
             visible: true,
-            selectedInfo: { numero, superficie }
+            selectedInfo: { numero }
         });
     }
 
@@ -163,7 +164,6 @@ const Odontrograma = () => {
                 <ModalDiente
                     visible={modalState.visible}
                     diente={dientes.find(d => d.numero === modalState.selectedInfo?.numero)}
-                    initialSurface={modalState.selectedInfo?.superficie}
                     onSave={handleModalSave}
                     onClose={handleModalClose}
                 />
