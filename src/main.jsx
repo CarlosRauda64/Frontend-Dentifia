@@ -24,6 +24,9 @@ import ListarMovimientosStock from './pages/Movimientos_Stock/ListarMovimientos.
 import FormInsertarMov from './pages/Movimientos_Stock/FormInsertarMov.jsx'
 import FormEditMov from './pages/Movimientos_Stock/FormEditMov.jsx'
 import Autorizacion from './routes/Autorizacion.jsx'
+import ListarPacientes from './pages/Pacientes/ListarPacientes.jsx'
+import FormCrearPaciente from './pages/Pacientes/FormCrearPaciente.jsx'
+import FormEditarPaciente from './pages/Pacientes/FormEditarPaciente.jsx'
 import ExpedientePaciente from './pages/Expediente/ExpedientePaciente.jsx'
 
 console.log("Componente HistorialFactura:", HistorialFactura);
@@ -135,6 +138,18 @@ const router = createBrowserRouter([
       {
         path: '/inventario/movimientos_stock/editar/:id',
         element: <FormEditMov />,
+      },
+      {
+        path: '/pacientes',
+        element: <ListarPacientes />,
+      },
+      {
+        path: '/pacientes/nuevo',
+        element: <FormCrearPaciente />,
+      },
+      {
+        path: '/pacientes/editar/:id',
+        element: <FormEditarPaciente />,
       },
     ],
   },
