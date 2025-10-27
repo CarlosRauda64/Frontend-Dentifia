@@ -1,137 +1,164 @@
-import React, { useEffect, useState } from 'react'
-import { Button, Label, Textarea } from 'flowbite-react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Button } from 'flowbite-react'
 
-const ModalDiente = ({ visible, diente, onSave, onClose }) => {
-    const [localSuperficies, setLocalSuperficies] = useState({
-        oclusal: '',
-        mesial: '',
-        distal: '',
-        lingual: '',
-        vestibular: '',
-    });
-    const [localOpcion, setLocalOpcion] = useState({
-        estado: 'Normal',
-        estadoNombre: 'limpiarEstado',
-    });
-    const [selectedTreatment, setSelectedTreatment] = useState(null);
-    const [selectedGlobal, setSelectedGlobal] = useState(null);
-    const [disabledTreatments, setDisabledTreatments] = useState(false);
+const createEmptySurfaces = () => ({
+    oclusal: null,
+    mesial: null,
+    distal: null,
+    palatino: null,
+    vestibular: null
+})
 
-    const menuOpciones = [
-        { id: 'caries', label: 'Caries', colorClass: 'fill-red-400', color: 'bg-red-500' },
-        { id: 'obturacion', label: 'Obturación', colorClass: 'fill-blue-400', color: 'bg-blue-500' },
-        { id: 'cariesRadiograficas', label: 'Caries Radiográficas', colorClass: 'fill-green-400', color: 'bg-green-500' },
-        { id: 'sellante', label: 'Sellante', colorClass: 'fill-yellow-400', color: 'bg-yellow-500' },
-        { id: 'limpiar', label: 'Limpiar Superficie', colorClass: '', color: 'bg-gray-500' },
-    ];
+const ModalDiente = ({ visible, diente, onSave, onClose, surfaceOptions = [], globalOptions = [] }) => {
+    const [localSuperficies, setLocalSuperficies] = useState(createEmptySurfaces())
+    const [selectedTreatment, setSelectedTreatment] = useState(null)
+    const [selectedGlobalId, setSelectedGlobalId] = useState(null)
 
-    const menuGlobales = [
-        { id: 'restosRadiculares', label: 'Restos Radiculares', texto: 'RR', color: 'red' },
-        { id: 'exodoncia', label: 'Exodoncia', texto: 'X', color: 'red' },
-        { id: 'exodonciaOrtodoncia', label: 'Exodoncia por Ortodoncia', texto: 'ORT', color: 'red' },
-        { id: 'endodoncia', label: 'Endodoncia', texto: 'E', color: 'red' },
-        { id: 'implante', label: 'Implante', texto: 'IMP', color: 'red' },
-        { id: 'fractura', label: 'Fractura', texto: 'FR', color: 'red' },
-        { id: 'ausenciaNatural', label: 'Ausencia Natural', texto: 'X', color: 'dark' },
-        { id: 'implanteRealizado', label: 'Implante Realizado', texto: 'IMP', color: 'blue' },
-        { id: 'exodonciaRealizada', label: 'Exodoncia Realizada', texto: 'X', color: 'blue' },
-        { id: 'endodonciaRealizada', label: 'Endodoncia Realizada', texto: 'E', color: 'blue' },
-        { id: 'implanteCoronarealizada', label: 'Implante con Corona Permanente', texto: 'IMP', color: 'blue' },
-        { id: 'extruido', label: 'Diente Extruido', texto: '⬆', color: 'blue' },
-        { id: 'entruido', label: 'Diente Entruido', texto: '⬇', color: 'blue' },
-        { id: 'limpiarEstado', label: 'Limpiar Estado', texto: 'Normal', color: '' },
-    ];
+    const surfaceClassMap = useMemo(() => {
+        const map = {}
+        surfaceOptions.forEach((option) => {
+            map[option.id] = option.colorClass || ''
+        })
+        return map
+    }, [surfaceOptions])
+
+    const globalOptionMap = useMemo(() => {
+        const map = {}
+        globalOptions.forEach((option) => {
+            map[option.id] = option
+        })
+        return map
+    }, [globalOptions])
+
+    const surfaceSelectionDisabled = Boolean(selectedGlobalId && selectedGlobalId !== 'limpiarEstado')
 
     useEffect(() => {
-        if (diente) {
-            if (diente.estado === 'Normal' && diente.estadoNombre === '') {
-                setLocalSuperficies({
-                    oclusal: diente.superficies?.oclusal || '',
-                    mesial: diente.superficies?.mesial || '',
-                    distal: diente.superficies?.distal || '',
-                    palatino: diente.superficies?.palatino || '',
-                    vestibular: diente.superficies?.vestibular || '',
-                });
-            } else {
-                setLocalSuperficies({
-                    oclusal: '',
-                    mesial: '',
-                    distal: '',
-                    palatino: '',
-                    vestibular: '',
-                });
-                setLocalOpcion({
-                    estado: diente.estado || '',
-                    estadoNombre: diente.estadoNombre || '',
-                });
-                if (diente.estadoNombre === 'limpiarEstado') {
-                    setDisabledTreatments(false);
-                } else {
-                    setDisabledTreatments(true);
-                }
-            }
-        }
-    }, [diente]);
+        if (!visible || !diente) return
+
+        setLocalSuperficies({
+            oclusal: diente.superficies?.oclusal ?? null,
+            mesial: diente.superficies?.mesial ?? null,
+            distal: diente.superficies?.distal ?? null,
+            palatino: diente.superficies?.palatino ?? null,
+            vestibular: diente.superficies?.vestibular ?? null
+        })
+        setSelectedTreatment(null)
+        setSelectedGlobalId(diente.globalConditionId ?? null)
+    }, [visible, diente])
+
+    useEffect(() => {
+        if (!surfaceSelectionDisabled) return
+        setLocalSuperficies(createEmptySurfaces())
+    }, [surfaceSelectionDisabled])
 
     useEffect(() => {
         const onKey = (e) => {
-            if (e.key === 'Escape' && visible) onClose();
-        };
-        window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
-    }, [visible, onClose]);
+            if (e.key === 'Escape' && visible) onClose()
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+    }, [visible, onClose])
 
-    useEffect(() => {
-        if (selectedGlobal === null) return;
-        setLocalSuperficies({
-            oclusal: '',
-            mesial: '',
-            distal: '',
-            palatino: '',
-            vestibular: '',
-        });
-    }, [selectedGlobal]);
+    if (!visible || !diente) return null
 
-    if (!visible || !diente) return null;
+    const applyTreatmentToSurface = (surfaceKey) => {
+        if (surfaceSelectionDisabled) return
 
-    const applyTreatmentToSurface = (superficie) => {
-        setLocalSuperficies(prev => {
-            const copy = { ...prev };
+        setLocalSuperficies((prev) => {
+            const copy = { ...prev }
             if (!selectedTreatment || selectedTreatment.id === 'limpiar') {
-                copy[superficie] = '';
+                copy[surfaceKey] = null
             } else {
-                copy[superficie] = selectedTreatment.colorClass;
+                copy[surfaceKey] = selectedTreatment.id
             }
-            return copy;
-        });
-    };
+            return copy
+        })
+    }
 
-    const handleSurfaceClick = (s) => {
-        applyTreatmentToSurface(s);
-    };
+    const handleSurfaceClick = (surfaceKey) => {
+        applyTreatmentToSurface(surfaceKey)
+    }
+
+    const handleGlobalSelect = (option) => {
+        setSelectedGlobalId(option.id)
+        setSelectedTreatment(null)
+    }
 
     const handleSave = () => {
-        const nuevas = {
-            oclusal: localSuperficies.oclusal || '',
-            mesial: localSuperficies.mesial || '',
-            distal: localSuperficies.distal || '',
-            palatino: localSuperficies.palatino || '',
-            vestibular: localSuperficies.vestibular || '',
-        };
-        /* onSave({ numero: diente.numero, superficies: nuevas, globalAction: selectedGlobal }); */
-        if (selectedGlobal !== null && selectedGlobal.id !== 'limpiarEstado') {
-            const nuevas = {
-                oclusal: '',
-                mesial: '',
-                distal: '',
-                palatino: '',
-                vestibular: '',
-            };
-            onSave({ numero: diente.numero, superficies: nuevas, globalAction: selectedGlobal });
-        } else {
-            onSave({ numero: diente.numero, superficies: nuevas, globalAction: selectedGlobal });
+        const normalizedSuperficies = {
+            ...createEmptySurfaces(),
+            ...localSuperficies
         }
-    };
+
+        const storedGlobalId = selectedGlobalId && selectedGlobalId !== 'limpiarEstado'
+            ? selectedGlobalId
+            : null
+
+        if (storedGlobalId) {
+            Object.keys(normalizedSuperficies).forEach((key) => {
+                normalizedSuperficies[key] = null
+            })
+        }
+
+        onSave({
+            numero: diente.numero,
+            superficies: normalizedSuperficies,
+            globalConditionId: storedGlobalId
+        })
+    }
+
+    const getPolygonClass = (key) => {
+        const condicion = localSuperficies[key]
+        const fillClass = condicion ? (surfaceClassMap[condicion] || 'fill-blue-300') : 'fill-white'
+        if (surfaceSelectionDisabled) {
+            return `${fillClass} stroke-gray-400 opacity-60 cursor-not-allowed`
+        }
+        return `${fillClass} stroke-gray-400 cursor-pointer hover:fill-gray-200`
+    }
+
+    const selectedGlobalOption = selectedGlobalId ? globalOptionMap[selectedGlobalId] : null
+    const displayedEstadoNombre = selectedGlobalOption?.id ?? ''
+    const displayedEstado = selectedGlobalOption?.texto ?? 'Normal'
+    const displayedColor = selectedGlobalOption && selectedGlobalOption.id !== 'limpiarEstado'
+        ? (selectedGlobalOption.color ?? 'gray')
+        : 'gray'
+
+    const toneToHex = (tone) => {
+        switch (tone) {
+            case 'red':
+                return '#dc2626'
+            case 'blue':
+                return '#2563eb'
+            case 'green':
+                return '#16a34a'
+            case 'gray':
+            default:
+                return '#475569'
+        }
+    }
+
+    const globalButtonColorClass = (option) => {
+        switch (option.color) {
+            case 'red':
+                return 'bg-red-500 text-white'
+            case 'blue':
+                return 'bg-blue-500 text-white'
+            case 'green':
+                return 'bg-green-500 text-white'
+            case 'gray':
+                return 'bg-gray-600 text-white'
+            default:
+                return 'bg-slate-200 text-slate-900'
+        }
+    }
+
+    const treatmentButtonClasses = (option) => {
+        if (surfaceSelectionDisabled) {
+            return `p-2 rounded ${option.color} opacity-50 cursor-not-allowed`
+        }
+        const isSelected = selectedTreatment?.id === option.id
+        return `p-2 rounded ${option.color} ${isSelected ? 'ring-2 ring-offset-1 ring-indigo-400' : ''} cursor-pointer`
+    }
 
     const overlayStyle = {
         position: 'fixed',
@@ -143,78 +170,89 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
         zIndex: 2000,
     };
 
-    const disenoEstado = (estadoNombre, estado) => {
-        const color = menuGlobales.find(op => op.id === estadoNombre)?.color || 'gray';
-        const numero = diente.numero;
+    const disenoEstado = (estadoNombre, estado, color) => {
+        if (!estadoNombre || estadoNombre === 'limpiarEstado') {
+            return null
+        }
+
+        const numero = diente.numero
+        const toneHex = toneToHex(color)
+
         switch (estadoNombre) {
             case 'exodoncia':
-                return <text
-                    x="50"
-                    y="64"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className={`text-${color}-800 dark:text-${color}800 fill-current`}
-                    fontSize="140"
-                >
-                    {estado === 'Normal' ? '' : estado}
-                </text>;
+                return (
+                    <text
+                        x="50"
+                        y="64"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill={toneHex}
+                        fontSize="140"
+                    >
+                        {estado === 'Normal' ? '' : estado}
+                    </text>
+                )
             case 'exodonciaOrtodoncia':
-                return <text
-                    x="50"
-                    y="64"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className={`text-${color}-500 dark:text-${color}-400 fill-current`}
-                    fontSize="140"
-                >
-                    X
-                </text>;
+                return (
+                    <text
+                        x="50"
+                        y="64"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill={toneHex}
+                        fontSize="140"
+                    >
+                        X
+                    </text>
+                )
             case 'implante':
-                return <image href="https://img.icons8.com/?size=100&id=VZE4lkdKnHQr&format=png&color=000000"
-                    x={50 - 75 / 2}
-                    y={50 - 75 / 2}
-                    width={75}
-                    height={75} />;
+                return (
+                    <image
+                        href="https://img.icons8.com/?size=100&id=VZE4lkdKnHQr&format=png&color=000000"
+                        x={50 - 75 / 2}
+                        y={50 - 75 / 2}
+                        width={75}
+                        height={75}
+                    />
+                )
             case 'fractura':
-                return <polyline
-                    points="-10,62 10,42 30,62 50,42 70,62 90,42 110,62"
-                    fill="none"
-                    stroke={color}
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                />
+                return (
+                    <polyline
+                        points="-10,62 10,42 30,62 50,42 70,62 90,42 110,62"
+                        fill="none"
+                        stroke={toneHex}
+                        strokeWidth="6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+                )
             case 'ausenciaNatural':
-                return <text
-                    x="50"
-                    y="64"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className={`text-${color}-800 dark:text-${color}800 fill-current`}
-                    fontSize="140"
-                >
-                    {estado === 'Normal' ? '' : estado}
-                </text>;
-            case 'implanteRealizado':
-                return <image href="https://img.icons8.com/?size=100&id=VZE4lkdKnHQr&format=png&color=000000"
-                    x={50 - 75 / 2}
-                    y={50 - 75 / 2}
-                    width={75}
-                    height={75} />;
             case 'exodonciaRealizada':
-                return <text
-                    x="50"
-                    y="64"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className={`text-${color}-800 dark:text-${color}800 fill-current`}
-                    fontSize="140"
-                >
-                    {estado === 'Normal' ? '' : estado}
-                </text>;
-            case 'implanteCoronarealizada':
-                const r = 45;
-                const imgSize = r * 2;
+                return (
+                    <text
+                        x="50"
+                        y="64"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill={toneHex}
+                        fontSize="140"
+                    >
+                        {estado === 'Normal' ? '' : estado}
+                    </text>
+                )
+            case 'implanteRealizado':
+                return (
+                    <image
+                        href="https://img.icons8.com/?size=100&id=VZE4lkdKnHQr&format=png&color=000000"
+                        x={50 - 75 / 2}
+                        y={50 - 75 / 2}
+                        width={75}
+                        height={75}
+                    />
+                )
+            case 'implanteCoronarealizada': {
+                const r = 45
+                const imgSize = r * 2
                 return (
                     <g className="pointer-events-none">
                         <defs>
@@ -228,7 +266,7 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
                             cy="50"
                             r={r}
                             fill="white"
-                            stroke={color || '#64748b'}
+                            stroke={toneHex}
                             strokeWidth="7"
                         />
 
@@ -242,107 +280,106 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
                             clipPath={`url(#clip-implante-${numero})`}
                         />
                     </g>
-                );
+                )
+            }
             case 'extruido':
-                return <text></text>;
             case 'entruido':
-                return <text></text>;
+                return null
             default:
-                return <text
-                    x="50"
-                    y="55"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className={`text-${color}-700 dark:text-${color}-700 fill-current font-bold`}
-                    fontSize="60"
-                >
-                    {estado === 'Normal' ? '' : estado}
-                </text>;
+                return (
+                    <text
+                        x="50"
+                        y="55"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill={toneHex}
+                        fontSize="60"
+                    >
+                        {estado === 'Normal' ? '' : estado}
+                    </text>
+                )
         }
     }
 
     return (
-        <div style={overlayStyle} onClick={onClose} className='overflow-x-auto-auto'>
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 w-90% shadow-lg" onClick={(e) => e.stopPropagation()}>
+        <div style={overlayStyle} onClick={onClose} className='overflow-x-auto'>
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 w-full max-w-5xl shadow-lg" onClick={(e) => e.stopPropagation()}>
                 <div className="flex flex-col sm:flex-row gap-4 items-center">
                     <div className="flex-1 flex flex-col items-center">
                         <div className="text-2xl font-semibold mb-2 dark:text-white">Diente {diente.numero}</div>
                         <svg viewBox="0 0 100 100" width={240} height={240} className="m-1">
                             <polygon
                                 points="0,0 100,0 75,25 25,25"
-                                className={localSuperficies.vestibular || "fill-white stroke-gray-400 cursor-pointer hover:fill-gray-200 strokeWidth-3"}
+                                className={getPolygonClass('vestibular')}
+                                strokeWidth={3}
                                 onClick={() => handleSurfaceClick('vestibular')}
                             />
                             <polygon
                                 points="0,0 25,25 25,75 0,100"
-                                className={localSuperficies.distal || "fill-white stroke-gray-400 cursor-pointer hover:fill-gray-200 strokeWidth-3"}
+                                className={getPolygonClass('distal')}
+                                strokeWidth={3}
                                 onClick={() => handleSurfaceClick('distal')}
                             />
                             <polygon
                                 points="75,25 100,0 100,100 75,75"
-                                className={localSuperficies.mesial || "fill-white stroke-gray-400 cursor-pointer hover:fill-gray-200 strokeWidth-3"}
+                                className={getPolygonClass('mesial')}
+                                strokeWidth={3}
                                 onClick={() => handleSurfaceClick('mesial')}
                             />
                             <polygon
                                 points="25,25 75,25 75,75 25,75"
-                                className={localSuperficies.oclusal || "fill-white stroke-gray-400 cursor-pointer hover:fill-gray-200 strokeWidth-3"}
+                                className={getPolygonClass('oclusal')}
+                                strokeWidth={3}
                                 onClick={() => handleSurfaceClick('oclusal')}
                             />
                             <polygon
                                 points="25,75 75,75 100,100 0,100"
-                                className={localSuperficies.palatino || "fill-white stroke-gray-400 cursor-pointer hover:fill-gray-200 strokeWidth-3"}
+                                className={getPolygonClass('palatino')}
+                                strokeWidth={3}
                                 onClick={() => handleSurfaceClick('palatino')}
                             />
-                            {disenoEstado(localOpcion.estadoNombre, localOpcion.estado)}
+                            {disenoEstado(displayedEstadoNombre, displayedEstado, displayedColor)}
                         </svg>
                         <p className="text-2xl font-semibold dark:text-white">{diente.numero}</p>
-                                    <div className={'text-center font-bold dark:text-white text-sm'}>{localOpcion.estado}</div>
+                        <div className={'text-center font-bold dark:text-white text-sm'}>{displayedEstado}</div>
                     </div>
 
-                    <div className="width-10%">
+                    <div className="w-full sm:w-80">
                         <div className="mb-2 font-semibold dark:text-white">Opciones</div>
                         <div className="mb-2">
                             <div className="mb-1 dark:text-white">Tratamientos por superficie</div>
                             <div className="grid grid-cols-3 gap-2 mb-4 max-sm:grid-cols-2">
-                                {menuOpciones.map(op => (
+                                {surfaceOptions.map((op) => (
                                     <button
                                         key={op.id}
-                                        onClick={() => { setSelectedTreatment(op) }}
-                                        disabled={disabledTreatments}
-                                        className={
-                                            !disabledTreatments ?
-                                                `p-2 rounded ${selectedTreatment?.id === op.id ? 'ring-2 ring-offset-1' : ''} ${op.color} cursor-pointer`
-                                                : `p-2 rounded ${op.color} opacity-50 cursor-not-allowed`
-                                        }>
-                                        <span className='text-black dark:text-white'>
-                                            {op.label}
-                                        </span>
+                                        onClick={() => setSelectedTreatment(op)}
+                                        disabled={surfaceSelectionDisabled}
+                                        className={treatmentButtonClasses(op)}
+                                    >
+                                        <span className='text-black dark:text-white'>{op.label}</span>
                                     </button>
                                 ))}
                             </div>
 
                             <div className="mb-1 dark:text-white">Acciones globales del diente</div>
                             <div className="grid grid-cols-3 gap-2 mb-4">
-                                {menuGlobales.map(op => (
-                                    <button
-                                        key={op.id}
-                                        onClick={(e) => {
-                                            setSelectedGlobal(op)
-                                            setSelectedTreatment(null)
-                                            document.activeElement?.blur();
-                                            setLocalOpcion({ estado: op.texto, estadoNombre: op.id })
-                                            op.id === 'limpiarEstado' ? setDisabledTreatments(false) : setDisabledTreatments(true)
-                                        }}
-
-                                        aria-pressed={selectedGlobal?.id === op.id}
-                                        className={`p-2 cursor-pointer rounded ${selectedGlobal?.id === op.id ? 'ring-2 ring-offset-1' : ''} ${op.color === 'dark' ? 'bg-gray-700 text-white' : op.color === 'red' ? 'bg-red-500 text-white' : op.color === 'blue' ? 'bg-blue-500 text-white' :  op.color === '' ? 'bg-green-500 text-white' : ''}`}
-                                    >
-                                        <div className='flex flex-col'>
-                                            <span className="max-sm:text-sm max-lg:truncate font-semibold mr-2 text-black dark:text-white">{op.texto || ''}</span>
-                                            <span className="max-sm:text-sm max-lg:truncate text-black dark:text-white">{op.label}</span>
-                                        </div>
-                                    </button>
-                                ))}
+                                {globalOptions.map((op) => {
+                                    const isSelected = selectedGlobalId === op.id
+                                    const buttonClass = globalButtonColorClass(op)
+                                    return (
+                                        <button
+                                            key={op.id}
+                                            onClick={() => handleGlobalSelect(op)}
+                                            aria-pressed={isSelected}
+                                            className={`p-2 cursor-pointer rounded ${isSelected ? 'ring-2 ring-offset-1 ring-indigo-400' : ''} ${buttonClass}`}
+                                        >
+                                            <div className='flex flex-col text-center'>
+                                                <span className="max-sm:text-sm max-lg:truncate font-semibold text-black dark:text-white">{op.texto || ''}</span>
+                                                <span className="max-sm:text-sm max-lg:truncate text-black dark:text-white">{op.label}</span>
+                                            </div>
+                                        </button>
+                                    )
+                                })}
                             </div>
                         </div>
 

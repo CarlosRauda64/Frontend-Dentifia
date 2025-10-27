@@ -1,12 +1,10 @@
 import React from 'react'
 import TableFichas from './tableFichasOrtodoncia.jsx'
 
-const fichaOrtodoncia = () => {
+const FichaOrtodoncia = ({ expedienteId, onRefresh }) => {
   return (
-    <>
-        <TableFichas />
-    </>
+    <TableFichas expedienteId={expedienteId} onRefresh={onRefresh} />
   )
 }
 
-export default fichaOrtodoncia
+export default FichaOrtodoncia

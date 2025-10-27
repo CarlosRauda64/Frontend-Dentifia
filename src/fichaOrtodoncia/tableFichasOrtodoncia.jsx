@@ -1,208 +1,363 @@
-// ...existing code...
-import React, { useState, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+    Button,
+    Modal,
+    ModalBody,
+    ModalHeader,
     Table,
     TableBody,
     TableCell,
     TableHead,
     TableHeadCell,
-    TableRow,
-    Modal,
-    ModalBody,
-    ModalHeader,
-    Button,
-    Datepicker
+    TableRow
 } from "flowbite-react";
-import { HiOutlinePencilAlt, HiOutlineTrash, HiOutlineExclamationCircle, HiOutlinePlus, HiOutlineDocumentText } from "react-icons/hi";
+import {
+    HiOutlineDocumentText,
+    HiOutlineExclamationCircle,
+    HiOutlinePlus,
+    HiOutlineTrash
+} from "react-icons/hi";
 import { useNavigate } from "react-router";
+import { API_URL } from "../api/api";
+import { useAuth } from "../auth/useAuth";
 
-const mockFichas = [
-    {
-        id: 1,
-        motivo_consulta: "Dolor en molares superiores",
-        diagnostico: "Caries profunda en 16 y 15",
-        oclusion: "Clase I",
-        mordida: "Mordida normal",
-        plan_tratamiento: "Obturación 16, 15 + control a 6 meses",
-        estado_tratamiento: "Pendiente",
-        created_at: "2025-10-01T10:15:00Z",
-    },
-    {
-        id: 2,
-        motivo_consulta: "Malposición dental",
-        diagnostico: "Apiñamiento leve en arcada superior",
-        oclusion: "Clase II",
-        mordida: "Mordida cruzada parcial",
-        plan_tratamiento: "Brackets superiores 12 meses",
-        estado_tratamiento: "En tratamiento",
-        created_at: "2025-09-15T14:30:00Z",
-    },
-    {
-        id: 3,
-        motivo_consulta: "Revisión rutinaria",
-        diagnostico: "Sin hallazgos relevantes",
-        oclusion: "Clase I",
-        mordida: "Mordida normal",
-        plan_tratamiento: "Profilaxis + pulido",
-        estado_tratamiento: "Completado",
-        created_at: "2025-08-20T09:00:00Z",
-    },
-];
+const ESTADO_TRATAMIENTO_OPCIONES = [
+    { value: "activo", label: "Activo" },
+    { value: "finalizado", label: "Finalizado" }
+]
 
-const TableFichas = () => {
-    const [fichas, setFichas] = useState(mockFichas);
-    const [fichaSeleccionada, setFichaSeleccionada] = useState(null);
-    const [openModal, setOpenModal] = useState(false);
-    const [openCreateModal, setOpenCreateModal] = useState(false);
-    const [newFicha, setNewFicha] = useState({
-        motivo_consulta_inicial: "",
-        diagnostico: "",
-        oclusion: "",
-        mordida: "",
-        plan_tratamiento: "",
-        estado_tratamiento: "",
-    });
-    const navigate = useNavigate();
+const FICHA_INICIAL = {
+    motivo_consulta_inicial: "",
+    diagnostico: "",
+    oclusion: "",
+    mordida: "",
+    plan_tratamiento: "",
+    estado_tratamiento: "activo"
+}
 
-    // Notes modal state
-    const [openNotesModal, setOpenNotesModal] = useState(false);
-    const [selectedFichaForNotas, setSelectedFichaForNotas] = useState(null);
-        const [notas, setNotas] = useState([]);
-    const [openCreateNotaModal, setOpenCreateNotaModal] = useState(false);
-    const [newNota, setNewNota] = useState({ cita_id: "", motivo_visita: "", observaciones_clinicas: "", procedimiento_realizado: "" });
+const NOTA_INICIAL = {
+    motivo_visita: "",
+    observaciones_clinicas: "",
+    procedimiento_realizado: "",
+    odontograma_comentarios: "",
+    odontograma_snapshot: []
+}
 
-        // Infinite scroll UI state
-        const [page, setPage] = useState(1);
-        const pageSize = 2; // ejemplo pequeño para demo
-        const [displayedNotas, setDisplayedNotas] = useState([]);
-        const [hasMore, setHasMore] = useState(true);
-        const [loadingMore, setLoadingMore] = useState(false);
-        const scrollRef = useRef(null);
+const parseListado = (payload) => {
+    if (!payload) return []
+    if (Array.isArray(payload)) return payload
+    if (Array.isArray(payload?.results)) return payload.results
+    return []
+}
 
-    // Mock notes per ficha (UI only)
-    const mockNotas = {
-        1: [
-            { id: 101, ficha_ortodoncia_id: 1, cita_id: 201, motivo_visita: "Ajuste de arco", observaciones_clinicas: "Arco flojo en lado derecho", procedimiento_realizado: "Cambio de ligaduras", created_at: "2025-10-10T09:30:00Z" },
-            { id: 102, ficha_ortodoncia_id: 1, cita_id: 202, motivo_visita: "Control", observaciones_clinicas: "Buen avance", procedimiento_realizado: "Ajuste leve", created_at: "2025-09-05T11:00:00Z" },
-            { id: 103, ficha_ortodoncia_id: 1, cita_id: 202, motivo_visita: "Control", observaciones_clinicas: "Buen avance", procedimiento_realizado: "Ajuste leve", created_at: "2025-09-05T11:00:00Z" },
-            { id: 104, ficha_ortodoncia_id: 1, cita_id: 202, motivo_visita: "Control", observaciones_clinicas: "Buen avance", procedimiento_realizado: "Ajuste leve", created_at: "2025-09-05T11:00:00Z" },
-            { id: 105, ficha_ortodoncia_id: 1, cita_id: 202, motivo_visita: "Control", observaciones_clinicas: "Buen avance", procedimiento_realizado: "Ajuste leve", created_at: "2025-09-05T11:00:00Z" },
-            { id: 106, ficha_ortodoncia_id: 1, cita_id: 202, motivo_visita: "Control", observaciones_clinicas: "Buen avance", procedimiento_realizado: "Ajuste leve", created_at: "2025-09-05T11:00:00Z" },
-        ],
-        2: [
-            { id: 103, ficha_ortodoncia_id: 2, cita_id: 203, motivo_visita: "Colocación de brackets", observaciones_clinicas: "Colocados superiores", procedimiento_realizado: "Colocación brackets", created_at: "2025-09-16T10:00:00Z" },
-        ],
-        3: [],
-    };
+const formatDate = (iso) => {
+    if (!iso) return "-"
+    try {
+        return new Date(iso).toLocaleString('es-SV')
+    } catch {
+        return iso
+    }
+}
 
-    const abrirModalNotas = (f) => {
-        setSelectedFichaForNotas(f);
-            setNotas(mockNotas[f.id] ?? []);
-            // reset infinite scroll
-            setPage(1);
-            setDisplayedNotas((mockNotas[f.id] ?? []).slice(0, pageSize));
-            setHasMore(((mockNotas[f.id] ?? []).length > pageSize));
-        setOpenNotesModal(true);
-    };
+const traducirEstado = (valor) => {
+    const encontrado = ESTADO_TRATAMIENTO_OPCIONES.find((op) => op.value === valor)
+    return encontrado?.label ?? valor ?? 'Sin estado'
+}
+
+const TableFichas = ({ expedienteId, onRefresh }) => {
+    const navigate = useNavigate()
+    const auth = useAuth()
+
+    const [fichas, setFichas] = useState([])
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState(null)
+
+    const [fichaSeleccionada, setFichaSeleccionada] = useState(null)
+    const [openDeleteModal, setOpenDeleteModal] = useState(false)
+
+    const [openCreateModal, setOpenCreateModal] = useState(false)
+    const [newFicha, setNewFicha] = useState(FICHA_INICIAL)
+    const [savingFicha, setSavingFicha] = useState(false)
+
+    const [openNotesModal, setOpenNotesModal] = useState(false)
+    const [selectedFichaForNotas, setSelectedFichaForNotas] = useState(null)
+    const [notas, setNotas] = useState([])
+    const [loadingNotas, setLoadingNotas] = useState(false)
+    const [errorNotas, setErrorNotas] = useState(null)
+    const [openCreateNotaModal, setOpenCreateNotaModal] = useState(false)
+    const [newNota, setNewNota] = useState(NOTA_INICIAL)
+    const [savingNota, setSavingNota] = useState(false)
+    const [deletingNotaId, setDeletingNotaId] = useState(null)
+
+    const tieneAcceso = auth?.isAuthenticated && Boolean(expedienteId)
+
+    const getToken = useCallback(() => {
+        const token = auth.getAccessToken?.()
+        return token || null
+    }, [auth])
+
+    const fetchFichas = useCallback(async () => {
+        if (!tieneAcceso) {
+            setFichas([])
+            return
+        }
+
+        const token = getToken()
+        if (!token) {
+            return
+        }
+
+        setLoading(true)
+        setError(null)
+
+        try {
+            const params = new URLSearchParams({ expediente: expedienteId })
+            const response = await fetch(`${API_URL}/expediente/fichas-ortodoncia/?${params.toString()}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}`)
+            }
+
+            const data = await response.json()
+            setFichas(parseListado(data))
+        } catch (err) {
+            console.error('Error al cargar las fichas de ortodoncia:', err)
+            setError('No se pudieron cargar las fichas de ortodoncia.')
+        } finally {
+            setLoading(false)
+        }
+    }, [tieneAcceso, expedienteId, getToken])
+
+    useEffect(() => {
+        fetchFichas()
+    }, [fetchFichas])
+
+    const abrirModalEliminar = (ficha) => {
+        setFichaSeleccionada(ficha)
+        setOpenDeleteModal(true)
+    }
+
+    const cerrarModalEliminar = () => {
+        setFichaSeleccionada(null)
+        setOpenDeleteModal(false)
+    }
+
+    const confirmarEliminar = async () => {
+        if (!fichaSeleccionada) return
+        const token = getToken()
+        if (!token) return
+
+        try {
+            const response = await fetch(`${API_URL}/expediente/fichas-ortodoncia/${fichaSeleccionada.id}/`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+
+            if (!response.ok && response.status !== 204) {
+                throw new Error(`Error ${response.status}`)
+            }
+
+            await fetchFichas()
+            onRefresh?.()
+        } catch (err) {
+            console.error('Error al eliminar la ficha:', err)
+        } finally {
+            cerrarModalEliminar()
+        }
+    }
+
+    const abrirModalNotas = (ficha) => {
+        setSelectedFichaForNotas(ficha)
+        setOpenNotesModal(true)
+        cargarNotas(ficha.id)
+    }
 
     const cerrarModalNotas = () => {
-        setOpenNotesModal(false);
-        setSelectedFichaForNotas(null);
-        setNotas([]);
-    };
+        setSelectedFichaForNotas(null)
+        setNotas([])
+        setOpenNotesModal(false)
+        setErrorNotas(null)
+    }
 
-    const guardarNuevaNotaUI = () => {
-        // UI-only: log and close
-        // eslint-disable-next-line no-console
-        console.log('Crear nota (UI-only) para ficha', selectedFichaForNotas?.id, newNota);
-        setOpenCreateNotaModal(false);
-        setNewNota({ cita_id: "", motivo_visita: "", observaciones_clinicas: "", procedimiento_realizado: "" });
-    };
+    const cargarNotas = useCallback(async (fichaId) => {
+        if (!fichaId) return
+        const token = getToken()
+        if (!token) return
 
-        // load more function (UI-only, simulated delay)
-        const loadMoreNotas = () => {
-            if (!selectedFichaForNotas) return;
-            const all = mockNotas[selectedFichaForNotas.id] ?? [];
-            if (loadingMore || !hasMore) return;
-            setLoadingMore(true);
-            // simulate network delay
-            setTimeout(() => {
-                const nextPage = page + 1;
-                const start = (nextPage - 1) * pageSize;
-                const nextChunk = all.slice(start, start + pageSize);
-                setDisplayedNotas((prev) => [...prev, ...nextChunk]);
-                setPage(nextPage);
-                setHasMore(start + pageSize < all.length);
-                setLoadingMore(false);
-            }, 600);
-        };
+        setLoadingNotas(true)
+        setErrorNotas(null)
 
-        // attach scroll listener to container (optional: handled via onScroll)
-        useEffect(() => {
-            const el = scrollRef.current;
-            if (!el) return;
-            const onScroll = () => {
-                if (loadingMore || !hasMore) return;
-                const { scrollTop, scrollHeight, clientHeight } = el;
-                if (scrollTop + clientHeight >= scrollHeight - 40) {
-                    loadMoreNotas();
-                }
-            };
-            el.addEventListener('scroll', onScroll);
-            return () => el.removeEventListener('scroll', onScroll);
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [scrollRef, loadingMore, hasMore, page, selectedFichaForNotas]);
-
-    const formatDate = (iso) => {
-        if (!iso) return "";
         try {
-            const d = new Date(iso);
-            return d.toLocaleString();
-        } catch {
-            return iso;
+            const params = new URLSearchParams({ ficha_ortodoncia: fichaId })
+            const response = await fetch(`${API_URL}/expediente/notas-progreso/?${params.toString()}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}`)
+            }
+
+            const data = await response.json()
+            setNotas(parseListado(data))
+        } catch (err) {
+            console.error('Error al cargar las notas de progreso:', err)
+            setErrorNotas('No se pudieron cargar las notas de progreso.')
+        } finally {
+            setLoadingNotas(false)
         }
-    };
+    }, [getToken])
 
-    const abrirModalEliminar = (f) => {
-        setFichaSeleccionada(f);
-        setOpenModal(true);
-    };
+    const resetNuevaFicha = () => {
+        setNewFicha(FICHA_INICIAL)
+    }
 
-    const cancelarModal = () => {
-        setOpenModal(false);
-        setFichaSeleccionada(null);
-    };
+    const resetNuevaNota = () => {
+        setNewNota(NOTA_INICIAL)
+    }
 
-    const confirmarEliminar = () => {
-        if (!fichaSeleccionada) return;
-        setFichas((prev) => prev.filter((f) => f.id !== fichaSeleccionada.id));
-        setOpenModal(false);
-        setFichaSeleccionada(null);
-    };
+    const guardarNuevaFicha = async () => {
+        if (!tieneAcceso) return
+        const token = getToken()
+        if (!token) return
+
+        setSavingFicha(true)
+        try {
+            const respuesta = await fetch(`${API_URL}/expediente/fichas-ortodoncia/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    expediente: expedienteId,
+                    ...newFicha
+                })
+            })
+
+            if (!respuesta.ok) {
+                throw new Error(`Error ${respuesta.status}`)
+            }
+
+            await fetchFichas()
+            onRefresh?.()
+            setOpenCreateModal(false)
+            resetNuevaFicha()
+        } catch (err) {
+            console.error('Error al crear la ficha:', err)
+        } finally {
+            setSavingFicha(false)
+        }
+    }
+
+    const guardarNuevaNota = async () => {
+        if (!selectedFichaForNotas) return
+        const token = getToken()
+        if (!token) return
+
+        setSavingNota(true)
+        try {
+            const payload = {
+                ficha_ortodoncia: selectedFichaForNotas.id,
+                motivo_visita: newNota.motivo_visita,
+                observaciones_clinicas: newNota.observaciones_clinicas,
+                procedimiento_realizado: newNota.procedimiento_realizado,
+                odontograma_comentarios: newNota.odontograma_comentarios,
+                odontograma_snapshot: newNota.odontograma_snapshot ?? []
+            }
+
+            const respuesta = await fetch(`${API_URL}/expediente/notas-progreso/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            })
+
+            if (!respuesta.ok) {
+                throw new Error(`Error ${respuesta.status}`)
+            }
+
+            resetNuevaNota()
+            setOpenCreateNotaModal(false)
+            await cargarNotas(selectedFichaForNotas.id)
+            onRefresh?.()
+        } catch (err) {
+            console.error('Error al crear la nota de progreso:', err)
+        } finally {
+            setSavingNota(false)
+        }
+    }
+
+    const eliminarNota = async (notaId) => {
+        if (!selectedFichaForNotas || !notaId) return
+        const token = getToken()
+        if (!token) return
+
+        setDeletingNotaId(notaId)
+        try {
+            const respuesta = await fetch(`${API_URL}/expediente/notas-progreso/${notaId}/`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+
+            if (!respuesta.ok && respuesta.status !== 204) {
+                throw new Error(`Error ${respuesta.status}`)
+            }
+
+            await cargarNotas(selectedFichaForNotas.id)
+            onRefresh?.()
+        } catch (err) {
+            console.error('Error al eliminar la nota de progreso:', err)
+        } finally {
+            setDeletingNotaId(null)
+        }
+    }
+
+    const fichasOrdenadas = useMemo(() => {
+        return [...fichas].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    }, [fichas])
 
     return (
         <>
-            <div className="flex justify-between items-center mb-4">
-                <div className="flex flex-col justify-center items-center md:flex-row md:space-x-2">
-                    <p className="text-gray-600 dark:text-gray-300 font-bold">Busqueda por fecha:</p>
-                    <Datepicker language="es-MX" />
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                <div>
+                    <p className="text-gray-600 dark:text-gray-300 font-semibold">Fichas de ortodoncia registradas</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Expediente asociado: {expedienteId ?? 'No asignado'}</p>
                 </div>
-                <Button color="purple" onClick={() => setOpenCreateModal(true)}>
+                <Button color="purple" onClick={() => setOpenCreateModal(true)} disabled={!tieneAcceso}>
                     <div className="flex items-center gap-2">
                         <HiOutlinePlus size={16} />
                         Crear ficha
                     </div>
                 </Button>
             </div>
-            <div className="overflow-x-auto">
+
+            {error && (
+                <div className="mb-4 rounded-lg bg-red-100 p-4 text-red-700 dark:bg-red-950 dark:text-red-200">
+                    {error}
+                </div>
+            )}
+
+            <div className="overflow-x-auto rounded-lg shadow-sm">
                 <Table hoverable className="text-center">
                     <TableHead>
                         <TableRow>
-                            <TableHeadCell>Motivo</TableHeadCell>
+                            <TableHeadCell>Motivo inicial</TableHeadCell>
                             <TableHeadCell className="max-sm:hidden">Diagnóstico</TableHeadCell>
                             <TableHeadCell className="max-md:hidden">Oclusión</TableHeadCell>
                             <TableHeadCell className="max-md:hidden">Mordida</TableHeadCell>
-                            <TableHeadCell className="max-lg:hidden">Plan tratamiento</TableHeadCell>
+                            <TableHeadCell className="max-lg:hidden">Plan de tratamiento</TableHeadCell>
                             <TableHeadCell className="max-lg:hidden">Estado</TableHeadCell>
                             <TableHeadCell>Creado</TableHeadCell>
                             <TableHeadCell>Notas</TableHeadCell>
@@ -210,231 +365,279 @@ const TableFichas = () => {
                             <TableHeadCell>Eliminar</TableHeadCell>
                         </TableRow>
                     </TableHead>
-
                     <TableBody className="divide-y">
-                        {fichas.map((f) => (
-                            <TableRow key={f.id} className="bg-white dark:border-gray-700 dark:bg-gray-800">
-                                <TableCell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                                    {f.motivo_consulta ?? ""}
-                                </TableCell>
-                                <TableCell className="max-sm:hidden">{f.diagnostico ?? ""}</TableCell>
-                                <TableCell className="max-md:hidden">{f.oclusion ?? ""}</TableCell>
-                                <TableCell className="max-md:hidden">{f.mordida ?? ""}</TableCell>
-                                <TableCell className="max-lg:hidden">{f.plan_tratamiento ?? ""}</TableCell>
-                                <TableCell className="max-lg:hidden">{f.estado_tratamiento ?? ""}</TableCell>
-                                <TableCell>{formatDate(f.created_at)}</TableCell>
-                                <TableCell>
-                                    <HiOutlineDocumentText
-                                        size={18}
-                                        className="cursor-pointer text-gray-500 hover:text-gray-700 mx-auto"
-                                        onClick={() => abrirModalNotas(f)}
-                                    />
-                                </TableCell>
-                                <TableCell>
-                                    <HiOutlinePencilAlt
-                                        size={18}
-                                        className="cursor-pointer text-gray-500 hover:text-gray-700 mx-auto"
-                                        onClick={() => navigate(`/fichas/editar/${f.id}`)}
-                                    />
-                                </TableCell>                               
-                                <TableCell>
-                                    <HiOutlineTrash
-                                        size={18}
-                                        className="cursor-pointer text-gray-500 hover:text-gray-700 mx-auto"
-                                        onClick={() => abrirModalEliminar(f)}
-                                    />
+                        {loading ? (
+                            <TableRow>
+                                <TableCell colSpan={10} className="text-center py-6 text-gray-500 dark:text-gray-300">
+                                    Cargando fichas...
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        ) : fichasOrdenadas.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={10} className="text-center py-6 text-gray-500 dark:text-gray-300">
+                                    No hay fichas registradas todavía.
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            fichasOrdenadas.map((ficha) => (
+                                <TableRow key={ficha.id} className="bg-white dark:border-gray-700 dark:bg-gray-800">
+                                    <TableCell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                                        {ficha.motivo_consulta_inicial || 'Sin motivo'}
+                                    </TableCell>
+                                    <TableCell className="max-sm:hidden">{ficha.diagnostico || 'Sin diagnóstico'}</TableCell>
+                                    <TableCell className="max-md:hidden">{ficha.oclusion || '-'}</TableCell>
+                                    <TableCell className="max-md:hidden">{ficha.mordida || '-'}</TableCell>
+                                    <TableCell className="max-lg:hidden">{ficha.plan_tratamiento || '-'}</TableCell>
+                                    <TableCell className="max-lg:hidden">{traducirEstado(ficha.estado_tratamiento)}</TableCell>
+                                    <TableCell>{formatDate(ficha.created_at)}</TableCell>
+                                    <TableCell>
+                                        <HiOutlineDocumentText
+                                            size={18}
+                                            className="cursor-pointer text-gray-500 hover:text-gray-700 mx-auto"
+                                            onClick={() => abrirModalNotas(ficha)}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <button
+                                            type="button"
+                                            onClick={() => navigate(`/fichas/editar/${ficha.id}`)}
+                                            className="text-indigo-600 hover:text-indigo-800"
+                                        >
+                                            Editar
+                                        </button>
+                                    </TableCell>
+                                    <TableCell>
+                                        <HiOutlineTrash
+                                            size={18}
+                                            className="cursor-pointer text-gray-500 hover:text-red-600 mx-auto"
+                                            onClick={() => abrirModalEliminar(ficha)}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
                     </TableBody>
                 </Table>
             </div>
 
-            {openModal && fichaSeleccionada && (
-                <Modal show={openModal} size="md" onClose={cancelarModal} popup position="center">
-                    <ModalHeader />
-                    <ModalBody>
-                        <div className="text-center">
-                            <HiOutlineExclamationCircle className="mx-auto mb-4 h-14 w-14 text-gray-400 dark:text-gray-200" />
-                            <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-                                ¿Eliminar ficha creada el{" "}
-                                <span className="font-semibold">{formatDate(fichaSeleccionada.created_at)}</span>?
-                            </h3>
-                            <div className="flex justify-center gap-4">
-                                <Button color="red" onClick={confirmarEliminar}>
-                                    Eliminar
-                                </Button>
-                                <Button color="gray" onClick={cancelarModal}>
-                                    Cancelar
-                                </Button>
-                            </div>
+            <Modal show={openDeleteModal} size="md" onClose={cerrarModalEliminar} popup position="center">
+                <ModalHeader />
+                <ModalBody>
+                    <div className="text-center">
+                        <HiOutlineExclamationCircle className="mx-auto mb-4 h-14 w-14 text-gray-400 dark:text-gray-200" />
+                        <h3 className="mb-5 text-lg font-normal text-gray-600 dark:text-gray-300">
+                            ¿Eliminar la ficha creada el {formatDate(fichaSeleccionada?.created_at)}?
+                        </h3>
+                        <div className="flex justify-center gap-4">
+                            <Button color="red" onClick={confirmarEliminar}>
+                                Eliminar
+                            </Button>
+                            <Button color="gray" onClick={cerrarModalEliminar}>
+                                Cancelar
+                            </Button>
                         </div>
-                    </ModalBody>
-                </Modal>
-            )}
+                    </div>
+                </ModalBody>
+            </Modal>
 
-            {/* Create ficha modal (UI only, no backend yet) */}
             <Modal show={openCreateModal} size="md" onClose={() => setOpenCreateModal(false)} popup position="center">
                 <ModalHeader />
                 <ModalBody>
                     <div className="text-left">
                         <h3 className="mb-4 text-lg font-semibold">Crear ficha de ortodoncia</h3>
                         <div className="flex flex-col gap-3">
-                            <label className="text-sm">Motivo de consulta</label>
+                            <label className="text-sm">Motivo de consulta inicial</label>
                             <input
                                 type="text"
-                                value={newFicha.motivo_consulta_inicial}
-                                onChange={(e) => setNewFicha((s) => ({ ...s, motivo_consulta_inicial: e.target.value }))}
                                 className="w-full rounded border px-2 py-1"
-                                placeholder="Motivo de consulta inicial"
+                                value={newFicha.motivo_consulta_inicial}
+                                onChange={(e) => setNewFicha((prev) => ({ ...prev, motivo_consulta_inicial: e.target.value }))}
                             />
 
                             <label className="text-sm">Diagnóstico</label>
                             <input
                                 type="text"
-                                value={newFicha.diagnostico}
-                                onChange={(e) => setNewFicha((s) => ({ ...s, diagnostico: e.target.value }))}
                                 className="w-full rounded border px-2 py-1"
-                                placeholder="Diagnóstico"
+                                value={newFicha.diagnostico}
+                                onChange={(e) => setNewFicha((prev) => ({ ...prev, diagnostico: e.target.value }))}
                             />
 
                             <label className="text-sm">Oclusión</label>
                             <input
                                 type="text"
-                                value={newFicha.oclusion}
-                                onChange={(e) => setNewFicha((s) => ({ ...s, oclusion: e.target.value }))}
                                 className="w-full rounded border px-2 py-1"
-                                placeholder="Clase I / II / III"
+                                value={newFicha.oclusion}
+                                onChange={(e) => setNewFicha((prev) => ({ ...prev, oclusion: e.target.value }))}
                             />
 
                             <label className="text-sm">Mordida</label>
                             <input
                                 type="text"
-                                value={newFicha.mordida}
-                                onChange={(e) => setNewFicha((s) => ({ ...s, mordida: e.target.value }))}
                                 className="w-full rounded border px-2 py-1"
-                                placeholder="Abierta / Cruzada / Normal"
+                                value={newFicha.mordida}
+                                onChange={(e) => setNewFicha((prev) => ({ ...prev, mordida: e.target.value }))}
                             />
 
                             <label className="text-sm">Plan de tratamiento</label>
                             <textarea
-                                value={newFicha.plan_tratamiento}
-                                onChange={(e) => setNewFicha((s) => ({ ...s, plan_tratamiento: e.target.value }))}
                                 className="w-full rounded border px-2 py-1"
                                 rows={3}
-                                placeholder="Plan de tratamiento"
+                                value={newFicha.plan_tratamiento}
+                                onChange={(e) => setNewFicha((prev) => ({ ...prev, plan_tratamiento: e.target.value }))}
                             />
 
-                            <label className="text-sm">Estado</label>
-                            <input
-                                type="text"
-                                value={newFicha.estado_tratamiento}
-                                onChange={(e) => setNewFicha((s) => ({ ...s, estado_tratamiento: e.target.value }))}
+                            <label className="text-sm">Estado del tratamiento</label>
+                            <select
                                 className="w-full rounded border px-2 py-1"
-                                placeholder="Activo / Finalizado / Cancelado"
-                            />
+                                value={newFicha.estado_tratamiento}
+                                onChange={(e) => setNewFicha((prev) => ({ ...prev, estado_tratamiento: e.target.value }))}
+                            >
+                                {ESTADO_TRATAMIENTO_OPCIONES.map((opcion) => (
+                                    <option key={opcion.value} value={opcion.value}>
+                                        {opcion.label}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
-
                         <div className="flex justify-end gap-3 mt-4">
-                            <Button color="gray" onClick={() => setOpenCreateModal(false)}>
+                            <Button color="gray" onClick={() => {
+                                setOpenCreateModal(false)
+                                resetNuevaFicha()
+                            }}>
                                 Cancelar
                             </Button>
-                            <Button color="purple" onClick={() => {
-                                // UI-only: placeholder save action (no backend). Close modal.
-                                // You can later replace this with real API call and state update.
-                                // eslint-disable-next-line no-console
-                                console.log('Crear ficha (UI-only):', newFicha);
-                                setOpenCreateModal(false);
-                                setNewFicha({ motivo_consulta_inicial: '', diagnostico: '', oclusion: '', mordida: '', plan_tratamiento: '', estado_tratamiento: '' });
-                            }}>
-                                Guardar (no funcional)
+                            <Button color="purple" onClick={guardarNuevaFicha} isProcessing={savingFicha} disabled={savingFicha}>
+                                Guardar ficha
                             </Button>
                         </div>
                     </div>
                 </ModalBody>
             </Modal>
 
-            {/* Notes modal (UI only) */}
             <Modal show={openNotesModal} size="lg" onClose={cerrarModalNotas} popup position="center">
                 <ModalHeader />
                 <ModalBody>
                     <div>
-                        <div className="flex justify-between items-center mb-4">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
                             <div>
                                 <h3 className="text-lg font-semibold">Notas de progreso</h3>
-                                <div className="text-sm text-gray-500">Ficha: {selectedFichaForNotas?.motivo_consulta ?? selectedFichaForNotas?.id}</div>
+                                <div className="text-sm text-gray-500 dark:text-gray-300">
+                                    Ficha: {selectedFichaForNotas?.motivo_consulta_inicial || selectedFichaForNotas?.id}
+                                </div>
                             </div>
                             <div className="flex gap-2">
-                                <Button color="gray" onClick={cerrarModalNotas}>Cerrar</Button>
-                                <Button color="purple" onClick={() => setOpenCreateNotaModal(true)}>Agregar nota</Button>
+                                <Button color="purple" onClick={() => setOpenCreateNotaModal(true)} disabled={!selectedFichaForNotas}>
+                                    Agregar nota
+                                </Button>
+                                <Button color="gray" onClick={cerrarModalNotas}>
+                                    Cerrar
+                                </Button>
                             </div>
                         </div>
 
-                                    {notas.length === 0 ? (
-                                        <div className="text-center py-6 text-gray-500">No hay notas para esta ficha.</div>
-                                    ) : (
-                                        <div ref={scrollRef} className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto px-1">
-                                            {displayedNotas.map((n) => (
-                                                <div key={n.id} className="p-3 border rounded bg-white">
-                                                    <div className="flex justify-between items-start">
-                                                        <div>
-                                                            <div className="text-xs text-gray-400">{new Date(n.created_at).toLocaleString()}</div>
-                                                            <div className="font-semibold">{n.motivo_visita}</div>
-                                                            <div className="text-sm text-gray-700 mt-1">{n.observaciones_clinicas}</div>
-                                                            <div className="text-xs text-indigo-600 mt-2">Procedimiento: {n.procedimiento_realizado}</div>
-                                                        </div>
-                                                        <div className="flex flex-col gap-2">
-                                                            <HiOutlinePencilAlt className="text-gray-500 hover:text-gray-700 hover:cursor-pointer" />
-                                                            <HiOutlineTrash className="text-gray-500 hover:text-gray-700 hover:cursor-pointer" />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
+                        {errorNotas && (
+                            <div className="mb-3 rounded bg-red-100 p-3 text-red-700 dark:bg-red-950 dark:text-red-200">
+                                {errorNotas}
+                            </div>
+                        )}
 
-                                            <div className="flex justify-center py-3">
-                                                {loadingMore ? (
-                                                    <div className="text-sm text-gray-500">Cargando...</div>
-                                                ) : hasMore ? (
-                                                    <button className="text-sm text-indigo-600" onClick={loadMoreNotas}>Cargar más</button>
-                                                ) : (
-                                                    <div className="text-sm text-gray-400">No hay más notas</div>
+                        {loadingNotas ? (
+                            <div className="py-6 text-center text-gray-500 dark:text-gray-300">Cargando notas...</div>
+                        ) : notas.length === 0 ? (
+                            <div className="py-6 text-center text-gray-500 dark:text-gray-300">No hay notas para esta ficha.</div>
+                        ) : (
+                            <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto px-1">
+                                {notas.map((nota) => (
+                                    <div key={nota.id} className="p-3 border rounded bg-white dark:bg-gray-900">
+                                        <div className="flex justify-between items-start gap-3">
+                                            <div>
+                                                <div className="text-xs text-gray-400 dark:text-gray-500">{formatDate(nota.created_at)}</div>
+                                                <div className="font-semibold text-gray-900 dark:text-gray-100">{nota.motivo_visita || 'Sin motivo'}</div>
+                                                <div className="text-sm text-gray-700 dark:text-gray-200 mt-1">{nota.observaciones_clinicas || 'Sin observaciones'}</div>
+                                                <div className="text-xs text-indigo-600 dark:text-indigo-300 mt-2">
+                                                    Procedimiento: {nota.procedimiento_realizado || 'N/A'}
+                                                </div>
+                                                {nota.odontograma_comentarios && (
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                                        Comentarios odontograma: {nota.odontograma_comentarios}
+                                                    </div>
                                                 )}
                                             </div>
+                                            <Button
+                                                color="failure"
+                                                size="xs"
+                                                onClick={() => eliminarNota(nota.id)}
+                                                isProcessing={deletingNotaId === nota.id}
+                                                disabled={deletingNotaId === nota.id}
+                                            >
+                                                Eliminar
+                                            </Button>
                                         </div>
-                                    )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </ModalBody>
             </Modal>
 
-            {/* Create nota modal (UI only) */}
-            <Modal show={openCreateNotaModal} size="md" onClose={() => setOpenCreateNotaModal(false)} popup position="center">
+            <Modal show={openCreateNotaModal} size="md" onClose={() => {
+                setOpenCreateNotaModal(false)
+                resetNuevaNota()
+            }} popup position="center">
                 <ModalHeader />
                 <ModalBody>
                     <div className="text-left">
                         <h3 className="mb-3 text-lg font-semibold">Crear nota de progreso</h3>
                         <div className="flex flex-col gap-3">
-                            <label className="text-sm">Cita ID</label>
-                            <input type="text" value={newNota.cita_id} onChange={(e) => setNewNota((s) => ({ ...s, cita_id: e.target.value }))} className="w-full rounded border px-2 py-1" />
-
-                            <label className="text-sm">Motivo visita</label>
-                            <input type="text" value={newNota.motivo_visita} onChange={(e) => setNewNota((s) => ({ ...s, motivo_visita: e.target.value }))} className="w-full rounded border px-2 py-1" />
+                            <label className="text-sm">Motivo de visita</label>
+                            <input
+                                type="text"
+                                className="w-full rounded border px-2 py-1"
+                                value={newNota.motivo_visita}
+                                onChange={(e) => setNewNota((prev) => ({ ...prev, motivo_visita: e.target.value }))}
+                            />
 
                             <label className="text-sm">Observaciones clínicas</label>
-                            <textarea value={newNota.observaciones_clinicas} onChange={(e) => setNewNota((s) => ({ ...s, observaciones_clinicas: e.target.value }))} className="w-full rounded border px-2 py-1" rows={3} />
+                            <textarea
+                                className="w-full rounded border px-2 py-1"
+                                rows={3}
+                                value={newNota.observaciones_clinicas}
+                                onChange={(e) => setNewNota((prev) => ({ ...prev, observaciones_clinicas: e.target.value }))}
+                            />
 
                             <label className="text-sm">Procedimiento realizado</label>
-                            <input type="text" value={newNota.procedimiento_realizado} onChange={(e) => setNewNota((s) => ({ ...s, procedimiento_realizado: e.target.value }))} className="w-full rounded border px-2 py-1" />
-                        </div>
+                            <input
+                                type="text"
+                                className="w-full rounded border px-2 py-1"
+                                value={newNota.procedimiento_realizado}
+                                onChange={(e) => setNewNota((prev) => ({ ...prev, procedimiento_realizado: e.target.value }))}
+                            />
 
+                            <label className="text-sm">Comentarios del odontograma (opcional)</label>
+                            <textarea
+                                className="w-full rounded border px-2 py-1"
+                                rows={2}
+                                value={newNota.odontograma_comentarios}
+                                onChange={(e) => setNewNota((prev) => ({ ...prev, odontograma_comentarios: e.target.value }))}
+                            />
+                        </div>
                         <div className="flex justify-end gap-3 mt-4">
-                            <Button color="gray" onClick={() => setOpenCreateNotaModal(false)}>Cancelar</Button>
-                            <Button color="purple" onClick={guardarNuevaNotaUI}>Guardar (no funcional)</Button>
+                            <Button color="gray" onClick={() => {
+                                setOpenCreateNotaModal(false)
+                                resetNuevaNota()
+                            }}>
+                                Cancelar
+                            </Button>
+                            <Button color="purple" onClick={guardarNuevaNota} isProcessing={savingNota} disabled={savingNota}>
+                                Guardar nota
+                            </Button>
                         </div>
                     </div>
                 </ModalBody>
             </Modal>
         </>
-    );
-};
+    )
+}
 
-export default TableFichas;
+export default TableFichas

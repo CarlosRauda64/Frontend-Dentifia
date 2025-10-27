@@ -28,6 +28,7 @@ import ListarPacientes from './pages/Pacientes/ListarPacientes.jsx'
 import FormCrearPaciente from './pages/Pacientes/FormCrearPaciente.jsx'
 import FormEditarPaciente from './pages/Pacientes/FormEditarPaciente.jsx'
 import ExpedientePaciente from './pages/Expediente/ExpedientePaciente.jsx'
+import GestorExpedientes from './pages/Expediente/GestorExpedientes.jsx'
 
 console.log("Componente HistorialFactura:", HistorialFactura);
 
@@ -100,6 +101,10 @@ const router = createBrowserRouter([
         path: '/',
         element: <ProtectedDoctor />,
         children: [
+          {
+            path: '/expedientes',
+            element: <GestorExpedientes />,
+          },
           {
             path: '/expediente_paciente',
             element: <ExpedientePaciente />,
