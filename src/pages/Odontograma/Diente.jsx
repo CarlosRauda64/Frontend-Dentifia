@@ -194,7 +194,7 @@ const Diente = ({ numero, superficies, onCaraClick, limpiarDiente, size, estado:
             </svg>
 
             <div className="text-center font-bold dark:text-white text-sm">{numero}</div>
-            <div className={`text-center font-bold text-${color}-600 text-sm`}>{estado}</div>
+            <div className={estado === 'Normal' ? 'text-center font-bold dark:text-white text-sm' : `text-center font-bold text-${color}-600 text-sm`}>{estado}</div>
 
         </div>
     )

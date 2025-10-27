@@ -262,9 +262,9 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
     }
 
     return (
-        <div style={overlayStyle} onClick={onClose}>
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 w-11/12 md:w-3/4 lg:w-1/2 shadow-lg" onClick={(e) => e.stopPropagation()}>
-                <div className="flex flex-col md:flex-row gap-4">
+        <div style={overlayStyle} onClick={onClose} className='overflow-x-auto-auto'>
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 w-90% shadow-lg" onClick={(e) => e.stopPropagation()}>
+                <div className="flex flex-col sm:flex-row gap-4 items-center">
                     <div className="flex-1 flex flex-col items-center">
                         <div className="text-2xl font-semibold mb-2 dark:text-white">Diente {diente.numero}</div>
                         <svg viewBox="0 0 100 100" width={240} height={240} className="m-1">
@@ -296,30 +296,33 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
                             {disenoEstado(localOpcion.estadoNombre, localOpcion.estado)}
                         </svg>
                         <p className="text-2xl font-semibold dark:text-white">{diente.numero}</p>
+                                    <div className={'text-center font-bold dark:text-white text-sm'}>{localOpcion.estado}</div>
                     </div>
 
-                    <div className="flex-1">
+                    <div className="width-10%">
                         <div className="mb-2 font-semibold dark:text-white">Opciones</div>
                         <div className="mb-2">
-                            <div className="mb-1">Tratamientos por superficie</div>
-                            <div className="grid grid-cols-2 gap-2 mb-4">
+                            <div className="mb-1 dark:text-white">Tratamientos por superficie</div>
+                            <div className="grid grid-cols-3 gap-2 mb-4 max-sm:grid-cols-2">
                                 {menuOpciones.map(op => (
                                     <button
                                         key={op.id}
                                         onClick={() => { setSelectedTreatment(op) }}
                                         disabled={disabledTreatments}
                                         className={
-                                            !disabledTreatments ? 
-                                            `p-2 rounded ${selectedTreatment?.id === op.id ? 'ring-2 ring-offset-1' : ''} ${op.color}` 
-                                            : `p-2 rounded ${op.color} opacity-50 cursor-not-allowed`
+                                            !disabledTreatments ?
+                                                `p-2 rounded ${selectedTreatment?.id === op.id ? 'ring-2 ring-offset-1' : ''} ${op.color} cursor-pointer`
+                                                : `p-2 rounded ${op.color} opacity-50 cursor-not-allowed`
                                         }>
-                                        {op.label}
+                                        <span className='text-black dark:text-white'>
+                                            {op.label}
+                                        </span>
                                     </button>
                                 ))}
                             </div>
 
-                            <div className="mb-1">Acciones globales del diente</div>
-                            <div className="grid grid-cols-2 gap-2 mb-4">
+                            <div className="mb-1 dark:text-white">Acciones globales del diente</div>
+                            <div className="grid grid-cols-3 gap-2 mb-4">
                                 {menuGlobales.map(op => (
                                     <button
                                         key={op.id}
@@ -332,10 +335,12 @@ const ModalDiente = ({ visible, diente, onSave, onClose }) => {
                                         }}
 
                                         aria-pressed={selectedGlobal?.id === op.id}
-                                        className={`p-2 rounded ${selectedGlobal?.id === op.id ? 'ring-2 ring-offset-1' : ''} ${op.color === 'dark' ? 'bg-gray-700 text-white' : op.color === 'red' ? 'bg-red-500 text-white' : op.color === 'blue' ? 'bg-blue-500 text-white' : ''}`}
+                                        className={`p-2 cursor-pointer rounded ${selectedGlobal?.id === op.id ? 'ring-2 ring-offset-1' : ''} ${op.color === 'dark' ? 'bg-gray-700 text-white' : op.color === 'red' ? 'bg-red-500 text-white' : op.color === 'blue' ? 'bg-blue-500 text-white' :  op.color === '' ? 'bg-green-500 text-white' : ''}`}
                                     >
-                                        <span className="font-semibold mr-2">{op.texto || ''}</span>
-                                        <span className="truncate">{op.label}</span>
+                                        <div className='flex flex-col'>
+                                            <span className="max-sm:text-sm max-lg:truncate font-semibold mr-2 text-black dark:text-white">{op.texto || ''}</span>
+                                            <span className="max-sm:text-sm max-lg:truncate text-black dark:text-white">{op.label}</span>
+                                        </div>
                                     </button>
                                 ))}
                             </div>
