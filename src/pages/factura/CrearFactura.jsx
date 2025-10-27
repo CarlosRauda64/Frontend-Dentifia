@@ -1,14 +1,17 @@
 import { useForm, useFieldArray } from 'react-hook-form';
+import { useState } from 'react';
 import { Button, Label, TextInput, Select } from "flowbite-react";
 import Navegacion from '../Common/Navegacion';
 import { HiOutlineClipboard, HiHashtag, HiCalendar, HiCreditCard, HiCheck } from "react-icons/hi";
 import { API_URL } from '../../api/api';
 import { useAuth } from '../../auth/useAuth';
 import { useNavigate } from 'react-router';
+import BuscarPacienteInput from './BuscarPacienteInput';
 
 const CrearFactura = () => {
   const auth = useAuth();
   const navigate = useNavigate();
+  const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null);
 
   const {
     register,
@@ -41,6 +44,7 @@ const CrearFactura = () => {
     const dataToSend = {
       ...data,
       monto_total,
+      paciente: pacienteSeleccionado ? pacienteSeleccionado.id : null
     };
 
     console.log(dataToSend);
@@ -77,6 +81,14 @@ navigate('/factura/historial');
           className="flex flex-col gap-4 dark:bg-gray-800 bg-white p-10 rounded-2xl w-[90%] max-w-4xl"
           onSubmit={handleSubmit(onSubmit)}
         >
+          {/* Campo de búsqueda de paciente */}
+          <div>
+            <Label htmlFor="paciente">Paciente (Opcional)</Label>
+            <BuscarPacienteInput
+              onPacienteSelected={setPacienteSeleccionado}
+              pacienteSeleccionado={pacienteSeleccionado}
+            />
+          </div>
 
           <TextInput icon={HiHashtag} placeholder="ID de Factura" {...register("idfactura", { required: "Requerido" })} />
           <TextInput icon={HiCalendar} type="date" {...register("fecha_emision", { required: "Requerido" })} />

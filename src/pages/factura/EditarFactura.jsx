@@ -13,6 +13,7 @@ import {
 import { useAuth } from "../../auth/useAuth";
 import { API_URL } from "../../api/api";
 import Navegacion from "../Common/Navegacion";
+import BuscarPacienteInput from './BuscarPacienteInput';
 
 const EditarFactura = () => {
   const { id } = useParams();
@@ -23,6 +24,7 @@ const EditarFactura = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null);
   const navigate = useNavigate();
   const auth = useAuth();
 
@@ -41,6 +43,14 @@ const EditarFactura = () => {
         setValue("metodo_pago", data.metodo_pago);
         setValue("estado", data.estado);
         setValue("detalles", data.detalles);
+        
+        // Precargar paciente si existe
+        if (data.paciente) {
+          setPacienteSeleccionado({
+            id: data.paciente,
+            nombre_completo: data.paciente_nombre
+          });
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -66,6 +76,7 @@ const EditarFactura = () => {
         ...data,
         idfactura: id, 
         monto_total,
+        paciente: pacienteSeleccionado ? pacienteSeleccionado.id : null
       };
 
       console.log("Datos enviados:", facturaPayload);
@@ -106,6 +117,15 @@ const EditarFactura = () => {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Campo de búsqueda de paciente */}
+          <div>
+            <Label htmlFor="paciente" value="Paciente (Opcional)" />
+            <BuscarPacienteInput
+              onPacienteSelected={setPacienteSeleccionado}
+              pacienteSeleccionado={pacienteSeleccionado}
+            />
+          </div>
+
           <div>
             <Label htmlFor="fecha_emision" value="Fecha de Emisión" />
             <TextInput type="date" {...register("fecha_emision")} required />

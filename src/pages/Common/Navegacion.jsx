@@ -24,7 +24,8 @@ import {
   HiOutlineLogout,
   HiPuzzle,
   HiMoon,
-  HiSun
+  HiSun,
+  HiIdentification
 } from "react-icons/hi";
 
 const Navegacion = ({ children }) => {
@@ -81,8 +82,14 @@ const Navegacion = ({ children }) => {
               }
               {
                 (user.rol == "secretaria" || user.rol == "administrador") &&
-                <SidebarItem href="#" icon={HiCalendar}>
+                <SidebarItem href="/citas" icon={HiCalendar}>
                   Agendación de Citas
+                </SidebarItem>
+              }
+              {
+                (user.rol == "secretaria" || user.rol == "doctor" || user.rol == "administrador") &&
+                <SidebarItem href="/pacientes" icon={HiIdentification}>
+                  Gestión de Pacientes
                 </SidebarItem>
               }
               {
