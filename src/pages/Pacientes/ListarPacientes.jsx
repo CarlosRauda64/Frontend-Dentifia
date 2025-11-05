@@ -22,6 +22,11 @@ const ListarPacientes = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full sm:w-auto"
                         />
+                        {searchTerm && (
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                                Buscando: "{searchTerm}"
+                            </span>
+                        )}
                         <Button href="/pacientes/nuevo" color="blue">
                             Agregar Paciente
                         </Button>

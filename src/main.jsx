@@ -5,7 +5,7 @@ import './index.css'
 import App from './App.jsx'
 import Login from './pages/Login/Login.jsx'
 import Loading from './pages/Common/Loading.jsx'
-import ProtectedRoute, { ProtectedAdministrador, ProtectedSecretaria } from './routes/ProtectedRoute.jsx'
+import ProtectedRoute, { ProtectedAdministrador, ProtectedSecretaria, ProtectedDoctor } from './routes/ProtectedRoute.jsx'
 import CrearFactura from './pages/factura/CrearFactura.jsx'
 import CancelarFactura from './pages/factura/CancelarFactura.jsx'
 import EditarFactura from './pages/factura/EditarFactura.jsx'
@@ -134,12 +134,18 @@ const router = createBrowserRouter([
         element: <ListarPacientes />,
       },
       {
-        path: '/pacientes/nuevo',
-        element: <FormCrearPaciente />,
-      },
-      {
-        path: '/pacientes/editar/:id',
-        element: <FormEditarPaciente />,
+        path: '/',
+        element: <ProtectedDoctor />,
+        children: [
+          {
+            path: '/pacientes/nuevo',
+            element: <FormCrearPaciente />,
+          },
+          {
+            path: '/pacientes/editar/:id',
+            element: <FormEditarPaciente />,
+          },
+        ]
       },
       {
         path: '/reportes',
