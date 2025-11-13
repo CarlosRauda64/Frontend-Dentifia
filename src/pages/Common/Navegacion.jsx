@@ -17,6 +17,7 @@ import {
   HiCalendar,
   HiClipboard,
   HiCurrencyDollar,
+  HiClipboardCheck,
   HiClipboardList,
   HiDocumentReport,
   HiUsers,
@@ -108,6 +109,9 @@ const Navegacion = ({ children }) => {
               </SidebarItem>
               <SidebarItem href="/reportes" icon={HiDocumentReport}>
                 Reportes
+              </SidebarItem>
+               <SidebarItem href="/encuestas" icon={HiClipboardCheck}>
+                Encuestas
               </SidebarItem>
               <SidebarItem icon={!theme ? HiSun : HiMoon} className="flex items-center">
                 <ToggleSwitch checked={theme} onChange={setTheme} label="Modo Oscuro" />
