@@ -9,7 +9,11 @@ import {
     TableCell,
     TableHead,
     TableHeadCell,
-    TableRow
+    TableRow,
+    Label,
+    TextInput,
+    Select,
+    Textarea
 } from "flowbite-react";
 import {
     HiOutlineDocumentText,
@@ -333,7 +337,6 @@ const TableFichas = ({ expedienteId, onRefresh }) => {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
                 <div>
                     <p className="text-gray-600 dark:text-gray-300 font-semibold">Fichas de ortodoncia registradas</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Expediente asociado: {expedienteId ?? 'No asignado'}</p>
                 </div>
                 <Button color="purple" onClick={() => setOpenCreateModal(true)} disabled={!tieneAcceso}>
                     <div className="flex items-center gap-2">
@@ -441,63 +444,101 @@ const TableFichas = ({ expedienteId, onRefresh }) => {
             </Modal>
 
             <Modal show={openCreateModal} size="md" onClose={() => setOpenCreateModal(false)} popup position="center">
-                <ModalHeader />
-                <ModalBody>
+                <ModalBody className="pt-4  bg-white text-gray-900 dark:bg-gray-800 dark:text-white">
                     <div className="text-left">
-                        <h3 className="mb-4 text-lg font-semibold">Crear ficha de ortodoncia</h3>
+                        <h3 className="mb-4 text-lg font-semibold text-gray-900  dark:text-white">Crear ficha de ortodoncia</h3>
                         <div className="flex flex-col gap-3">
-                            <label className="text-sm">Motivo de consulta inicial</label>
-                            <input
-                                type="text"
-                                className="w-full rounded border px-2 py-1"
-                                value={newFicha.motivo_consulta_inicial}
-                                onChange={(e) => setNewFicha((prev) => ({ ...prev, motivo_consulta_inicial: e.target.value }))}
-                            />
+                            <div>
+                                <div className="mb-2 block">
+                                    <Label htmlFor="motivo_consulta">Motivo de consulta inicial</Label>
+                                </div>
+                                <TextInput
+                                    id="motivo_consulta"
+                                    type="text"
+                                    placeholder="Motivo de consulta"
+                                    value={newFicha.motivo_consulta_inicial}
+                                    onChange={(e) => setNewFicha((prev) => ({ ...prev, motivo_consulta_inicial: e.target.value }))}
+                                    shadow
+                                    className=" text-gray-900 dark:text-white"
+                                />
+                            </div>
 
-                            <label className="text-sm">Diagnóstico</label>
-                            <input
-                                type="text"
-                                className="w-full rounded border px-2 py-1"
-                                value={newFicha.diagnostico}
-                                onChange={(e) => setNewFicha((prev) => ({ ...prev, diagnostico: e.target.value }))}
-                            />
+                            <div>
+                                <div className="mb-2 block">
+                                    <Label htmlFor="diagnostico">Diagnóstico</Label>
+                                </div>
+                                <TextInput
+                                    id="diagnostico"
+                                    type="text"
+                                    placeholder="Diagnóstico"
+                                    value={newFicha.diagnostico}
+                                    onChange={(e) => setNewFicha((prev) => ({ ...prev, diagnostico: e.target.value }))}
+                                    shadow
+                                    className=" text-gray-900 dark:text-white"
+                                />
+                            </div>
 
-                            <label className="text-sm">Oclusión</label>
-                            <input
-                                type="text"
-                                className="w-full rounded border px-2 py-1"
-                                value={newFicha.oclusion}
-                                onChange={(e) => setNewFicha((prev) => ({ ...prev, oclusion: e.target.value }))}
-                            />
+                            <div>
+                                <div className="mb-2 block">
+                                    <Label htmlFor="oclusion">Oclusión</Label>
+                                </div>
+                                <TextInput
+                                    id="oclusion"
+                                    type="text"
+                                    placeholder="Oclusión"
+                                    value={newFicha.oclusion}
+                                    onChange={(e) => setNewFicha((prev) => ({ ...prev, oclusion: e.target.value }))}
+                                    shadow
+                                    className=" text-gray-900 dark:text-white"
+                                />
+                            </div>
 
-                            <label className="text-sm">Mordida</label>
-                            <input
-                                type="text"
-                                className="w-full rounded border px-2 py-1"
-                                value={newFicha.mordida}
-                                onChange={(e) => setNewFicha((prev) => ({ ...prev, mordida: e.target.value }))}
-                            />
+                            <div>
+                                <div className="mb-2 block">
+                                    <Label htmlFor="mordida">Mordida</Label>
+                                </div>
+                                <TextInput
+                                    id="mordida"
+                                    type="text"
+                                    placeholder="Mordida"
+                                    value={newFicha.mordida}
+                                    onChange={(e) => setNewFicha((prev) => ({ ...prev, mordida: e.target.value }))}
+                                    shadow
+                                    className=" text-gray-900 dark:text-white"
+                                />
+                            </div>
 
-                            <label className="text-sm">Plan de tratamiento</label>
-                            <textarea
-                                className="w-full rounded border px-2 py-1"
-                                rows={3}
-                                value={newFicha.plan_tratamiento}
-                                onChange={(e) => setNewFicha((prev) => ({ ...prev, plan_tratamiento: e.target.value }))}
-                            />
+                            <div>
+                                <div className="mb-2 block">
+                                    <Label htmlFor="plan_tratamiento">Plan de tratamiento</Label>
+                                </div>
+                                <Textarea
+                                    id="plan_tratamiento"
+                                    placeholder="Plan de tratamiento"
+                                    rows={3}
+                                    value={newFicha.plan_tratamiento}
+                                    onChange={(e) => setNewFicha((prev) => ({ ...prev, plan_tratamiento: e.target.value }))}
+                                    className="text-gray-900 dark:text-white"
+                                />
+                            </div>
 
-                            <label className="text-sm">Estado del tratamiento</label>
-                            <select
-                                className="w-full rounded border px-2 py-1"
-                                value={newFicha.estado_tratamiento}
-                                onChange={(e) => setNewFicha((prev) => ({ ...prev, estado_tratamiento: e.target.value }))}
-                            >
-                                {ESTADO_TRATAMIENTO_OPCIONES.map((opcion) => (
-                                    <option key={opcion.value} value={opcion.value}>
-                                        {opcion.label}
-                                    </option>
-                                ))}
-                            </select>
+                            <div>
+                                <div className="mb-2 block">
+                                    <Label htmlFor="estado_tratamiento">Estado del tratamiento</Label>
+                                </div>
+                                <Select
+                                    id="estado_tratamiento"
+                                    value={newFicha.estado_tratamiento}
+                                    onChange={(e) => setNewFicha((prev) => ({ ...prev, estado_tratamiento: e.target.value }))}
+                                    className="text-gray-900 dark:text-white"
+                                >
+                                    {ESTADO_TRATAMIENTO_OPCIONES.map((opcion) => (
+                                        <option key={opcion.value} value={opcion.value}>
+                                            {opcion.label}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </div>
                         </div>
                         <div className="flex justify-end gap-3 mt-4">
                             <Button color="gray" onClick={() => {
@@ -590,37 +631,63 @@ const TableFichas = ({ expedienteId, onRefresh }) => {
                     <div className="text-left">
                         <h3 className="mb-3 text-lg font-semibold">Crear nota de progreso</h3>
                         <div className="flex flex-col gap-3">
-                            <label className="text-sm">Motivo de visita</label>
-                            <input
-                                type="text"
-                                className="w-full rounded border px-2 py-1"
-                                value={newNota.motivo_visita}
-                                onChange={(e) => setNewNota((prev) => ({ ...prev, motivo_visita: e.target.value }))}
-                            />
+                            <div>
+                                <div className="mb-2 block">
+                                    <Label htmlFor="motivo_visita">Motivo de visita</Label>
+                                </div>
+                                <TextInput
+                                    id="motivo_visita"
+                                    type="text"
+                                    placeholder="Motivo de la visita"
+                                    value={newNota.motivo_visita}
+                                    onChange={(e) => setNewNota((prev) => ({ ...prev, motivo_visita: e.target.value }))}
+                                    shadow
+                                    className="bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
+                                />
+                            </div>
 
-                            <label className="text-sm">Observaciones clínicas</label>
-                            <textarea
-                                className="w-full rounded border px-2 py-1"
-                                rows={3}
-                                value={newNota.observaciones_clinicas}
-                                onChange={(e) => setNewNota((prev) => ({ ...prev, observaciones_clinicas: e.target.value }))}
-                            />
+                            <div>
+                                <div className="mb-2 block">
+                                    <Label htmlFor="observaciones_clinicas">Observaciones clínicas</Label>
+                                </div>
+                                <Textarea
+                                    id="observaciones_clinicas"
+                                    rows={3}
+                                    placeholder="Observaciones clínicas"
+                                    value={newNota.observaciones_clinicas}
+                                    onChange={(e) => setNewNota((prev) => ({ ...prev, observaciones_clinicas: e.target.value }))}
+                                    className="bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
+                                />
+                            </div>
 
-                            <label className="text-sm">Procedimiento realizado</label>
-                            <input
-                                type="text"
-                                className="w-full rounded border px-2 py-1"
-                                value={newNota.procedimiento_realizado}
-                                onChange={(e) => setNewNota((prev) => ({ ...prev, procedimiento_realizado: e.target.value }))}
-                            />
+                            <div>
+                                <div className="mb-2 block">
+                                    <Label htmlFor="procedimiento_realizado">Procedimiento realizado</Label>
+                                </div>
+                                <TextInput
+                                    id="procedimiento_realizado"
+                                    type="text"
+                                    placeholder="Procedimiento realizado"
+                                    value={newNota.procedimiento_realizado}
+                                    onChange={(e) => setNewNota((prev) => ({ ...prev, procedimiento_realizado: e.target.value }))}
+                                    shadow
+                                    className="bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
+                                />
+                            </div>
 
-                            <label className="text-sm">Comentarios del odontograma (opcional)</label>
-                            <textarea
-                                className="w-full rounded border px-2 py-1"
-                                rows={2}
-                                value={newNota.odontograma_comentarios}
-                                onChange={(e) => setNewNota((prev) => ({ ...prev, odontograma_comentarios: e.target.value }))}
-                            />
+                            <div>
+                                <div className="mb-2 block">
+                                    <Label htmlFor="odontograma_comentarios">Comentarios del odontograma (opcional)</Label>
+                                </div>
+                                <Textarea
+                                    id="odontograma_comentarios"
+                                    rows={2}
+                                    placeholder="Comentarios sobre el odontograma"
+                                    value={newNota.odontograma_comentarios}
+                                    onChange={(e) => setNewNota((prev) => ({ ...prev, odontograma_comentarios: e.target.value }))}
+                                    className="bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
+                                />
+                            </div>
                         </div>
                         <div className="flex justify-end gap-3 mt-4">
                             <Button color="gray" onClick={() => {

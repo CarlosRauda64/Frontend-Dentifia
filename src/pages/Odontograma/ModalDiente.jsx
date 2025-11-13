@@ -304,8 +304,8 @@ const ModalDiente = ({ visible, diente, onSave, onClose, surfaceOptions = [], gl
     return (
         <div style={overlayStyle} onClick={onClose} className='overflow-x-auto'>
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 w-full max-w-5xl shadow-lg" onClick={(e) => e.stopPropagation()}>
-                <div className="flex flex-col sm:flex-row gap-4 items-center">
-                    <div className="flex-1 flex flex-col items-center">
+                <div className="flex flex-col sm:flex-row gap-4 items-center justify-center w-full">
+                    <div className="flex flex-col items-center">
                         <div className="text-2xl font-semibold mb-2 dark:text-white">Diente {diente.numero}</div>
                         <svg viewBox="0 0 100 100" width={240} height={240} className="m-1">
                             <polygon
@@ -344,7 +344,7 @@ const ModalDiente = ({ visible, diente, onSave, onClose, surfaceOptions = [], gl
                         <div className={'text-center font-bold dark:text-white text-sm'}>{displayedEstado}</div>
                     </div>
 
-                    <div className="w-full sm:w-80">
+                    <div className="w-full ">
                         <div className="mb-2 font-semibold dark:text-white">Opciones</div>
                         <div className="mb-2">
                             <div className="mb-1 dark:text-white">Tratamientos por superficie</div>
