@@ -73,7 +73,7 @@ const buildDientesFromVersion = (version) => {
     return dientes
 }
 
-const Odontrograma = ({ expedienteId, odontograma, onVersionCreated }) => {
+const Odontrograma = ({ expedienteId, odontograma, onVersionCreated, readOnly = false }) => {
     const auth = useAuth()
 
     const [dientes, setDientes] = useState(() => createInitialDientes())
@@ -203,6 +203,7 @@ const Odontrograma = ({ expedienteId, odontograma, onVersionCreated }) => {
     }, [globalOptions])
 
     const handleCaraClick = (numero, event) => {
+        if (readOnly) return
         event.stopPropagation()
         setModalState({ visible: true, numero })
     }
@@ -374,7 +375,7 @@ const Odontrograma = ({ expedienteId, odontograma, onVersionCreated }) => {
                 ))}
             </div>
 
-            {modalState.visible && selectedDiente && (
+            {!readOnly && modalState.visible && selectedDiente && (
                 <ModalDiente
                     visible={modalState.visible}
                     diente={selectedDiente}
@@ -386,32 +387,36 @@ const Odontrograma = ({ expedienteId, odontograma, onVersionCreated }) => {
             )}
 
             <div className="w-full my-6 max-w-full">
-                <div className="mb-2 block">
-                    <Label htmlFor="odontograma-comment">Comentario de la versión</Label>
-                </div>
-                <Textarea
-                    id="odontograma-comment"
-                    placeholder="Describe los cambios realizados antes de guardar una nueva versión."
-                    rows={4}
-                    className="resize-none w-full"
-                    value={comentario}
-                    onChange={(e) => setComentario(e.target.value)}
-                />
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
-                    {ultimaVersion && (
-                        <p className="text-sm text-gray-500 dark:text-gray-300">
-                            Última versión guardada: {new Date(ultimaVersion.created_at).toLocaleString('es-SV')}
-                        </p>
-                    )}
-                    <Button
-                        color="purple"
-                        onClick={handleGuardarVersion}
-                        disabled={saving || !odontogramaId}
-                        isProcessing={saving}
-                    >
-                        Guardar versión
-                    </Button>
-                </div>
+                {!readOnly && (
+                    <>
+                        <div className="mb-2 block">
+                            <Label htmlFor="odontograma-comment">Comentario de la versión</Label>
+                        </div>
+                        <Textarea
+                            id="odontograma-comment"
+                            placeholder="Describe los cambios realizados antes de guardar una nueva versión."
+                            rows={4}
+                            className="resize-none w-full"
+                            value={comentario}
+                            onChange={(e) => setComentario(e.target.value)}
+                        />
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-3">
+                            {ultimaVersion && (
+                                <p className="text-sm text-gray-500 dark:text-gray-300">
+                                    Última versión guardada: {new Date(ultimaVersion.created_at).toLocaleString('es-SV')}
+                                </p>
+                            )}
+                            <Button
+                                color="purple"
+                                onClick={handleGuardarVersion}
+                                disabled={saving || !odontogramaId}
+                                isProcessing={saving}
+                            >
+                                Guardar versión
+                            </Button>
+                        </div>
+                    </>
+                )}
                 {error && (
                     <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>
                 )}
