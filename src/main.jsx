@@ -5,7 +5,7 @@ import './index.css'
 import App from './App.jsx'
 import Login from './pages/Login/Login.jsx'
 import Loading from './pages/Common/Loading.jsx'
-import ProtectedRoute, { ProtectedAdministrador, ProtectedSecretaria, ProtectedDoctor, ProtectedDoctor } from './routes/ProtectedRoute.jsx'
+import ProtectedRoute, { ProtectedAdministrador, ProtectedSecretaria, ProtectedDoctor } from './routes/ProtectedRoute.jsx'
 import CrearFactura from './pages/factura/CrearFactura.jsx'
 import CancelarFactura from './pages/factura/CancelarFactura.jsx'
 import EditarFactura from './pages/factura/EditarFactura.jsx'
@@ -30,6 +30,9 @@ import ListarPacientes from './pages/Pacientes/ListarPacientes.jsx'
 import FormCrearPaciente from './pages/Pacientes/FormCrearPaciente.jsx'
 import FormEditarPaciente from './pages/Pacientes/FormEditarPaciente.jsx'
 import FormEncuesta from './pages/Encuesta/FormInsertarEncuesta.jsx'
+import ReportesHome from './pages/Reportes/ReportesHome.jsx'
+import GestorExpedientes from './pages/Expediente/GestorExpedientes.jsx'
+import ExpedientePaciente from './pages/Expediente/ExpedientePaciente.jsx'
 
 console.log("Componente HistorialFactura:", HistorialFactura);
 
