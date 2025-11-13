@@ -12,6 +12,9 @@ const TablePacientes = ({ searchTerm }) => {
     const navigate = useNavigate();
     const auth = useAuth();
 
+    const user = auth.getUser();
+    const canEdit = user?.rol === 'doctor' || user?.rol === 'administrador';
+
     const modalHandler = (paciente) => {
         setOpenModal(true);
         setPaciente(paciente);
@@ -30,17 +33,26 @@ const TablePacientes = ({ searchTerm }) => {
 
     const eliminarPaciente = async (id) => {
         try {
-            await fetch(`${API_URL}/pacientes/${id}/`, {
+            const response = await fetch(`${API_URL}/pacientes/${id}/`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${auth.getAccessToken()}`
                 }
             });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                // Mostrar mensaje de error específico
+                alert(errorData.error || 'Error al eliminar el paciente');
+                return;
+            }
+
             console.log("Paciente eliminado (lógicamente):", id);
             fetchPacientes();
         } catch (error) {
             console.error('Error al eliminar el paciente:', error);
+            alert('Error de conexión al intentar eliminar el paciente');
         }
     }
 
@@ -84,6 +96,11 @@ const TablePacientes = ({ searchTerm }) => {
 
     return (
         <>
+            {filteredPacientes.length === 0 && searchTerm && (
+                <div className="text-center py-8 text-gray-500">
+                    No se encontraron pacientes que coincidan con "{searchTerm}"
+                </div>
+            )}
             <div className="overflow-x-auto">
                 <Table hoverable className="text-center">
                     <TableHead>
@@ -92,8 +109,8 @@ const TablePacientes = ({ searchTerm }) => {
                             <TableHeadCell className="max-sm:hidden">DUI</TableHeadCell>
                             <TableHeadCell>Teléfono</TableHeadCell>
                             <TableHeadCell className="max-lg:hidden">Edad</TableHeadCell>
-                            <TableHeadCell>Editar</TableHeadCell>
-                            <TableHeadCell>Eliminar</TableHeadCell>
+                            {canEdit && <TableHeadCell>Editar</TableHeadCell>}
+                            {canEdit && <TableHeadCell>Eliminar</TableHeadCell>}
                         </TableRow>
                     </TableHead>
                     <TableBody className="divide-y">
@@ -105,16 +122,20 @@ const TablePacientes = ({ searchTerm }) => {
                                 <TableCell className="max-sm:hidden">{paciente.dui || '-'}</TableCell>
                                 <TableCell>{paciente.telefono}</TableCell>
                                 <TableCell className="max-lg:hidden">{paciente.edad ? `${paciente.edad} años` : '-'}</TableCell>
-                                <TableCell>
-                                    <HiOutlinePencilAlt href="#" size={25} className="cursor-pointer text-gray-500 hover:text-gray-700 mx-auto"
-                                        onClick={() => navigate(`/pacientes/editar/${paciente.id}`)}
-                                    />
-                                </TableCell>
-                                <TableCell>
-                                    <HiOutlineTrash size={25} className="cursor-pointer text-gray-500 hover:text-gray-700 mx-auto"
-                                        onClick={() => modalHandler(paciente)}
-                                    />
-                                </TableCell>
+                                {canEdit && (
+                                    <TableCell>
+                                        <HiOutlinePencilAlt href="#" size={25} className="cursor-pointer text-gray-500 hover:text-gray-700 mx-auto"
+                                            onClick={() => navigate(`/pacientes/editar/${paciente.id}`)}
+                                        />
+                                    </TableCell>
+                                )}
+                                {canEdit && (
+                                    <TableCell>
+                                        <HiOutlineTrash size={25} className="cursor-pointer text-gray-500 hover:text-gray-700 mx-auto"
+                                            onClick={() => modalHandler(paciente)}
+                                        />
+                                    </TableCell>
+                                )}
                             </TableRow>
                         ))}
                     </TableBody>

@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form'
-import { Button, Label, TextInput, Select, Textarea } from "flowbite-react";
+import { Button, Label, TextInput, Select, Textarea, Alert } from "flowbite-react";
 import Navegacion from '../Common/Navegacion';
 import DatosMedicosForm from './DatosMedicosForm';
 import {
@@ -21,6 +21,7 @@ const FormEditarPaciente = () => {
     const [paciente, setPaciente] = useState(null);
     const [loading, setLoading] = useState(true);
     const [datosMedicos, setDatosMedicos] = useState({});
+    const [errorMsg, setErrorMsg] = useState(null); // Estado para mensajes de error
 
     const {
         register,
@@ -74,6 +75,8 @@ const FormEditarPaciente = () => {
     }, [id, auth, setValue]);
 
     const actualizarPaciente = async (data) => {
+        setErrorMsg(null); // Limpiar mensajes de error previos
+
         try {
             // Incluir datos médicos en la actualización
             const dataToSend = {
@@ -93,14 +96,51 @@ const FormEditarPaciente = () => {
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error('Error del servidor:', errorData);
-                throw new Error('Error al actualizar el paciente');
+
+                // Extraer mensajes de error del servidor
+                let errorMessage = 'Error al actualizar el paciente';
+                if (errorData.datos_medicos) {
+                    // Si hay errores en datos_medicos
+                    const datosMedicosErrors = errorData.datos_medicos;
+                    errorMessage = Object.values(datosMedicosErrors).flat().join(', ');
+                } else if (errorData.non_field_errors) {
+                    errorMessage = errorData.non_field_errors.join(', ');
+                } else if (typeof errorData === 'string') {
+                    errorMessage = errorData;
+                } else if (Object.keys(errorData).length > 0) {
+                    // Mostrar el primer error de campo
+                    const firstError = Object.entries(errorData)[0];
+                    errorMessage = `${firstError[0]}: ${Array.isArray(firstError[1]) ? firstError[1][0] : firstError[1]}`;
+                }
+
+                setErrorMsg(errorMessage);
+                return false; // Indicar que falló
             } else {
                 navigate('/pacientes');
+                return true; // Indicar que fue exitoso
             }
         } catch (error) {
             console.error('Error al actualizar el paciente:', error);
+            setErrorMsg('Error de conexión. Por favor, intente nuevamente.');
+            return false; // Indicar que falló
         }
     }
+
+    // Función para formatear DUI mientras se escribe
+    const formatDUI = (value) => {
+        // Remover caracteres no numéricos
+        const numbersOnly = value.replace(/\D/g, '');
+
+        // Limitar a 9 dígitos (8 + 1)
+        const limited = numbersOnly.substring(0, 9);
+
+        // Aplicar formato XXXXXXXX-X
+        if (limited.length <= 8) {
+            return limited;
+        } else {
+            return `${limited.substring(0, 8)}-${limited.substring(8)}`;
+        }
+    };
 
     const handleDatosMedicosChange = (nuevosDatosMedicos) => {
         setDatosMedicos(nuevosDatosMedicos);
@@ -108,6 +148,7 @@ const FormEditarPaciente = () => {
 
     const onSubmit = async (data) => {
         await actualizarPaciente(data);
+        // No resetear en caso de error - los campos mantienen sus valores
     }
 
     if (loading) {
@@ -134,6 +175,13 @@ const FormEditarPaciente = () => {
         <Navegacion>
             <div className="flex flex-col items-center sm:justify-center w-full h-full max-sm:mt-10">
                 <h1 className="text-2xl font-bold mb-4 text-black dark:text-white">Editar Paciente</h1>
+
+                {errorMsg && (
+                    <Alert color="failure" className="w-[75%] max-w-4xl mb-4">
+                        <span className="font-medium">Error: </span>{errorMsg}
+                    </Alert>
+                )}
+
                 <form className="flex flex-col gap-4 dark:bg-gray-800 bg-white p-10 rounded-2xl w-[75%] max-w-4xl lg:grid lg:grid-cols-2 lg:max-w-6xl" onSubmit={handleSubmit(onSubmit)}>
                     
                     {/* Nombres - Campo obligatorio */}
@@ -250,9 +298,14 @@ const FormEditarPaciente = () => {
                             icon={HiOutlineClipboard}
                             placeholder="12345678-9"
                             {...register("dui", {
-                                pattern: {
-                                    value: /^\d{8}-\d{1}$/,
-                                    message: "Formato debe ser 12345678-9"
+                                onChange: (e) => {
+                                    const formatted = formatDUI(e.target.value);
+                                    e.target.value = formatted;
+                                },
+                                validate: (value) => {
+                                    if (!value) return true; // Campo opcional
+                                    const cleanValue = value.replace(/-/g, '');
+                                    return cleanValue.length === 9 || "El DUI debe tener exactamente 9 dígitos";
                                 }
                             })}
                         />
@@ -346,3 +399,4 @@ const FormEditarPaciente = () => {
 }
 
 export default FormEditarPaciente;
+

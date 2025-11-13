@@ -5,7 +5,7 @@ import './index.css'
 import App from './App.jsx'
 import Login from './pages/Login/Login.jsx'
 import Loading from './pages/Common/Loading.jsx'
-import ProtectedRoute, { ProtectedAdministrador, ProtectedSecretaria, ProtectedDoctor } from './routes/ProtectedRoute.jsx'
+import ProtectedRoute, { ProtectedAdministrador, ProtectedSecretaria, ProtectedDoctor, ProtectedDoctor } from './routes/ProtectedRoute.jsx'
 import CrearFactura from './pages/factura/CrearFactura.jsx'
 import CancelarFactura from './pages/factura/CancelarFactura.jsx'
 import EditarFactura from './pages/factura/EditarFactura.jsx'
@@ -27,8 +27,6 @@ import Autorizacion from './routes/Autorizacion.jsx'
 import ListarPacientes from './pages/Pacientes/ListarPacientes.jsx'
 import FormCrearPaciente from './pages/Pacientes/FormCrearPaciente.jsx'
 import FormEditarPaciente from './pages/Pacientes/FormEditarPaciente.jsx'
-import ExpedientePaciente from './pages/Expediente/ExpedientePaciente.jsx'
-import GestorExpedientes from './pages/Expediente/GestorExpedientes.jsx'
 
 console.log("Componente HistorialFactura:", HistorialFactura);
 
@@ -149,12 +147,22 @@ const router = createBrowserRouter([
         element: <ListarPacientes />,
       },
       {
-        path: '/pacientes/nuevo',
-        element: <FormCrearPaciente />,
+        path: '/',
+        element: <ProtectedDoctor />,
+        children: [
+          {
+            path: '/pacientes/nuevo',
+            element: <FormCrearPaciente />,
+          },
+          {
+            path: '/pacientes/editar/:id',
+            element: <FormEditarPaciente />,
+          },
+        ]
       },
       {
-        path: '/pacientes/editar/:id',
-        element: <FormEditarPaciente />,
+        path: '/reportes',
+        element: <ReportesHome />,
       },
     ],
   },

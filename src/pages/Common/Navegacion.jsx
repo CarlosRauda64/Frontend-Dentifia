@@ -106,7 +106,7 @@ const Navegacion = ({ children }) => {
               <SidebarItem href="/inventario" icon={HiClipboardList}>
                 Inventario
               </SidebarItem>
-              <SidebarItem href="#" icon={HiDocumentReport}>
+              <SidebarItem href="/reportes" icon={HiDocumentReport}>
                 Reportes
               </SidebarItem>
               <SidebarItem icon={!theme ? HiSun : HiMoon} className="flex items-center">
