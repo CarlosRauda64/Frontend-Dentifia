@@ -29,6 +29,10 @@ import Autorizacion from './routes/Autorizacion.jsx'
 import ListarPacientes from './pages/Pacientes/ListarPacientes.jsx'
 import FormCrearPaciente from './pages/Pacientes/FormCrearPaciente.jsx'
 import FormEditarPaciente from './pages/Pacientes/FormEditarPaciente.jsx'
+import Agenda from './pages/Citas/Agenda.jsx'
+import Citas from './pages/Citas/Citas.jsx'
+import CrearCita from './pages/Citas/CrearCita.jsx'
+import ReprogramarCita from './pages/Citas/ReprogramarCita.jsx'
 import FormEncuesta from './pages/Encuesta/FormInsertarEncuesta.jsx'
 import ReportesHome from './pages/Reportes/ReportesHome.jsx'
 import GestorExpedientes from './pages/Expediente/GestorExpedientes.jsx'
@@ -178,7 +182,34 @@ const router = createBrowserRouter([
         path: '/encuestas/nueva',
         element: <FormInsertarEncuesta />,
       },
-
+      {
+        path: '/pacientes',
+        element: <ListarPacientes />,
+      },
+      {
+        path: '/pacientes/nuevo',
+        element: <FormCrearPaciente />,
+      },
+      {
+        path: '/pacientes/editar/:id',
+        element: <FormEditarPaciente />,
+      },
+       {
+        path: '/citas/agenda',
+        element: <Agenda />,
+      },
+      {
+        path: '/citas',
+        element: <Citas />,
+      },
+      {
+        path: '/citas/nueva',
+        element: <CrearCita />,
+      },
+      {
+        path: '/citas/reprogramar/:id',
+        element: <ReprogramarCita />,
+      },
     ],
   },
 ]);

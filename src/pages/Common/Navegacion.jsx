@@ -82,7 +82,7 @@ const Navegacion = ({ children }) => {
               }
               {
                 (user.rol == "secretaria" || user.rol == "administrador") &&
-                <SidebarItem href="#" icon={HiCalendar}>
+                <SidebarItem href="/citas" icon={HiCalendar}>
                   Agendación de Citas
                 </SidebarItem>
               }
