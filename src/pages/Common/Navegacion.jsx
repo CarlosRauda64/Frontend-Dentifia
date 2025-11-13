@@ -94,8 +94,8 @@ const Navegacion = ({ children }) => {
               }
               {
                 (user.rol == "doctor" || user.rol == "administrador") &&
-                <SidebarItem href="#" icon={HiClipboard}>
-                  Diagnóstico
+                <SidebarItem href="/expedientes" icon={HiClipboard}>
+                  Expedientes
                 </SidebarItem>
               }
               {

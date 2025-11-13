@@ -82,6 +82,7 @@ const TableFichas = ({ expedienteId, onRefresh }) => {
     const [openCreateModal, setOpenCreateModal] = useState(false)
     const [newFicha, setNewFicha] = useState(FICHA_INICIAL)
     const [savingFicha, setSavingFicha] = useState(false)
+    const [editingFichaId, setEditingFichaId] = useState(null)
 
     const [openNotesModal, setOpenNotesModal] = useState(false)
     const [selectedFichaForNotas, setSelectedFichaForNotas] = useState(null)
@@ -182,6 +183,33 @@ const TableFichas = ({ expedienteId, onRefresh }) => {
         cargarNotas(ficha.id)
     }
 
+    const abrirModalEditar = (ficha) => {
+        // Prefill form and open modal in edit mode
+        setNewFicha({
+            motivo_consulta_inicial: ficha.motivo_consulta_inicial || '',
+            diagnostico: ficha.diagnostico || '',
+            oclusion: ficha.oclusion || '',
+            mordida: ficha.mordida || '',
+            plan_tratamiento: ficha.plan_tratamiento || '',
+            estado_tratamiento: ficha.estado_tratamiento || 'activo'
+        })
+        setEditingFichaId(ficha.id)
+        setOpenCreateModal(true)
+    }
+
+    const abrirModalCrear = () => {
+        // ensure we're not in edit mode
+        setEditingFichaId(null)
+        resetNuevaFicha()
+        setOpenCreateModal(true)
+    }
+
+    const cerrarModalCrearEditar = () => {
+        setOpenCreateModal(false)
+        resetNuevaFicha()
+        setEditingFichaId(null)
+    }
+
     const cerrarModalNotas = () => {
         setSelectedFichaForNotas(null)
         setNotas([])
@@ -234,19 +262,38 @@ const TableFichas = ({ expedienteId, onRefresh }) => {
 
         setSavingFicha(true)
         try {
-            const respuesta = await fetch(`${API_URL}/expediente/fichas-ortodoncia/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    expediente: expedienteId,
-                    ...newFicha
+            let respuesta
+            if (editingFichaId) {
+                // edit via PATCH
+                respuesta = await fetch(`${API_URL}/expediente/fichas-ortodoncia/${editingFichaId}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        expediente: expedienteId,
+                        ...newFicha
+                    })
                 })
-            })
+            } else {
+                // create
+                respuesta = await fetch(`${API_URL}/expediente/fichas-ortodoncia/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        expediente: expedienteId,
+                        ...newFicha
+                    })
+                })
+            }
 
             if (!respuesta.ok) {
+                const body = await respuesta.json().catch(() => null)
+                console.error('Error respuesta crear/editar ficha:', respuesta.status, body)
                 throw new Error(`Error ${respuesta.status}`)
             }
 
@@ -254,6 +301,7 @@ const TableFichas = ({ expedienteId, onRefresh }) => {
             onRefresh?.()
             setOpenCreateModal(false)
             resetNuevaFicha()
+            setEditingFichaId(null)
         } catch (err) {
             console.error('Error al crear la ficha:', err)
         } finally {
@@ -338,7 +386,7 @@ const TableFichas = ({ expedienteId, onRefresh }) => {
                 <div>
                     <p className="text-gray-600 dark:text-gray-300 font-semibold">Fichas de ortodoncia registradas</p>
                 </div>
-                <Button color="purple" onClick={() => setOpenCreateModal(true)} disabled={!tieneAcceso}>
+                <Button color="purple" onClick={abrirModalCrear} disabled={!tieneAcceso}>
                     <div className="flex items-center gap-2">
                         <HiOutlinePlus size={16} />
                         Crear ficha
@@ -403,7 +451,7 @@ const TableFichas = ({ expedienteId, onRefresh }) => {
                                     <TableCell>
                                         <button
                                             type="button"
-                                            onClick={() => navigate(`/fichas/editar/${ficha.id}`)}
+                                            onClick={() => abrirModalEditar(ficha)}
                                             className="text-indigo-600 hover:text-indigo-800"
                                         >
                                             Editar
@@ -443,10 +491,10 @@ const TableFichas = ({ expedienteId, onRefresh }) => {
                 </ModalBody>
             </Modal>
 
-            <Modal show={openCreateModal} size="md" onClose={() => setOpenCreateModal(false)} popup position="center">
+            <Modal show={openCreateModal} size="md" onClose={cerrarModalCrearEditar} popup position="center">
                 <ModalBody className="pt-4  bg-white text-gray-900 dark:bg-gray-800 dark:text-white">
                     <div className="text-left">
-                        <h3 className="mb-4 text-lg font-semibold text-gray-900  dark:text-white">Crear ficha de ortodoncia</h3>
+                        <h3 className="mb-4 text-lg font-semibold text-gray-900  dark:text-white">{editingFichaId ? 'Editar ficha de ortodoncia' : 'Crear ficha de ortodoncia'}</h3>
                         <div className="flex flex-col gap-3">
                             <div>
                                 <div className="mb-2 block">
@@ -541,14 +589,11 @@ const TableFichas = ({ expedienteId, onRefresh }) => {
                             </div>
                         </div>
                         <div className="flex justify-end gap-3 mt-4">
-                            <Button color="gray" onClick={() => {
-                                setOpenCreateModal(false)
-                                resetNuevaFicha()
-                            }}>
+                            <Button color="gray" onClick={cerrarModalCrearEditar}>
                                 Cancelar
                             </Button>
                             <Button color="purple" onClick={guardarNuevaFicha} isProcessing={savingFicha} disabled={savingFicha}>
-                                Guardar ficha
+                                {editingFichaId ? 'Guardar cambios' : 'Guardar ficha'}
                             </Button>
                         </div>
                     </div>
