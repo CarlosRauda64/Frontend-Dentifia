@@ -8,7 +8,11 @@ const ListarEncuestas = () => {
             <div className="p-4 max-sm:pt-20 max-sm:px-2">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold mb-4 dark:text-gray-600">Registro de encuestas</h1>
-                    
+                    <div className="mb-4">
+                        <Button href="/encuestas/nueva" color="blue">
+                            Realizar Encuesta
+                        </Button>
+                    </div>
                 </div>
                 <TableEncuestas />
             </div>
