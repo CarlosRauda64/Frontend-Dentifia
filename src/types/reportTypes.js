@@ -19,25 +19,26 @@ export const Paciente = {
   updated_at: 'string'
 };
 
-// Estados de citas (mock)
-export const CitaEstado = {
-  PROGRAMADA: 'Programada',
-  ATENDIDO: 'Atendido',
-  CANCELADO: 'Cancelado',
-  REPROGRAMADO: 'Reprogramado',
-  NO_ASISTIO: 'No Asistió'
-};
+// NOTA: CitaEstado fue removido porque el modelo Cita del backend NO tiene campo 'estado'
+// Si se requiere funcionalidad de estados, debe agregarse primero al modelo Django
+// export const CitaEstado = {
+//   PROGRAMADA: 'Programada',
+//   ATENDIDO: 'Atendido',
+//   CANCELADO: 'Cancelado',
+//   REPROGRAMADO: 'Reprogramado',
+//   NO_ASISTIO: 'No Asistió'
+// };
 
-// Cita médica (mock)
+// Cita médica (real - del backend)
+// Basado en Dentifia-Backend/citas/models.py
 export const Cita = {
-  id: 'string',
-  pacienteId: 'string',
-  fecha: 'string', // YYYY-MM-DD
-  hora: 'string', // HH:MM
-  servicioId: 'string',
-  estado: 'string', // CitaEstado
-  notas: 'string',
-  doctorId: 'string'
+  id: 'number', // AutoField
+  paciente: 'object', // ForeignKey a Paciente (puede ser null)
+  nombre_completo: 'string', // CharField, nullable
+  fecha_hora: 'string', // DateTimeField (formato ISO)
+  motivo: 'string', // TextField, nullable
+  created_at: 'string', // DateTimeField
+  updated_at: 'string' // DateTimeField
 };
 
 // Factura (real - del backend)
@@ -70,28 +71,32 @@ export const Insumo = {
 };
 
 // Movimiento de stock (real - del backend)
+// Basado en Dentifia-Backend/inventario/models.py
 export const MovimientoStock = {
-  id: 'number',
-  insumo: 'number', // ID del insumo
-  tipo: 'string', // 'entrada' o 'salida'
-  cantidad: 'number',
-  fecha: 'string', // YYYY-MM-DD
-  motivo: 'string',
-  usuario: 'number' // ID del usuario
+  id: 'number', // AutoField
+  insumo: 'number', // ForeignKey a Insumo (ID del insumo)
+  tipo: 'string', // CharField - 'entrada' o 'salida'
+  fecha: 'string', // DateField (YYYY-MM-DD)
+  cantidad: 'number', // IntegerField
+  usuario: 'number', // ForeignKey a Usuario (ID del usuario, nullable)
+  nombre_usuario: 'string', // CharField - snapshot del nombre del usuario
+  rol_usuario: 'string', // CharField - snapshot del rol del usuario
+  activo: 'boolean' // BooleanField
 };
 
-// Encuesta de satisfacción (mock)
+// Encuesta de satisfacción (real - del backend)
+// Basado en Dentifia-Backend/encuestas/models.py
+// NOTA: El modelo actual solo tiene estos campos. Si se requieren más campos
+// (como paciente, servicio, fecha), deben agregarse primero al modelo Django.
 export const Encuesta = {
-  id: 'string',
-  pacienteId: 'string',
-  servicioId: 'string',
-  fecha: 'string', // YYYY-MM-DD
-  puntuacionGeneral: 'number', // 1-5
-  comentarios: 'string',
-  preguntas: 'array' // Preguntas específicas
+  id: 'number', // AutoField
+  observaciones: 'string', // CharField
+  nivel_satisfaccion: 'number' // IntegerField
 };
 
-// Servicio (mock)
+// Servicio (MOCK TEMPORAL - no existe en el backend)
+// Este tipo se usa solo para datos de demostración en reportes.
+// Si se requiere funcionalidad de servicios, debe crearse el modelo en Django primero.
 export const Servicio = {
   id: 'string',
   nombre: 'string',
@@ -121,14 +126,17 @@ export const ReporteBase = {
 };
 
 // Reporte de Citas
+// NOTA: Los contadores por estado (total_atendido, total_cancelado, etc.)
+// están comentados porque el modelo Cita no tiene campo 'estado'.
+// Si se requiere esta funcionalidad, agregar campo 'estado' al modelo Django primero.
 export const ReporteCitasData = {
   ...ReporteBase,
   total_citas: 'number',
-  total_atendido: 'number',
-  total_cancelado: 'number',
-  total_reprogramado: 'number',
-  total_no_asistio: 'number',
-  rows: 'array' // Citas con datos de paciente y servicio
+  // total_atendido: 'number', // Requiere campo 'estado' en modelo Cita
+  // total_cancelado: 'number', // Requiere campo 'estado' en modelo Cita
+  // total_reprogramado: 'number', // Requiere campo 'estado' en modelo Cita
+  // total_no_asistio: 'number', // Requiere campo 'estado' en modelo Cita
+  rows: 'array' // Citas con datos de paciente
 };
 
 // Reporte de Pacientes

@@ -24,6 +24,9 @@ const ReportesHome = () => {
   // Estados para filtros
   const [pacientes, setPacientes] = useState([]);
   const [selectedPacienteId, setSelectedPacienteId] = useState('');
+  const [filterPacienteCitas, setFilterPacienteCitas] = useState('');
+  const [busquedaPacienteHistorial, setBusquedaPacienteHistorial] = useState('');
+  const [pacientesFiltradosHistorial, setPacientesFiltradosHistorial] = useState([]);
   
   // Filtros específicos por reporte
   // Pacientes
@@ -50,7 +53,7 @@ const ReportesHome = () => {
 
   // Determinar qué filtros mostrar según el tipo de reporte
   const showDateFilters = selectedReportType && selectedReportType !== ReportType.STOCK_INSUMOS;
-  const showPacienteFilter = selectedReportType === ReportType.HISTORIAL_CLINICO;
+  const showPacienteFilter = selectedReportType === ReportType.HISTORIAL_CLINICO || selectedReportType === ReportType.CITAS;
 
   // Función para generar reporte
   const handleGenerateReport = useCallback(async () => {
@@ -92,6 +95,10 @@ const ReportesHome = () => {
           usuarioMovimiento: filterUsuarioMovimiento,
           busquedaInsumo: filterBusquedaInsumoMov
         };
+      } else if (selectedReportType === ReportType.CITAS) {
+        filters = {
+          pacienteId: filterPacienteCitas || selectedPacienteId
+        };
       }
 
       const accessToken = auth.getAccessToken();
@@ -120,7 +127,9 @@ const ReportesHome = () => {
     // Filtros de stock
     filterStockBajo, filterBusquedaInsumo,
     // Filtros de movimientos
-    filterTipoMovimiento, filterEstadoMovimiento, filterUsuarioMovimiento, filterBusquedaInsumoMov
+    filterTipoMovimiento, filterEstadoMovimiento, filterUsuarioMovimiento, filterBusquedaInsumoMov,
+    // Filtros de citas
+    filterPacienteCitas
   ]);
 
   // Cargar pacientes al montar el componente
@@ -130,12 +139,29 @@ const ReportesHome = () => {
         const accessToken = auth.getAccessToken();
         const pacientesData = await getPacientes(accessToken);
         setPacientes(pacientesData);
+        setPacientesFiltradosHistorial(pacientesData);
       } catch (error) {
         console.error('Error cargando pacientes:', error);
       }
     };
     loadPacientes();
   }, [auth]);
+
+  // Filtrar pacientes por nombre + DUI para historial clínico
+  useEffect(() => {
+    if (selectedReportType === ReportType.HISTORIAL_CLINICO && busquedaPacienteHistorial) {
+      const busqueda = busquedaPacienteHistorial.toLowerCase().trim();
+      const filtrados = pacientes.filter(p => {
+        const nombreCompleto = `${p.nombre || ''} ${p.dui || ''}`.toLowerCase();
+        return nombreCompleto.includes(busqueda) || 
+               (p.dui && p.dui.toLowerCase().includes(busqueda)) ||
+               (p.nombre && p.nombre.toLowerCase().includes(busqueda));
+      });
+      setPacientesFiltradosHistorial(filtrados);
+    } else {
+      setPacientesFiltradosHistorial(pacientes);
+    }
+  }, [busquedaPacienteHistorial, pacientes, selectedReportType]);
 
   // Regenerar reporte automáticamente al cambiar filtros (solo para búsquedas de texto)
   useEffect(() => {
@@ -213,10 +239,10 @@ const ReportesHome = () => {
             >
               <option value="">Seleccionar tipo de reporte</option>
               <option value={ReportType.PACIENTES}>Listado de Pacientes</option>
-              <option value={ReportType.CITAS}>Reporte de Citas *</option>
-              <option value={ReportType.HISTORIAL_CLINICO}>Historial Clínico *</option>
+              <option value={ReportType.CITAS}>Reporte de Citas</option>
+              <option value={ReportType.HISTORIAL_CLINICO}>Historial Clínico</option>
               <option value={ReportType.FACTURACION}>Reporte de Facturación</option>
-              <option value={ReportType.ENCUESTAS_SATISFACCION}>Encuestas de Satisfacción *</option>
+              <option value={ReportType.ENCUESTAS_SATISFACCION}>Encuestas de Satisfacción</option>
               <option value={ReportType.STOCK_INSUMOS}>Stock de Insumos</option>
               <option value={ReportType.MOVIMIENTOS_INVENTARIO}>Movimientos de Inventario</option>
             </Select>
@@ -230,11 +256,23 @@ const ReportesHome = () => {
           </div>
         </div>
 
-        {/* Leyenda de asteriscos */}
+        {/* Notas sobre limitaciones */}
         <div className="mb-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            <span className="font-medium">Nota:</span> Los reportes marcados con (*) utilizan datos de demostración ya que sus módulos correspondientes aún no están implementados en el backend.
-          </p>
+          {selectedReportType === ReportType.STOCK_INSUMOS && (
+            <Alert color="info" className="mb-2">
+              <span className="font-medium">Nota:</span> El reporte de stock no incluye unidad de medida ya que este campo no existe en el modelo de Insumo.
+            </Alert>
+          )}
+          {selectedReportType === ReportType.CITAS && (
+            <Alert color="info" className="mb-2">
+              <span className="font-medium">Nota:</span> El modelo de Cita no incluye los campos 'doctor' ni 'estado'. Solo se muestran fecha, hora, paciente y motivo.
+            </Alert>
+          )}
+          {selectedReportType === ReportType.ENCUESTAS_SATISFACCION && (
+            <Alert color="info" className="mb-2">
+              <span className="font-medium">Nota:</span> El modelo de Encuesta no tiene campo 'fecha' ni sistema de preguntas/respuestas. Solo se muestran observaciones y nivel de satisfacción.
+            </Alert>
+          )}
         </div>
 
         {/* Filtros */}
@@ -266,22 +304,45 @@ const ReportesHome = () => {
                 </>
               )}
               
-              {/* Filtro de paciente para historial clínico */}
+              {/* Filtro de paciente para historial clínico y citas */}
               {showPacienteFilter && (
-                <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Paciente</label>
-                  <Select
-                    value={selectedPacienteId}
-                    onChange={(e) => setSelectedPacienteId(e.target.value)}
-                  >
-                    <option value="">Seleccionar paciente</option>
-                    {pacientes.map(paciente => (
-                      <option key={paciente.id} value={paciente.id}>
-                        {paciente.nombre}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
+                <>
+                  {selectedReportType === ReportType.HISTORIAL_CLINICO && (
+                    <div>
+                      <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+                        Buscar por nombre o DUI
+                      </label>
+                      <TextInput
+                        placeholder="Nombre o DUI del paciente..."
+                        value={busquedaPacienteHistorial}
+                        onChange={(e) => setBusquedaPacienteHistorial(e.target.value)}
+                        icon={HiSearch}
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+                      {selectedReportType === ReportType.CITAS ? 'Filtrar por paciente (opcional)' : 'Paciente'}
+                    </label>
+                    <Select
+                      value={selectedReportType === ReportType.CITAS ? filterPacienteCitas : selectedPacienteId}
+                      onChange={(e) => {
+                        if (selectedReportType === ReportType.CITAS) {
+                          setFilterPacienteCitas(e.target.value);
+                        } else {
+                          setSelectedPacienteId(e.target.value);
+                        }
+                      }}
+                    >
+                      <option value="">{selectedReportType === ReportType.CITAS ? 'Todos los pacientes' : 'Seleccionar paciente'}</option>
+                      {(selectedReportType === ReportType.HISTORIAL_CLINICO ? pacientesFiltradosHistorial : pacientes).map(paciente => (
+                        <option key={paciente.id} value={paciente.id}>
+                          {paciente.nombre} {paciente.dui ? `(${paciente.dui})` : ''}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                </>
               )}
 
               {/* Filtros específicos para Listado de Pacientes */}
