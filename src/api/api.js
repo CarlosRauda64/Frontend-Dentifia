@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const API_URL = 'https://dentifia.onrender.com/';
+export const API_URL = 'https://dentifia.onrender.com';
 
 // Crear instancia de axios con configuración base
 const api = axios.create({
