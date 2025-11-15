@@ -17,13 +17,15 @@ import {
   HiCalendar,
   HiClipboard,
   HiCurrencyDollar,
+  HiClipboardCheck,
   HiClipboardList,
   HiDocumentReport,
   HiUsers,
   HiOutlineLogout,
   HiPuzzle,
   HiMoon,
-  HiSun
+  HiSun,
+  HiIdentification
 } from "react-icons/hi";
 
 const Navegacion = ({ children }) => {
@@ -80,14 +82,20 @@ const Navegacion = ({ children }) => {
               }
               {
                 (user.rol == "secretaria" || user.rol == "administrador") &&
-                <SidebarItem href="#" icon={HiCalendar}>
+                <SidebarItem href="/citas" icon={HiCalendar}>
                   Agendación de Citas
                 </SidebarItem>
               }
               {
+                (user.rol == "secretaria" || user.rol == "doctor" || user.rol == "administrador") &&
+                <SidebarItem href="/pacientes" icon={HiIdentification}>
+                  Gestión de Pacientes
+                </SidebarItem>
+              }
+              {
                 (user.rol == "doctor" || user.rol == "administrador") &&
-                <SidebarItem href="#" icon={HiClipboard}>
-                  Diagnóstico
+                <SidebarItem href="/expedientes" icon={HiClipboard}>
+                  Expedientes
                 </SidebarItem>
               }
               {
@@ -99,8 +107,11 @@ const Navegacion = ({ children }) => {
               <SidebarItem href="/inventario" icon={HiClipboardList}>
                 Inventario
               </SidebarItem>
-              <SidebarItem href="#" icon={HiDocumentReport}>
+              <SidebarItem href="/reportes" icon={HiDocumentReport}>
                 Reportes
+              </SidebarItem>
+               <SidebarItem href="/encuestas" icon={HiClipboardCheck}>
+                Encuestas
               </SidebarItem>
               <SidebarItem icon={!theme ? HiSun : HiMoon} className="flex items-center">
                 <ToggleSwitch checked={theme} onChange={setTheme} label="Modo Oscuro" />
@@ -122,7 +133,7 @@ const Navegacion = ({ children }) => {
           </SidebarItems>
         </Sidebar>
         <div className={`${visible ? "hidden" : "sm:hidden"} bg-black opacity-[50%] w-full h-full fixed z-1`} onClick={() => toggleVisible()}></div>
-        <div className="shrink w-full max-sm:absolute max-sm:inset-0 max-sm:h-screen dark:bg-gray-900 bg-gray-100">
+        <div className="shrink w-full max-sm:absolute max-sm:min-h-screen dark:bg-gray-900 bg-gray-100">
           {children}
         </div>
       </div>

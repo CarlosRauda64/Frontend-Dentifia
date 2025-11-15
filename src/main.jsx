@@ -5,7 +5,7 @@ import './index.css'
 import App from './App.jsx'
 import Login from './pages/Login/Login.jsx'
 import Loading from './pages/Common/Loading.jsx'
-import ProtectedRoute, { ProtectedAdministrador, ProtectedSecretaria } from './routes/ProtectedRoute.jsx'
+import ProtectedRoute, { ProtectedAdministrador, ProtectedSecretaria, ProtectedDoctor } from './routes/ProtectedRoute.jsx'
 import CrearFactura from './pages/factura/CrearFactura.jsx'
 import CancelarFactura from './pages/factura/CancelarFactura.jsx'
 import EditarFactura from './pages/factura/EditarFactura.jsx'
@@ -23,7 +23,20 @@ import FormEditarInsumo from './pages/Insumos/FormEditarInsumo.jsx'
 import ListarMovimientosStock from './pages/Movimientos_Stock/ListarMovimientos.jsx'
 import FormInsertarMov from './pages/Movimientos_Stock/FormInsertarMov.jsx'
 import FormEditMov from './pages/Movimientos_Stock/FormEditMov.jsx'
+import ListarEncuestas from './pages/Encuesta/ListarEncuesta.jsx'
+import FormInsertarEncuesta from './pages/Encuesta/FormInsertarEncuesta.jsx'
 import Autorizacion from './routes/Autorizacion.jsx'
+import ListarPacientes from './pages/Pacientes/ListarPacientes.jsx'
+import FormCrearPaciente from './pages/Pacientes/FormCrearPaciente.jsx'
+import FormEditarPaciente from './pages/Pacientes/FormEditarPaciente.jsx'
+import Agenda from './pages/Citas/Agenda.jsx'
+import Citas from './pages/Citas/Citas.jsx'
+import CrearCita from './pages/Citas/CrearCita.jsx'
+import ReprogramarCita from './pages/Citas/ReprogramarCita.jsx'
+import FormEncuesta from './pages/Encuesta/FormInsertarEncuesta.jsx'
+import ReportesHome from './pages/Reportes/ReportesHome.jsx'
+import GestorExpedientes from './pages/Expediente/GestorExpedientes.jsx'
+import ExpedientePaciente from './pages/Expediente/ExpedientePaciente.jsx'
 
 console.log("Componente HistorialFactura:", HistorialFactura);
 
@@ -93,6 +106,20 @@ const router = createBrowserRouter([
         ]
       },
       {
+        path: '/',
+        element: <ProtectedDoctor />,
+        children: [
+          {
+            path: '/expedientes',
+            element: <GestorExpedientes />,
+          },
+          {
+            path: '/expediente_paciente',
+            element: <ExpedientePaciente />,
+          },
+        ]
+      },
+      {
         path: '/usuarios/configuracion',
         element: <ConfigUsuario />,
       },
@@ -124,6 +151,64 @@ const router = createBrowserRouter([
       {
         path: '/inventario/movimientos_stock/editar/:id',
         element: <FormEditMov />,
+      },
+      {
+        path: '/pacientes',
+        element: <ListarPacientes />,
+      },
+      {
+        path: '/',
+        element: <ProtectedDoctor />,
+        children: [
+          {
+            path: '/pacientes/nuevo',
+            element: <FormCrearPaciente />,
+          },
+          {
+            path: '/pacientes/editar/:id',
+            element: <FormEditarPaciente />,
+          },
+        ]
+      },
+      {
+        path: '/reportes',
+        element: <ReportesHome />,
+      },
+      {
+        path: '/encuestas',
+        element: <ListarEncuestas />,
+      },
+      {
+        path: '/encuestas/nueva',
+        element: <FormInsertarEncuesta />,
+      },
+      {
+        path: '/pacientes',
+        element: <ListarPacientes />,
+      },
+      {
+        path: '/pacientes/nuevo',
+        element: <FormCrearPaciente />,
+      },
+      {
+        path: '/pacientes/editar/:id',
+        element: <FormEditarPaciente />,
+      },
+       {
+        path: '/citas/agenda',
+        element: <Agenda />,
+      },
+      {
+        path: '/citas',
+        element: <Citas />,
+      },
+      {
+        path: '/citas/nueva',
+        element: <CrearCita />,
+      },
+      {
+        path: '/citas/reprogramar/:id',
+        element: <ReprogramarCita />,
       },
     ],
   },
