@@ -23,10 +23,17 @@ import FormEditarInsumo from './pages/Insumos/FormEditarInsumo.jsx'
 import ListarMovimientosStock from './pages/Movimientos_Stock/ListarMovimientos.jsx'
 import FormInsertarMov from './pages/Movimientos_Stock/FormInsertarMov.jsx'
 import FormEditMov from './pages/Movimientos_Stock/FormEditMov.jsx'
+import ListarEncuesta from './pages/Encuesta/ListarEncuesta.jsx'
+import FormInsertarEncuesta from './pages/Encuesta/FormInsertarEncuesta.jsx'
 import Autorizacion from './routes/Autorizacion.jsx'
 import ListarPacientes from './pages/Pacientes/ListarPacientes.jsx'
 import FormCrearPaciente from './pages/Pacientes/FormCrearPaciente.jsx'
 import FormEditarPaciente from './pages/Pacientes/FormEditarPaciente.jsx'
+import Agenda from './pages/Citas/Agenda.jsx'
+import Citas from './pages/Citas/Citas.jsx'
+import CrearCita from './pages/Citas/CrearCita.jsx'
+import ReprogramarCita from './pages/Citas/ReprogramarCita.jsx'
+import FormEncuesta from './pages/Encuesta/FormInsertarEncuesta.jsx'
 import ReportesHome from './pages/Reportes/ReportesHome.jsx'
 import ListarCitas from './pages/Citas/ListarCitas.jsx'
 import FormCrearCita from './pages/Citas/FormCrearCita.jsx'
@@ -35,6 +42,8 @@ import ListarEncuestas from './pages/Encuestas/ListarEncuestas.jsx'
 import FormCrearEncuesta from './pages/Encuestas/FormCrearEncuesta.jsx'
 import FormEditarEncuesta from './pages/Encuestas/FormEditarEncuesta.jsx'
 import EncuestaPublica from './pages/Encuestas/EncuestaPublica.jsx'
+import GestorExpedientes from './pages/Expediente/GestorExpedientes.jsx'
+import ExpedientePaciente from './pages/Expediente/ExpedientePaciente.jsx'
 
 console.log("Componente HistorialFactura:", HistorialFactura);
 
@@ -120,6 +129,20 @@ const router = createBrowserRouter([
         ]
       },
       {
+        path: '/',
+        element: <ProtectedDoctor />,
+        children: [
+          {
+            path: '/expedientes',
+            element: <GestorExpedientes />,
+          },
+          {
+            path: '/expediente_paciente',
+            element: <ExpedientePaciente />,
+          },
+        ]
+      },
+      {
         path: '/usuarios/configuracion',
         element: <ConfigUsuario />,
       },
@@ -185,6 +208,22 @@ const router = createBrowserRouter([
       {
         path: '/encuestas/editar/:id',
         element: <FormEditarEncuesta />,
+      },
+      {
+        path: '/encuestas/nueva',
+        element: <FormInsertarEncuesta />,
+      },
+      {
+        path: '/citas/agenda',
+        element: <Agenda />,
+      },
+      {
+        path: '/citas/nueva',
+        element: <CrearCita />,
+      },
+      {
+        path: '/citas/reprogramar/:id',
+        element: <ReprogramarCita />,
       },
     ],
   },
