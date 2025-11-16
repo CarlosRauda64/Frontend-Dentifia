@@ -17,8 +17,8 @@ const TableUsuarios = () => {
         setUsuario(usuario);
     }
 
-    const aceptarModal = () => {
-        eliminarUsuario(usuario.id);
+    const aceptarModal = async () => {
+        await eliminarUsuario(usuario.id);
         setOpenModal(false);
         setUsuario('');
     }
@@ -28,33 +28,51 @@ const TableUsuarios = () => {
         setUsuario('');
     }
 
+    const getToken = () => {
+        return auth.getAccessToken?.() || null
+    }
+
     const eliminarUsuario = async (id) => {
+        const token = getToken()
+        if (!token) {
+            console.error('No autorizado: token no disponible')
+            return
+        }
         try {
-            await fetch(`${API_URL}/usuarios/api_usuarios/${id}/`, {
+            const resp = await fetch(`${API_URL}/usuarios/api_usuarios/${id}/`, {
                 method: 'DELETE',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${auth.getAccessToken()}`
+                    'Authorization': `Bearer ${token}`
                 }
             });
+            if (!resp.ok && resp.status !== 204) {
+                const txt = await resp.text().catch(() => null)
+                throw new Error(`Error ${resp.status} ${txt}`)
+            }
             console.log("Usuario eliminado:", id);
-            fetchUsuarios();
+            await fetchUsuarios();
         } catch (error) {
             console.error('Error al eliminar el usuario:', error);
         }
     }
 
     const fetchUsuarios = async () => {
+        const token = getToken()
+        if (!token) {
+            console.warn('fetchUsuarios: token no disponible, omitiendo petición')
+            setUsuarios([])
+            return
+        }
         try {
-            const response = await fetch(`${API_URL}/usuarios/api_usuarios`, {
+            // Asegurarse de usar la ruta con slash final que define DRF
+            const response = await fetch(`${API_URL}/usuarios/api_usuarios/`, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${auth.getAccessToken()}`
+                    'Authorization': `Bearer ${token}`
                 }
             });
             if (!response.ok) {
-                throw new Error('Error al obtener los usuarios');
+                throw new Error(`Error al obtener los usuarios (${response.status})`);
             }
             const data = await response.json();
             setUsuarios(data);
@@ -65,8 +83,9 @@ const TableUsuarios = () => {
     }
 
     useEffect(() => {
+        // Llamar cuando el componente monte; fetchUsuarios internamente verificará token
         fetchUsuarios();
-    }, []);
+    }, [auth]);
 
     return (
         <>
