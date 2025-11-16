@@ -109,15 +109,12 @@ const Navegacion = ({ children }) => {
               </SidebarItem>
               {
                 (user.rol == "secretaria" || user.rol == "administrador") &&
-                <SidebarItem href="/encuestas" icon={HiClipboard}>
-                  Encuesta
+                <SidebarItem href="/encuestas" icon={HiClipboardCheck}>
+                  Encuestas
                 </SidebarItem>
               }
               <SidebarItem href="/reportes" icon={HiDocumentReport}>
                 Reportes
-              </SidebarItem>
-               <SidebarItem href="/encuestas" icon={HiClipboardCheck}>
-                Encuestas
               </SidebarItem>
               <SidebarItem icon={!theme ? HiSun : HiMoon} className="flex items-center">
                 <ToggleSwitch checked={theme} onChange={setTheme} label="Modo Oscuro" />

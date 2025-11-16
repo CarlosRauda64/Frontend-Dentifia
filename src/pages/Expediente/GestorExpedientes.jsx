@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Button, Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow, TextInput, Badge, Tooltip } from 'flowbite-react'
+import { Button, Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow, TextInput, Badge, Tooltip, Spinner } from 'flowbite-react'
 import { HiOutlineFolderOpen, HiOutlinePlusCircle, HiSearch, HiRefresh } from 'react-icons/hi'
 import { useNavigate } from 'react-router'
 import Navegacion from '../Common/Navegacion.jsx'
-import Loading from '../Common/Loading.jsx'
 import { API_URL } from '../../api/api'
 import { useAuth } from '../../auth/useAuth'
 
@@ -181,8 +180,9 @@ const GestorExpedientes = () => {
 				)}
 
 				{loading ? (
-					<div className="flex justify-center py-12">
-						<Loading />
+					<div className="flex flex-col items-center justify-center py-12 min-h-[400px]">
+						<Spinner size="xl" className="mb-4" />
+						<span className="text-lg text-gray-600 dark:text-gray-400">Cargando pacientes y expedientes...</span>
 					</div>
 				) : (
 					<div className="overflow-x-auto rounded-xl bg-white shadow dark:bg-gray-800">

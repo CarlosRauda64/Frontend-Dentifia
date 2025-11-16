@@ -154,11 +154,13 @@ const formatCurrency = (amount) => {
 export const generateReport = async (reportType, desde, hasta, filters = {}, accessToken = null) => {
   const reportId = `REP-${Date.now()}`;
   const fecha_generacion = new Date().toISOString();
+  // Límite máximo de recuperaciones (por defecto 20, excepto para historial clínico)
+  const limiteMaximo = filters.limiteMaximo !== undefined ? filters.limiteMaximo : 20;
 
   try {
     switch (reportType) {
       case ReportType.CITAS:
-        return await generateCitasReport(reportId, fecha_generacion, desde, hasta, filters.pacienteId, filters.estado, accessToken);
+        return await generateCitasReport(reportId, fecha_generacion, desde, hasta, filters.pacienteId, filters.estado, limiteMaximo, accessToken);
       
       case ReportType.PACIENTES:
         return await generatePacientesReport(
@@ -168,6 +170,7 @@ export const generateReport = async (reportType, desde, hasta, filters = {}, acc
           hasta, 
           filters.rangoEdad, 
           filters.busquedaNombre,
+          limiteMaximo,
           accessToken
         );
       
@@ -192,11 +195,12 @@ export const generateReport = async (reportType, desde, hasta, filters = {}, acc
           filters.montoMinimo,
           filters.montoMaximo,
           filters.pacienteId,
+          limiteMaximo,
           accessToken
         );
       
       case ReportType.ENCUESTAS_SATISFACCION:
-        return await generateEncuestasReport(reportId, fecha_generacion, desde, hasta, accessToken);
+        return await generateEncuestasReport(reportId, fecha_generacion, desde, hasta, limiteMaximo, accessToken);
       
       case ReportType.STOCK_INSUMOS:
         return await generateStockReport(
@@ -206,6 +210,7 @@ export const generateReport = async (reportType, desde, hasta, filters = {}, acc
           hasta, 
           filters.stockBajo,
           filters.busquedaInsumo,
+          limiteMaximo,
           accessToken
         );
       
@@ -219,6 +224,7 @@ export const generateReport = async (reportType, desde, hasta, filters = {}, acc
           filters.estadoMovimiento,
           filters.usuarioMovimiento,
           filters.busquedaInsumo,
+          limiteMaximo,
           accessToken
         );
       
@@ -232,7 +238,7 @@ export const generateReport = async (reportType, desde, hasta, filters = {}, acc
 };
 
 // Reporte de Citas (Real - Backend)
-const generateCitasReport = async (reportId, fecha_generacion, desde, hasta, pacienteId = null, estado = null, accessToken = null) => {
+const generateCitasReport = async (reportId, fecha_generacion, desde, hasta, pacienteId = null, estado = null, limiteMaximo = 20, accessToken = null) => {
   try {
     // Construir URL con filtros
     let url = `${API_URL}/citas/listar/`;
@@ -272,6 +278,11 @@ const generateCitasReport = async (reportId, fecha_generacion, desde, hasta, pac
     // Filtrar por estado si se especifica (filtro en frontend ya que el backend no lo soporta)
     if (estado && estado !== '') {
       citas = citas.filter(c => c.estado === estado);
+    }
+    
+    // Aplicar límite máximo de recuperaciones
+    if (limiteMaximo && limiteMaximo > 0) {
+      citas = citas.slice(0, limiteMaximo);
     }
     
     // Formatear citas para el reporte
@@ -314,7 +325,7 @@ const generateCitasReport = async (reportId, fecha_generacion, desde, hasta, pac
 };
 
 // Reporte de Pacientes (Real - Backend)
-const generatePacientesReport = async (reportId, fecha_generacion, desde, hasta, rangoEdad, busquedaNombre, accessToken) => {
+const generatePacientesReport = async (reportId, fecha_generacion, desde, hasta, rangoEdad, busquedaNombre, limiteMaximo = 20, accessToken) => {
   try {
     // Obtener todos los pacientes con paginación para asegurar datos completos
     let allPacientes = [];
@@ -514,14 +525,20 @@ const generatePacientesReport = async (reportId, fecha_generacion, desde, hasta,
       })
     );
     
+    // Aplicar límite máximo de recuperaciones
+    let pacientesLimitados = pacientesConEstadisticas;
+    if (limiteMaximo && limiteMaximo > 0) {
+      pacientesLimitados = pacientesConEstadisticas.slice(0, limiteMaximo);
+    }
+    
     return {
       id: reportId,
       nombreReporte: ReportType.PACIENTES,
       fecha_generacion,
       desde,
       hasta,
-      total_pacientes: pacientesConEstadisticas.length,
-      rows: pacientesConEstadisticas
+      total_pacientes: pacientesLimitados.length,
+      rows: pacientesLimitados
     };
   } catch (error) {
     console.error('Error obteniendo pacientes:', error);
@@ -687,7 +704,7 @@ const generateHistorialClinicoReport = async (reportId, fecha_generacion, desde,
 };
 
 // Reporte de Facturación (Real - Backend)
-const generateFacturacionReport = async (reportId, fecha_generacion, desde, hasta, estadoFactura, metodoPago, montoMinimo, montoMaximo, pacienteId, accessToken) => {
+const generateFacturacionReport = async (reportId, fecha_generacion, desde, hasta, estadoFactura, metodoPago, montoMinimo, montoMaximo, pacienteId, limiteMaximo = 20, accessToken) => {
   try {
     const response = await fetch(`${API_URL}/facturacion/facturas/`, {
       method: 'GET',
@@ -758,6 +775,12 @@ const generateFacturacionReport = async (reportId, fecha_generacion, desde, hast
       .filter(f => f.estado === 'Pendiente')
       .reduce((sum, f) => sum + parseFloat(f.monto_total), 0);
 
+    // Aplicar límite máximo de recuperaciones
+    let facturacionRowsLimitados = facturacionRows;
+    if (limiteMaximo && limiteMaximo > 0) {
+      facturacionRowsLimitados = facturacionRows.slice(0, limiteMaximo);
+    }
+
     return {
       id: reportId,
       nombreReporte: ReportType.FACTURACION,
@@ -767,7 +790,7 @@ const generateFacturacionReport = async (reportId, fecha_generacion, desde, hast
       total_facturas_periodo: facturasFiltradas.length,
       total_recaudado_periodo: totalRecaudado,
       total_pendiente_periodo: totalPendiente,
-      rows: facturacionRows
+      rows: facturacionRowsLimitados
     };
   } catch (error) {
     console.error('Error obteniendo facturación:', error);
@@ -776,7 +799,7 @@ const generateFacturacionReport = async (reportId, fecha_generacion, desde, hast
 };
 
 // Reporte de Encuestas (Real - Backend)
-const generateEncuestasReport = async (reportId, fecha_generacion, desde, hasta, accessToken = null) => {
+const generateEncuestasReport = async (reportId, fecha_generacion, desde, hasta, limiteMaximo = 20, accessToken = null) => {
   try {
     const response = await fetch(`${API_URL}/encuestas/listar`, {
       method: 'GET',
@@ -831,9 +854,16 @@ const generateEncuestasReport = async (reportId, fecha_generacion, desde, hasta,
       };
     });
 
+    // Aplicar límite máximo de recuperaciones
+    let encuestasFormateadasLimitadas = encuestasFormateadas;
+    if (limiteMaximo && limiteMaximo > 0) {
+      encuestasFormateadasLimitadas = encuestasFormateadas.slice(0, limiteMaximo);
+    }
+
     // Calcular promedio antes de formatear nivel_satisfaccion como string
-    const totalPuntuacion = encuestas.reduce((sum, e) => sum + (e.nivel_satisfaccion || 0), 0);
-    const promedioPuntuacion = encuestas.length > 0 ? totalPuntuacion / encuestas.length : 0;
+    const encuestasParaPromedio = limiteMaximo && limiteMaximo > 0 ? encuestas.slice(0, limiteMaximo) : encuestas;
+    const totalPuntuacion = encuestasParaPromedio.reduce((sum, e) => sum + (e.nivel_satisfaccion || 0), 0);
+    const promedioPuntuacion = encuestasParaPromedio.length > 0 ? totalPuntuacion / encuestasParaPromedio.length : 0;
 
     return {
       id: reportId,
@@ -841,9 +871,9 @@ const generateEncuestasReport = async (reportId, fecha_generacion, desde, hasta,
       fecha_generacion,
       desde,
       hasta,
-      total_encuestas: encuestasFormateadas.length,
+      total_encuestas: encuestasFormateadasLimitadas.length,
       promedio_puntuacion: promedioPuntuacion.toFixed(2),
-      rows: encuestasFormateadas
+      rows: encuestasFormateadasLimitadas
     };
   } catch (error) {
     console.error('Error obteniendo encuestas:', error);
@@ -852,7 +882,7 @@ const generateEncuestasReport = async (reportId, fecha_generacion, desde, hasta,
 };
 
 // Reporte de Stock de Insumos (Real - Backend)
-const generateStockReport = async (reportId, fecha_generacion, desde, hasta, stockBajo, busquedaInsumo, accessToken) => {
+const generateStockReport = async (reportId, fecha_generacion, desde, hasta, stockBajo, busquedaInsumo, limiteMaximo = 20, accessToken) => {
   try {
     const response = await fetch(`${API_URL}/inventario/insumos/`, {
       method: 'GET',
@@ -886,20 +916,25 @@ const generateStockReport = async (reportId, fecha_generacion, desde, hasta, sto
       );
     }
 
+    // Aplicar límite máximo de recuperaciones
+    let insumosLimitados = insumosActivos;
+    if (limiteMaximo && limiteMaximo > 0) {
+      insumosLimitados = insumosActivos.slice(0, limiteMaximo);
+    }
+
     return {
       id: reportId,
       nombreReporte: ReportType.STOCK_INSUMOS,
       fecha_generacion,
       desde: 'Estado actual', // Cambiado para indicar que es estado actual
       hasta: 'Estado actual', // Cambiado para indicar que es estado actual
-      total_productos_distintos: insumosActivos.length,
+      total_productos_distintos: insumosLimitados.length,
       valor_total_stock: 0, // No calculado por ahora
-      rows: insumosActivos.map(i => ({
+      rows: insumosLimitados.map(i => ({
         id: i.id,
         nombre: i.nombre,
         descripcion: i.descripcion,
-        stockActual: i.stock_actual || 0,
-        unidad_medida: i.unidad_medida || 'unidad'
+        stockActual: i.stock_actual || 0
       }))
     };
   } catch (error) {
@@ -909,7 +944,7 @@ const generateStockReport = async (reportId, fecha_generacion, desde, hasta, sto
 };
 
 // Reporte de Movimientos de Inventario (Real - Backend)
-const generateMovimientosReport = async (reportId, fecha_generacion, desde, hasta, tipoMovimiento, estadoMovimiento, usuarioMovimiento, busquedaInsumo, accessToken) => {
+const generateMovimientosReport = async (reportId, fecha_generacion, desde, hasta, tipoMovimiento, estadoMovimiento, usuarioMovimiento, busquedaInsumo, limiteMaximo = 20, accessToken) => {
   try {
     const response = await fetch(`${API_URL}/inventario/movimientos_stock/`, {
       method: 'GET',
@@ -958,11 +993,17 @@ const generateMovimientosReport = async (reportId, fecha_generacion, desde, hast
       );
     }
 
-    const totalEntradas = movimientosFiltrados
+    // Aplicar límite máximo de recuperaciones
+    let movimientosLimitados = movimientosFiltrados;
+    if (limiteMaximo && limiteMaximo > 0) {
+      movimientosLimitados = movimientosFiltrados.slice(0, limiteMaximo);
+    }
+
+    const totalEntradas = movimientosLimitados
       .filter(m => m.tipo === 'entrada')
       .reduce((sum, m) => sum + m.cantidad, 0);
 
-    const totalSalidas = movimientosFiltrados
+    const totalSalidas = movimientosLimitados
       .filter(m => m.tipo === 'salida')
       .reduce((sum, m) => sum + m.cantidad, 0);
 
@@ -972,10 +1013,10 @@ const generateMovimientosReport = async (reportId, fecha_generacion, desde, hast
       fecha_generacion,
       desde,
       hasta,
-      total_cambios: movimientosFiltrados.length,
+      total_cambios: movimientosLimitados.length,
       total_entradas_cantidad: totalEntradas,
       total_salidas_cantidad: totalSalidas,
-      rows: movimientosFiltrados.map(m => ({
+      rows: movimientosLimitados.map(m => ({
         id: m.id,
         fecha: m.fecha,
         tipo: m.tipo,

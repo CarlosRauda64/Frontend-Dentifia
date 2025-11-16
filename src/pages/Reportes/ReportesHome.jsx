@@ -130,14 +130,27 @@ const ReportesHome = () => {
   const [filterEstadoMovimiento, setFilterEstadoMovimiento] = useState('');
   const [filterUsuarioMovimiento, setFilterUsuarioMovimiento] = useState('');
   const [filterBusquedaInsumoMov, setFilterBusquedaInsumoMov] = useState('');
+  
+  // Límite máximo de recuperaciones (por defecto 20, excepto historial clínico)
+  const [limiteMaximo, setLimiteMaximo] = useState(20);
 
   // Determinar qué filtros mostrar según el tipo de reporte
   const showDateFilters = selectedReportType && selectedReportType !== ReportType.STOCK_INSUMOS;
   const showPacienteFilter = selectedReportType === ReportType.HISTORIAL_CLINICO || selectedReportType === ReportType.CITAS;
+  const showLimiteMaximo = selectedReportType && selectedReportType !== ReportType.HISTORIAL_CLINICO;
 
   // Función para generar reporte
   const handleGenerateReport = useCallback(async () => {
     if (!selectedReportType) return;
+    
+    // Validación específica para historial clínico
+    if (selectedReportType === ReportType.HISTORIAL_CLINICO) {
+      if (!selectedPacienteId || selectedPacienteId === '') {
+        setError('Por favor, seleccione un paciente para generar el reporte de historial clínico.');
+        setReportData(null);
+        return;
+      }
+    }
     
     setError(null);
     setIsLoading(true);
@@ -149,13 +162,20 @@ const ReportesHome = () => {
       // Preparar filtros según el tipo de reporte
       let filters = {};
       
+      // Agregar límite máximo a todos los reportes excepto historial clínico
+      if (selectedReportType !== ReportType.HISTORIAL_CLINICO) {
+        filters.limiteMaximo = limiteMaximo;
+      }
+      
       if (selectedReportType === ReportType.PACIENTES) {
         filters = {
+          ...filters,
           rangoEdad: filterRangoEdad,
           busquedaNombre: filterBusquedaNombre
         };
       } else if (selectedReportType === ReportType.FACTURACION) {
         filters = {
+          ...filters,
           estadoFactura: filterEstadoFactura,
           metodoPago: filterMetodoPago,
           montoMinimo: filterMontoMinimo,
@@ -164,11 +184,13 @@ const ReportesHome = () => {
         };
       } else if (selectedReportType === ReportType.STOCK_INSUMOS) {
         filters = {
+          ...filters,
           stockBajo: filterStockBajo,
           busquedaInsumo: filterBusquedaInsumo
         };
       } else if (selectedReportType === ReportType.MOVIMIENTOS_INVENTARIO) {
         filters = {
+          ...filters,
           tipoMovimiento: filterTipoMovimiento,
           estadoMovimiento: filterEstadoMovimiento,
           usuarioMovimiento: filterUsuarioMovimiento,
@@ -177,9 +199,12 @@ const ReportesHome = () => {
       } else if (selectedReportType === ReportType.CITAS) {
         const pacienteIdValue = filterPacienteCitas || selectedPacienteId;
         filters = {
+          ...filters,
           pacienteId: pacienteIdValue && pacienteIdValue !== '' ? pacienteIdValue : null,
           estado: filterEstadoCitas
         };
+      } else if (selectedReportType === ReportType.ENCUESTAS_SATISFACCION) {
+        // Encuestas solo tiene limiteMaximo
       } else if (selectedReportType === ReportType.HISTORIAL_CLINICO) {
         filters = {
           pacienteId: selectedPacienteId
@@ -198,7 +223,18 @@ const ReportesHome = () => {
       setReportData(data);
     } catch (err) {
       console.error("Error generando reporte:", err);
-      setError(err.message || "Ocurrió un error al generar el reporte. Intente nuevamente.");
+      // Mensajes de error más específicos según el tipo de reporte
+      let errorMessage = "Ocurrió un error al generar el reporte. Intente nuevamente.";
+      if (selectedReportType === ReportType.HISTORIAL_CLINICO) {
+        if (err.message && err.message.toLowerCase().includes('paciente')) {
+          errorMessage = "No se pudo obtener el historial clínico. Verifique que el paciente seleccionado sea válido.";
+        } else {
+          errorMessage = "No se pudo generar el reporte de historial clínico. Verifique que el paciente tenga fichas clínicas en el período seleccionado.";
+        }
+      } else {
+        errorMessage = err.message || errorMessage;
+      }
+      setError(errorMessage);
       setReportData(null);
     } finally {
       setIsLoading(false);
@@ -214,7 +250,9 @@ const ReportesHome = () => {
     // Filtros de movimientos
     filterTipoMovimiento, filterEstadoMovimiento, filterUsuarioMovimiento, filterBusquedaInsumoMov,
     // Filtros de citas
-    filterPacienteCitas, filterEstadoCitas
+    filterPacienteCitas, filterEstadoCitas,
+    // Límite máximo
+    limiteMaximo
   ]);
 
   // Cargar pacientes al montar el componente
@@ -287,6 +325,12 @@ const ReportesHome = () => {
         doc.text(`ID: ${reportData.id}`, 14, 30);
         doc.text(`Generado: ${new Date(reportData.fecha_generacion).toLocaleString()}`, 14, 35);
         doc.text(`Período: ${reportData.desde} - ${reportData.hasta}`, 14, 40);
+        
+        // Agregar estadísticas para encuestas
+        if (reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION) {
+          doc.text(`Total Encuestas: ${reportData.total_encuestas || 0}`, 14, 45);
+          doc.text(`Promedio Puntuación: ${reportData.promedio_puntuacion || '0.00'}/5`, 14, 50);
+        }
         
         // Preparar datos para la tabla según el tipo de reporte
         let columns = Object.keys(reportData.rows[0] || {});
@@ -388,6 +432,38 @@ const ReportesHome = () => {
               return value || '-';
             })
           );
+        } else if (reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION) {
+          // Para reporte de encuestas: excluir preguntas_respuestas del PDF
+          columns = columns.filter(col => col !== 'preguntas_respuestas');
+          
+          columnHeaders = columns.map(col => {
+            const headerMap = {
+              'id': 'ID',
+              'fecha': 'Fecha',
+              'observaciones': 'Observaciones',
+              'nivel_satisfaccion': 'Nivel Satisfacción'
+            };
+            return headerMap[col] || formatFieldName(col);
+          });
+          
+          tableData = reportData.rows.map(row => 
+            columns.map(col => {
+              const value = row[col];
+              
+              // Formatear fecha
+              if (col === 'fecha') {
+                return value ? formatFecha(value) : 'N/A';
+              }
+              
+              // Formatear observaciones: permitir que se ajuste en múltiples líneas
+              if (col === 'observaciones' && value) {
+                // Limpiar espacios múltiples
+                return value.trim().replace(/\s+/g, ' ');
+              }
+              
+              return value || 'N/A';
+            })
+          );
         } else {
           // Para otros reportes: formato genérico
           columnHeaders = columns.map(col => formatFieldName(col));
@@ -396,12 +472,23 @@ const ReportesHome = () => {
           );
         }
         
+        // Calcular startY según si hay estadísticas adicionales
+        let startY = 50;
+        if (reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION) {
+          startY = 55;
+        }
+        
         // Generar tabla
         autoTable(doc, {
           head: [columnHeaders],
           body: tableData,
-          startY: 50,
-          styles: { fontSize: 8 },
+          startY: startY,
+          styles: { 
+            fontSize: reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION ? 7 : 8,
+            cellPadding: reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION ? 2 : 3,
+            overflow: reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION ? 'linebreak' : 'ellipsize',
+            cellWidth: reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION ? 'wrap' : 'auto'
+          },
           headStyles: { fillColor: [59, 130, 246] },
           columnStyles: reportData.nombreReporte === ReportType.FACTURACION ? {
             // Alinear montos a la derecha en facturación
@@ -416,6 +503,12 @@ const ReportesHome = () => {
             total_facturas: { halign: 'center' },
             total_facturado: { halign: 'right' },
             total_expedientes: { halign: 'center' }
+          } : reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION ? {
+            // Estilos especiales para encuestas - usar índices de columna (sin preguntas_respuestas)
+            0: { cellWidth: 20, halign: 'center' }, // id
+            1: { cellWidth: 40, halign: 'center' }, // fecha
+            2: { cellWidth: 80, overflow: 'linebreak' }, // observaciones
+            3: { cellWidth: 50, halign: 'center' } // nivel_satisfaccion
           } : {}
         });
         
@@ -449,7 +542,11 @@ const ReportesHome = () => {
             </Select>
             <Button 
               onClick={handleGenerateReport}
-              disabled={!selectedReportType || isLoading}
+              disabled={
+                !selectedReportType || 
+                isLoading || 
+                (selectedReportType === ReportType.HISTORIAL_CLINICO && (!selectedPacienteId || selectedPacienteId === ''))
+              }
               color="blue"
             >
               {isLoading ? <Spinner size="sm" /> : 'Generar Reporte'}
@@ -506,6 +603,9 @@ const ReportesHome = () => {
                   <div>
                     <label className="block text-sm font-medium mb-2 dark:text-gray-300">
                       {selectedReportType === ReportType.CITAS ? 'Filtrar por paciente (opcional)' : 'Paciente'}
+                      {selectedReportType === ReportType.HISTORIAL_CLINICO && (
+                        <span className="text-red-500 ml-1">*</span>
+                      )}
                     </label>
                     <Select
                       value={selectedReportType === ReportType.CITAS ? filterPacienteCitas : selectedPacienteId}
@@ -514,6 +614,10 @@ const ReportesHome = () => {
                           setFilterPacienteCitas(e.target.value);
                         } else {
                           setSelectedPacienteId(e.target.value);
+                          // Limpiar error cuando se selecciona un paciente
+                          if (e.target.value && error && error.includes('seleccione un paciente')) {
+                            setError(null);
+                          }
                         }
                       }}
                     >
@@ -524,6 +628,11 @@ const ReportesHome = () => {
                         </option>
                       ))}
                     </Select>
+                    {selectedReportType === ReportType.HISTORIAL_CLINICO && (!selectedPacienteId || selectedPacienteId === '') && (
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Debe seleccionar un paciente para generar el reporte
+                      </p>
+                    )}
                   </div>
                   {selectedReportType === ReportType.CITAS && (
                     <div>
@@ -710,6 +819,31 @@ const ReportesHome = () => {
                     />
                   </div>
                 </>
+              )}
+
+              {/* Campo de límite máximo de recuperaciones (para todos los reportes excepto historial clínico) */}
+              {showLimiteMaximo && (
+                <div>
+                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+                    Límite máximo de resultados
+                  </label>
+                  <TextInput
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value={limiteMaximo}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (!isNaN(value) && value > 0) {
+                        setLimiteMaximo(value);
+                      } else if (e.target.value === '') {
+                        setLimiteMaximo(20);
+                      }
+                    }}
+                    placeholder="20"
+                    helperText="Cantidad máxima de registros a mostrar (por defecto: 20)"
+                  />
+                </div>
               )}
             </div>
           </div>
