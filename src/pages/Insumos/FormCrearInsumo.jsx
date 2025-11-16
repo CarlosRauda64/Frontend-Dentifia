@@ -18,7 +18,6 @@ const FormCrearInsumo = () => {
     } = useForm();
 
     const crearInsumo = async (data) => {
-        // El stock_actual ya no se envía, el backend lo inicializa en 0.
         const dataToSend = {
             ...data,
         };

@@ -39,7 +39,6 @@ const FormEditarInsumo = () => {
     }, [id, reset, auth]);
 
     const editarInsumo = async (data) => {
-        // Ya no enviamos stock_actual, es de solo lectura.
         const dataToSend = {
             nombre: data.nombre,
             descripcion: data.descripcion,

@@ -19,17 +19,7 @@ export const Paciente = {
   updated_at: 'string'
 };
 
-// NOTA: CitaEstado fue removido porque el modelo Cita del backend NO tiene campo 'estado'
-// Si se requiere funcionalidad de estados, debe agregarse primero al modelo Django
-// export const CitaEstado = {
-//   PROGRAMADA: 'Programada',
-//   ATENDIDO: 'Atendido',
-//   CANCELADO: 'Cancelado',
-//   REPROGRAMADO: 'Reprogramado',
-//   NO_ASISTIO: 'No Asistió'
-// };
-
-// Cita médica (real - del backend)
+// Cita médica
 // Basado en Dentifia-Backend/citas/models.py
 export const Cita = {
   id: 'number', // AutoField
@@ -97,9 +87,7 @@ export const Encuesta = {
   preguntas_respuestas: 'object' // JSONField - objeto con preguntas como keys y respuestas como values
 };
 
-// Servicio (MOCK TEMPORAL - no existe en el backend)
-// Este tipo se usa solo para datos de demostración en reportes.
-// Si se requiere funcionalidad de servicios, debe crearse el modelo en Django primero.
+// Servicio
 export const Servicio = {
   id: 'string',
   nombre: 'string',

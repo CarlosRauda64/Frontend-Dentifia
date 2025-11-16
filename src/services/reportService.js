@@ -1,118 +1,7 @@
 // Servicio de reportes para DentiFIA
-// Integra datos reales del backend con datos mock para módulos faltantes
 
 import { API_URL } from '../api/api';
 import { ReportType } from '../types/reportTypes';
-// NOTA: CitaEstado fue removido porque el modelo Cita no tiene campo 'estado'
-
-// Datos mock para módulos faltantes
-const mockServicios = [
-  { id: 's-1', nombre: 'Consulta General', tipo: 'Consulta', duracionEstimadaMin: 30, costoBase: 50 },
-  { id: 's-2', nombre: 'Limpieza Dental', tipo: 'Procedimiento', duracionEstimadaMin: 45, costoBase: 75 },
-  { id: 's-3', nombre: 'Ortodoncia - Revisión', tipo: 'Ortodoncia', duracionEstimadaMin: 20, costoBase: 60 },
-  { id: 's-4', nombre: 'Blanqueamiento Dental', tipo: 'Estética', duracionEstimadaMin: 90, costoBase: 200 },
-  { id: 's-5', nombre: 'Extracción Simple', tipo: 'Cirugía', duracionEstimadaMin: 60, costoBase: 120 },
-];
-
-// Datos mock temporales para reporte de citas
-// NOTA: Estos datos usan la estructura real del modelo Cita del backend.
-// Estructura basada en Dentifia-Backend/citas/models.py
-// Campos: id, paciente (FK), nombre_completo, fecha_hora, motivo, created_at, updated_at
-// NOTA: El modelo actual NO tiene campos 'estado', 'doctor', ni 'servicio'
-const mockCitas = [
-  { 
-    id: 1, 
-    paciente: { id: 1, nombres: 'Juan', apellidos: 'Pérez' }, 
-    nombre_completo: 'Juan Pérez',
-    fecha_hora: '2024-07-01T09:00:00Z', 
-    motivo: 'Control anual',
-    created_at: '2024-06-25T10:00:00Z',
-    updated_at: '2024-06-25T10:00:00Z'
-  },
-  { 
-    id: 2, 
-    paciente: { id: 2, nombres: 'María', apellidos: 'González' }, 
-    nombre_completo: 'María González',
-    fecha_hora: '2024-07-01T10:00:00Z', 
-    motivo: 'Limpieza dental',
-    created_at: '2024-06-25T11:00:00Z',
-    updated_at: '2024-06-25T11:00:00Z'
-  },
-  { 
-    id: 3, 
-    paciente: { id: 3, nombres: 'Carlos', apellidos: 'Rodríguez' }, 
-    nombre_completo: 'Carlos Rodríguez',
-    fecha_hora: '2024-07-02T11:00:00Z', 
-    motivo: 'Consulta general',
-    created_at: '2024-06-26T09:00:00Z',
-    updated_at: '2024-06-26T09:00:00Z'
-  },
-  { 
-    id: 4, 
-    paciente: { id: 1, nombres: 'Juan', apellidos: 'Pérez' }, 
-    nombre_completo: 'Juan Pérez',
-    fecha_hora: '2024-07-08T09:00:00Z', 
-    motivo: 'Seguimiento',
-    created_at: '2024-07-01T10:00:00Z',
-    updated_at: '2024-07-01T10:00:00Z'
-  },
-  { 
-    id: 5, 
-    paciente: { id: 4, nombres: 'Ana', apellidos: 'Martínez' }, 
-    nombre_completo: 'Ana Martínez',
-    fecha_hora: '2024-07-10T14:00:00Z', 
-    motivo: 'Blanqueamiento',
-    created_at: '2024-07-05T08:00:00Z',
-    updated_at: '2024-07-05T08:00:00Z'
-  },
-  { 
-    id: 6, 
-    paciente: { id: 2, nombres: 'María', apellidos: 'González' }, 
-    nombre_completo: 'María González',
-    fecha_hora: '2023-12-15T15:00:00Z', 
-    motivo: 'Extracción muela del juicio',
-    created_at: '2023-12-10T10:00:00Z',
-    updated_at: '2023-12-10T10:00:00Z'
-  },
-  { 
-    id: 7, 
-    paciente: { id: 3, nombres: 'Carlos', apellidos: 'Rodríguez' }, 
-    nombre_completo: 'Carlos Rodríguez',
-    fecha_hora: '2024-06-20T08:30:00Z', 
-    motivo: 'Consulta de rutina',
-    created_at: '2024-06-15T14:00:00Z',
-    updated_at: '2024-06-15T14:00:00Z'
-  },
-];
-
-// Datos mock temporales para reporte de encuestas
-// NOTA: Estos datos usan la estructura real del modelo Encuesta del backend.
-// Estructura basada en Dentifia-Backend/encuestas/models.py
-// Campos: id, observaciones, nivel_satisfaccion
-// NOTA: El modelo actual NO tiene campos 'paciente', 'servicio', ni 'fecha'
-// Si se requieren estos campos, deben agregarse primero al modelo Django.
-const mockEncuestas = [
-  { 
-    id: 1, 
-    observaciones: 'Excelente atención, muy profesional.',
-    nivel_satisfaccion: 5
-  },
-  { 
-    id: 2, 
-    observaciones: 'Todo bien, aunque la espera fue un poco larga.',
-    nivel_satisfaccion: 4
-  },
-  { 
-    id: 3, 
-    observaciones: 'Siempre satisfecho con el servicio.',
-    nivel_satisfaccion: 5
-  },
-  { 
-    id: 4, 
-    observaciones: 'El procedimiento fue doloroso pero el resultado es bueno.',
-    nivel_satisfaccion: 3
-  },
-];
 
 // Función auxiliar para verificar si una fecha está en el rango
 const isInDateRange = (itemDateStr, desdeStr, hastaStr) => {
@@ -926,10 +815,10 @@ const generateStockReport = async (reportId, fecha_generacion, desde, hasta, sto
       id: reportId,
       nombreReporte: ReportType.STOCK_INSUMOS,
       fecha_generacion,
-      desde: 'Estado actual', // Cambiado para indicar que es estado actual
-      hasta: 'Estado actual', // Cambiado para indicar que es estado actual
+      desde: 'Estado actual',
+      hasta: 'Estado actual',
       total_productos_distintos: insumosLimitados.length,
-      valor_total_stock: 0, // No calculado por ahora
+      valor_total_stock: 0,
       rows: insumosLimitados.map(i => ({
         id: i.id,
         nombre: i.nombre,

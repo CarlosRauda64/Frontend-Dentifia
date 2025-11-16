@@ -59,15 +59,15 @@ const CrearFactura = () => {
   });
 
   if (!response.ok) {
-    const text = await response.text(); // 👈 Captura como texto para evitar error de parseo
-    console.error("❌ Respuesta del backend:", text);
+    const text = await response.text();
+    console.error("Respuesta del backend:", text);
     throw new Error('Error al crear la factura');
   }
 
 navigate('/factura/historial');
 
 } catch (error) {
-  console.error('❌ Error al crear la factura:', error);
+  console.error('Error al crear la factura:', error);
   alert("No se pudo crear la factura. Revisa consola para más detalles.");
 }
 
