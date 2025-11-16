@@ -351,31 +351,52 @@ const DatosPaciente = () => {
             setErrorAnexos('Anexo no encontrado')
             return
         }
-        const url = anexo.archivo || anexo.url
-        if (!url) {
-            setErrorAnexos('URL del archivo no disponible')
-            return
-        }
-        const token = auth.getAccessToken?.()
-        if (!token) {
-            setErrorAnexos('No autorizado')
-            return
-        }
+
+        // Prefer the public archivo_url returned by the backend (Cloudinary public URL)
+        let publicUrl = anexo.archivo_url || anexo.archivo || anexo.url || null
+        let filename = anexo.nombre_original || anexo.nombre || null
+
         setDownloading(true)
         try {
-            const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-            if (!resp.ok) {
-                const txt = await resp.text().catch(() => null)
-                console.error('Download error', resp.status, txt)
-                setErrorAnexos(`No se pudo descargar el anexo (${resp.status})`)
+            // If we don't have a public URL, ask backend for a download_url (authenticated)
+            if (!publicUrl) {
+                const token = auth.getAccessToken?.()
+                if (!token) {
+                    setErrorAnexos('No autorizado')
+                    return
+                }
+                const resp = await fetch(`${API_URL}/expediente/anexos/${id}/download_url/`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                if (!resp.ok) {
+                    const txt = await resp.text().catch(() => null)
+                    console.error('Error obteniendo download_url', resp.status, txt)
+                    setErrorAnexos(`No se pudo obtener la URL de descarga (${resp.status})`)
+                    return
+                }
+                const data = await resp.json().catch(() => null)
+                publicUrl = data?.url || null
+                filename = filename || data?.filename || filename
+                if (!publicUrl) {
+                    setErrorAnexos('URL de descarga no disponible desde el backend')
+                    return
+                }
+            }
+
+            // Fetch the file from the public URL WITHOUT sending Authorization (Cloudinary expects public access)
+            const respFile = await fetch(publicUrl)
+            if (!respFile.ok) {
+                const txt = await respFile.text().catch(() => null)
+                console.error('Download error', respFile.status, txt)
+                setErrorAnexos(`No se pudo descargar el anexo (${respFile.status})`)
                 return
             }
-            const blob = await resp.blob()
-            const filename = anexo.nombre_original || anexo.nombre || (new URL(url).pathname.split('/').pop()) || 'archivo'
+            const blob = await respFile.blob()
+            const inferredName = filename || (new URL(publicUrl).pathname.split('/').pop()) || 'archivo'
             const blobUrl = window.URL.createObjectURL(blob)
             const a = document.createElement('a')
             a.href = blobUrl
-            a.download = filename
+            a.download = inferredName
             document.body.appendChild(a)
             a.click()
             a.remove()
