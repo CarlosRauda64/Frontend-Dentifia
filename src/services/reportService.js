@@ -158,7 +158,7 @@ export const generateReport = async (reportType, desde, hasta, filters = {}, acc
   try {
     switch (reportType) {
       case ReportType.CITAS:
-        return await generateCitasReport(reportId, fecha_generacion, desde, hasta, filters.pacienteId, accessToken);
+        return await generateCitasReport(reportId, fecha_generacion, desde, hasta, filters.pacienteId, filters.estado, accessToken);
       
       case ReportType.PACIENTES:
         return await generatePacientesReport(
@@ -166,7 +166,6 @@ export const generateReport = async (reportType, desde, hasta, filters = {}, acc
           fecha_generacion, 
           desde, 
           hasta, 
-          filters.sexo, 
           filters.rangoEdad, 
           filters.busquedaNombre,
           accessToken
@@ -233,9 +232,7 @@ export const generateReport = async (reportType, desde, hasta, filters = {}, acc
 };
 
 // Reporte de Citas (Real - Backend)
-// NOTA: El modelo Cita NO tiene campo 'estado' ni 'doctor', por lo que solo se muestran
-// fecha, hora, paciente y motivo. Si se requiere esta funcionalidad, agregar campos al modelo Django.
-const generateCitasReport = async (reportId, fecha_generacion, desde, hasta, pacienteId = null, accessToken = null) => {
+const generateCitasReport = async (reportId, fecha_generacion, desde, hasta, pacienteId = null, estado = null, accessToken = null) => {
   try {
     // Construir URL con filtros
     let url = `${API_URL}/citas/listar/`;
@@ -243,40 +240,58 @@ const generateCitasReport = async (reportId, fecha_generacion, desde, hasta, pac
     
     if (desde) params.append('desde', desde);
     if (hasta) params.append('hasta', hasta);
-    if (pacienteId) params.append('paciente_id', pacienteId);
+    if (pacienteId && pacienteId !== '' && pacienteId !== 'undefined' && pacienteId !== null) {
+      params.append('paciente_id', pacienteId);
+    }
     
     if (params.toString()) {
       url += `?${params.toString()}`;
     }
     
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+    
     const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-      }
+      headers: headers
     });
     
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
     
-    const citas = await response.json();
+    let citas = await response.json();
+    
+    // Filtrar por estado si se especifica (filtro en frontend ya que el backend no lo soporta)
+    if (estado && estado !== '') {
+      citas = citas.filter(c => c.estado === estado);
+    }
     
     // Formatear citas para el reporte
     const citasFormateadas = citas.map(c => ({
       id: c.id,
-      paciente: c.paciente ? {
-        id: c.paciente,
-        nombres: c.paciente_nombres || '',
-        apellidos: c.paciente_apellidos || ''
-      } : null,
-      nombre_completo: c.nombre_completo || (c.paciente ? `${c.paciente_nombres || ''} ${c.paciente_apellidos || ''}`.trim() : 'Sin paciente'),
+      nombre_completo: c.nombre_completo || (c.paciente_nombres && c.paciente_apellidos ? `${c.paciente_nombres} ${c.paciente_apellidos}`.trim() : 'Sin paciente'),
       fecha_hora: c.fecha_hora,
       motivo: c.motivo || '',
+      doctor_nombre: c.doctor_nombre || 'Sin asignar',
+      estado: c.estado || 'programada',
       created_at: c.created_at,
       updated_at: c.updated_at
     }));
+
+    // Calcular contadores por estado
+    const total_atendido = citasFormateadas.filter(c => c.estado === 'atendida').length;
+    const total_cancelado = citasFormateadas.filter(c => c.estado === 'cancelada').length;
+    const total_reprogramado = citasFormateadas.filter(c => c.estado === 'reprogramada').length;
+    const total_no_asistio = citasFormateadas.filter(c => c.estado === 'no_asistio').length;
+    const total_programada = citasFormateadas.filter(c => c.estado === 'programada').length;
 
     return {
       id: reportId,
@@ -285,11 +300,11 @@ const generateCitasReport = async (reportId, fecha_generacion, desde, hasta, pac
       desde,
       hasta,
       total_citas: citasFormateadas.length,
-      // Contadores por estado removidos porque el modelo Cita no tiene campo 'estado'
-      // total_atendido: 0,
-      // total_cancelado: 0,
-      // total_reprogramado: 0,
-      // total_no_asistio: 0,
+      total_programada,
+      total_atendido,
+      total_cancelado,
+      total_reprogramado,
+      total_no_asistio,
       rows: citasFormateadas
     };
   } catch (error) {
@@ -299,32 +314,62 @@ const generateCitasReport = async (reportId, fecha_generacion, desde, hasta, pac
 };
 
 // Reporte de Pacientes (Real - Backend)
-const generatePacientesReport = async (reportId, fecha_generacion, desde, hasta, sexo, rangoEdad, busquedaNombre, accessToken) => {
+const generatePacientesReport = async (reportId, fecha_generacion, desde, hasta, rangoEdad, busquedaNombre, accessToken) => {
   try {
-    const response = await fetch(`${API_URL}/pacientes/`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-      }
-    });
+    // Obtener todos los pacientes con paginación para asegurar datos completos
+    let allPacientes = [];
+    let nextUrl = `${API_URL}/pacientes/`;
     
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    // Recorrer todas las páginas para obtener todos los pacientes
+    while (nextUrl) {
+      const response = await fetch(nextUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      const pacientes = data.results || (Array.isArray(data) ? data : []);
+      allPacientes = allPacientes.concat(pacientes);
+      
+      // Verificar si hay siguiente página
+      nextUrl = data.next || null;
     }
     
-    const data = await response.json();
-    const pacientes = data.results || data;
+    // Ahora obtener los datos completos de cada paciente (con serializer completo)
+    const pacientesCompletos = await Promise.all(
+      allPacientes.map(async (p) => {
+        try {
+          const detailResponse = await fetch(`${API_URL}/pacientes/${p.id}/`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`
+            }
+          });
+          
+          if (detailResponse.ok) {
+            return await detailResponse.json();
+          }
+          // Si falla, usar los datos básicos
+          return p;
+        } catch (error) {
+          console.warn(`Error obteniendo detalles del paciente ${p.id}:`, error);
+          return p;
+        }
+      })
+    );
     
     // Aplicar filtros
-    let pacientesFiltrados = pacientes.filter(p => 
+    let pacientesFiltrados = pacientesCompletos.filter(p => 
       isInDateRange(p.created_at?.split('T')[0], desde, hasta)
     );
-
-    // Filtro por sexo
-    if (sexo) {
-      pacientesFiltrados = pacientesFiltrados.filter(p => p.sexo === sexo);
-    }
 
     // Filtro por rango de edad
     if (rangoEdad) {
@@ -351,31 +396,132 @@ const generatePacientesReport = async (reportId, fecha_generacion, desde, hasta,
     if (busquedaNombre) {
       const busqueda = busquedaNombre.toLowerCase();
       pacientesFiltrados = pacientesFiltrados.filter(p => {
-        const nombreCompleto = `${p.nombres} ${p.apellidos}`.toLowerCase();
+        const nombreCompleto = `${p.nombres || ''} ${p.apellidos || ''}`.toLowerCase();
         return nombreCompleto.includes(busqueda);
       });
     }
 
+    // Obtener todas las facturas una sola vez (más eficiente)
+    let todasFacturas = [];
+    try {
+      const facturasResponse = await fetch(`${API_URL}/facturacion/facturas/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      
+      if (facturasResponse.ok) {
+        const facturasData = await facturasResponse.json();
+        todasFacturas = Array.isArray(facturasData) ? facturasData : (facturasData.results || []);
+      }
+    } catch (error) {
+      console.warn('Error obteniendo facturas:', error);
+    }
+    
+    // Obtener estadísticas de citas y facturas para cada paciente
+    const pacientesConEstadisticas = await Promise.all(
+      pacientesFiltrados.map(async (p) => {
+        try {
+          // Obtener citas del paciente
+          const citasResponse = await fetch(`${API_URL}/citas/listar/?paciente_id=${p.id}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`
+            }
+          });
+          
+          let citas = [];
+          if (citasResponse.ok) {
+            citas = await citasResponse.json();
+          }
+          
+          // Filtrar facturas por paciente desde la lista completa
+          // El campo paciente se serializa como ID numérico cuando es ForeignKey
+          const facturas = todasFacturas.filter(f => {
+            if (!f.paciente) return false; // Si no tiene paciente asignado, no cuenta
+            
+            // El campo paciente puede ser:
+            // - Un número (ID directo)
+            // - Un objeto con propiedad id
+            // - null/undefined
+            const pacienteId = f.paciente;
+            
+            if (typeof pacienteId === 'number') {
+              return pacienteId === p.id;
+            }
+            
+            if (typeof pacienteId === 'object' && pacienteId !== null) {
+              return pacienteId.id === p.id;
+            }
+            
+            // Comparación por string como fallback
+            return String(pacienteId) === String(p.id);
+          });
+          
+          // Calcular estadísticas
+          // Total de citas: todas las citas del paciente
+          const totalCitas = citas.length;
+          
+          // Total de citas atendidas: solo las que tienen estado 'atendida'
+          const totalCitasAtendidas = citas.filter(c => {
+            const estado = c.estado || '';
+            return estado.toLowerCase() === 'atendida';
+          }).length;
+          
+          // Total de facturas: todas las facturas del paciente
+          const totalFacturas = facturas.length;
+          
+          // Total facturado: suma de montos de facturas con estado 'Pagada'
+          const totalFacturado = facturas
+            .filter(f => {
+              const estado = f.estado || '';
+              return estado.toLowerCase() === 'pagada';
+            })
+            .reduce((sum, f) => {
+              const monto = parseFloat(f.monto_total || 0);
+              return sum + (isNaN(monto) ? 0 : monto);
+            }, 0);
+          
+          return {
+            id: p.id,
+            nombre: p.nombre_completo || `${p.nombres || ''} ${p.apellidos || ''}`.trim(),
+            dui: p.dui || '',
+            fecha_nacimiento: p.fecha_nacimiento || null,
+            fecha_registro: p.created_at?.split('T')[0] || p.created_at || null,
+            total_citas: totalCitas,
+            total_citas_atendidas: totalCitasAtendidas,
+            total_facturas: totalFacturas,
+            total_facturado: totalFacturado
+          };
+        } catch (error) {
+          console.warn(`Error obteniendo estadísticas del paciente ${p.id}:`, error);
+          // Retornar datos básicos sin estadísticas
+          return {
+            id: p.id,
+            nombre: p.nombre_completo || `${p.nombres || ''} ${p.apellidos || ''}`.trim(),
+            dui: p.dui || '',
+            fecha_nacimiento: p.fecha_nacimiento || null,
+            fecha_registro: p.created_at?.split('T')[0] || p.created_at || null,
+            total_citas: 0,
+            total_citas_atendidas: 0,
+            total_facturas: 0,
+            total_facturado: 0
+          };
+        }
+      })
+    );
+    
     return {
       id: reportId,
       nombreReporte: ReportType.PACIENTES,
       fecha_generacion,
       desde,
       hasta,
-      total_pacientes: pacientesFiltrados.length,
-      rows: pacientesFiltrados.map(p => ({
-        id: p.id,
-        nombre: p.nombre_completo || `${p.nombres} ${p.apellidos}`,
-        dui: p.dui || '',
-        fecha_nacimiento: p.fecha_nacimiento,
-        fecha_registro: p.created_at?.split('T')[0] || p.created_at,
-        telefono: p.telefono,
-        celular: p.celular,
-        email: p.email,
-        direccion: p.direccion,
-        alergias: p.datos_medicos?.alergias ? [p.datos_medicos.alergias] : [],
-        medicamentos: p.datos_medicos?.medicamentos ? [p.datos_medicos.medicamentos] : []
-      }))
+      total_pacientes: pacientesConEstadisticas.length,
+      rows: pacientesConEstadisticas
     };
   } catch (error) {
     console.error('Error obteniendo pacientes:', error);
@@ -630,13 +776,9 @@ const generateFacturacionReport = async (reportId, fecha_generacion, desde, hast
 };
 
 // Reporte de Encuestas (Real - Backend)
-// NOTA: El modelo Encuesta actual solo tiene 'observaciones' y 'nivel_satisfaccion'.
-// No tiene campos 'fecha', 'paciente', ni 'servicio', por lo que no se puede filtrar por fecha.
-// El modelo Django no tiene 'created_at' automático, por lo que no hay forma de filtrar por fecha.
-// Si se requiere filtrar por fecha, agregar campo 'fecha' o 'created_at' al modelo Django primero.
 const generateEncuestasReport = async (reportId, fecha_generacion, desde, hasta, accessToken = null) => {
   try {
-    const response = await fetch(`${API_URL}/encuestas/encuestas/`, {
+    const response = await fetch(`${API_URL}/encuestas/listar`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -649,17 +791,49 @@ const generateEncuestasReport = async (reportId, fecha_generacion, desde, hasta,
     }
     
     const data = await response.json();
-    const encuestas = Array.isArray(data) ? data : (data.results || []);
+    let encuestas = Array.isArray(data) ? data : (data.results || []);
     
-    // NOTA: No se puede filtrar por fecha porque el modelo no tiene campo 'fecha' ni 'created_at'
-    // Se muestran todas las encuestas disponibles
-    const encuestasFormateadas = encuestas.map(e => ({
-      id: e.id,
-      observaciones: e.observaciones || '',
-      nivel_satisfaccion: e.nivel_satisfaccion || 0
-    }));
+    // Filtrar por rango de fechas si se proporciona
+    if (desde || hasta) {
+      encuestas = encuestas.filter(e => {
+        if (!e.fecha) return false;
+        const fechaEncuesta = new Date(e.fecha);
+        if (desde) {
+          const desdeDate = new Date(desde);
+          desdeDate.setHours(0, 0, 0, 0);
+          if (fechaEncuesta < desdeDate) return false;
+        }
+        if (hasta) {
+          const hastaDate = new Date(hasta);
+          hastaDate.setHours(23, 59, 59, 999);
+          if (fechaEncuesta > hastaDate) return false;
+        }
+        return true;
+      });
+    }
+    
+    const encuestasFormateadas = encuestas.map(e => {
+      // Formatear preguntas_respuestas como lista numerada para mejor legibilidad
+      let preguntasFormateadas = '';
+      if (e.preguntas_respuestas && typeof e.preguntas_respuestas === 'object') {
+        const preguntasArray = Object.entries(e.preguntas_respuestas).map(([pregunta, respuesta], index) => 
+          `${index + 1}. ${pregunta}\n   → ${respuesta}`
+        );
+        preguntasFormateadas = preguntasArray.join('\n\n');
+      }
+      
+      return {
+        id: e.id,
+        fecha: e.fecha || null,
+        observaciones: e.observaciones || 'N/A',
+        nivel_satisfaccion: `${e.nivel_satisfaccion || 0}/5`,
+        preguntas_respuestas: preguntasFormateadas || 'N/A'
+      };
+    });
 
-    const totalPuntuacion = encuestasFormateadas.reduce((sum, e) => sum + (e.nivel_satisfaccion || 0), 0);
+    // Calcular promedio antes de formatear nivel_satisfaccion como string
+    const totalPuntuacion = encuestas.reduce((sum, e) => sum + (e.nivel_satisfaccion || 0), 0);
+    const promedioPuntuacion = encuestas.length > 0 ? totalPuntuacion / encuestas.length : 0;
 
     return {
       id: reportId,
@@ -668,7 +842,7 @@ const generateEncuestasReport = async (reportId, fecha_generacion, desde, hasta,
       desde,
       hasta,
       total_encuestas: encuestasFormateadas.length,
-      promedio_puntuacion: encuestasFormateadas.length > 0 ? totalPuntuacion / encuestasFormateadas.length : 0,
+      promedio_puntuacion: promedioPuntuacion.toFixed(2),
       rows: encuestasFormateadas
     };
   } catch (error) {
@@ -720,13 +894,12 @@ const generateStockReport = async (reportId, fecha_generacion, desde, hasta, sto
       hasta: 'Estado actual', // Cambiado para indicar que es estado actual
       total_productos_distintos: insumosActivos.length,
       valor_total_stock: 0, // No calculado por ahora
-      // NOTA: No se incluye unidad_medida porque el modelo Insumo no tiene este campo
       rows: insumosActivos.map(i => ({
         id: i.id,
         nombre: i.nombre,
         descripcion: i.descripcion,
-        stockActual: i.stock_actual || 0
-        // unidad_medida: No disponible - el modelo no tiene este campo
+        stockActual: i.stock_actual || 0,
+        unidad_medida: i.unidad_medida || 'unidad'
       }))
     };
   } catch (error) {

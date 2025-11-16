@@ -28,6 +28,13 @@ import ListarPacientes from './pages/Pacientes/ListarPacientes.jsx'
 import FormCrearPaciente from './pages/Pacientes/FormCrearPaciente.jsx'
 import FormEditarPaciente from './pages/Pacientes/FormEditarPaciente.jsx'
 import ReportesHome from './pages/Reportes/ReportesHome.jsx'
+import ListarCitas from './pages/Citas/ListarCitas.jsx'
+import FormCrearCita from './pages/Citas/FormCrearCita.jsx'
+import FormEditarCita from './pages/Citas/FormEditarCita.jsx'
+import ListarEncuestas from './pages/Encuestas/ListarEncuestas.jsx'
+import FormCrearEncuesta from './pages/Encuestas/FormCrearEncuesta.jsx'
+import FormEditarEncuesta from './pages/Encuestas/FormEditarEncuesta.jsx'
+import EncuestaPublica from './pages/Encuestas/EncuestaPublica.jsx'
 
 console.log("Componente HistorialFactura:", HistorialFactura);
 
@@ -39,6 +46,10 @@ const router = createBrowserRouter([
   {
     path: '/login',
     element: <Navigate to="/" replace />,
+  },
+  {
+    path: '/encuesta',
+    element: <EncuestaPublica />,
   },
   {
     path: '/autorizacion',
@@ -75,6 +86,18 @@ const router = createBrowserRouter([
           {
             path: '/factura/historial',
             element: <HistorialFactura />,
+          },
+          {
+            path: '/citas',
+            element: <ListarCitas />,
+          },
+          {
+            path: '/citas/nuevo',
+            element: <FormCrearCita />,
+          },
+          {
+            path: '/citas/editar/:id',
+            element: <FormEditarCita />,
           },
         ]
       },
@@ -150,6 +173,18 @@ const router = createBrowserRouter([
       {
         path: '/reportes',
         element: <ReportesHome />,
+      },
+      {
+        path: '/encuestas',
+        element: <ListarEncuestas />,
+      },
+      {
+        path: '/encuestas/nuevo',
+        element: <FormCrearEncuesta />,
+      },
+      {
+        path: '/encuestas/editar/:id',
+        element: <FormEditarEncuesta />,
       },
     ],
   },

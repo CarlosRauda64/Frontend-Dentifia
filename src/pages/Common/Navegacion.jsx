@@ -1,6 +1,6 @@
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../../auth/useAuth";
 import { useNavigate } from "react-router";
-import { useEffect, useState } from "react";
 import {
   Sidebar,
   SidebarItem,
@@ -62,7 +62,7 @@ const Navegacion = ({ children }) => {
   }, []);
 
   return (
-    <>
+    <React.Fragment>
       <div className="max-sm:relative sm:flex flex-row">
         <Sidebar className={`${visible ? "max-sm:-translate-x-[100%]" : ""} transition delay-150 duration-300 ease-in-out max-sm:fixed sm:sticky top-0 h-screen z-10`}>
           <Button className="sm:hidden absolute left-67 bg-white dark:bg-gray-800 shadow-md z-10 p-2" onClick={() => toggleVisible()}>
@@ -81,7 +81,7 @@ const Navegacion = ({ children }) => {
               }
               {
                 (user.rol == "secretaria" || user.rol == "administrador") &&
-                <SidebarItem href="#" icon={HiCalendar}>
+                <SidebarItem href="/citas" icon={HiCalendar}>
                   Agendación de Citas
                 </SidebarItem>
               }
@@ -106,6 +106,12 @@ const Navegacion = ({ children }) => {
               <SidebarItem href="/inventario" icon={HiClipboardList}>
                 Inventario
               </SidebarItem>
+              {
+                (user.rol == "secretaria" || user.rol == "administrador") &&
+                <SidebarItem href="/encuestas" icon={HiClipboard}>
+                  Encuesta
+                </SidebarItem>
+              }
               <SidebarItem href="/reportes" icon={HiDocumentReport}>
                 Reportes
               </SidebarItem>
@@ -133,7 +139,7 @@ const Navegacion = ({ children }) => {
           {children}
         </div>
       </div>
-    </>
+    </React.Fragment>
   )
 }
 

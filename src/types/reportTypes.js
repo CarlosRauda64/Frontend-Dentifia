@@ -37,6 +37,9 @@ export const Cita = {
   nombre_completo: 'string', // CharField, nullable
   fecha_hora: 'string', // DateTimeField (formato ISO)
   motivo: 'string', // TextField, nullable
+  doctor: 'number', // ForeignKey a Usuario (puede ser null)
+  doctor_nombre: 'string', // SerializerMethodField - nombre completo del doctor
+  estado: 'string', // CharField con choices: programada, atendida, cancelada, reprogramada, no_asistio
   created_at: 'string', // DateTimeField
   updated_at: 'string' // DateTimeField
 };
@@ -86,12 +89,12 @@ export const MovimientoStock = {
 
 // Encuesta de satisfacción (real - del backend)
 // Basado en Dentifia-Backend/encuestas/models.py
-// NOTA: El modelo actual solo tiene estos campos. Si se requieren más campos
-// (como paciente, servicio, fecha), deben agregarse primero al modelo Django.
 export const Encuesta = {
   id: 'number', // AutoField
+  fecha: 'string', // DateField (formato YYYY-MM-DD)
   observaciones: 'string', // CharField
-  nivel_satisfaccion: 'number' // IntegerField
+  nivel_satisfaccion: 'number', // IntegerField
+  preguntas_respuestas: 'object' // JSONField - objeto con preguntas como keys y respuestas como values
 };
 
 // Servicio (MOCK TEMPORAL - no existe en el backend)
@@ -126,17 +129,15 @@ export const ReporteBase = {
 };
 
 // Reporte de Citas
-// NOTA: Los contadores por estado (total_atendido, total_cancelado, etc.)
-// están comentados porque el modelo Cita no tiene campo 'estado'.
-// Si se requiere esta funcionalidad, agregar campo 'estado' al modelo Django primero.
 export const ReporteCitasData = {
   ...ReporteBase,
   total_citas: 'number',
-  // total_atendido: 'number', // Requiere campo 'estado' en modelo Cita
-  // total_cancelado: 'number', // Requiere campo 'estado' en modelo Cita
-  // total_reprogramado: 'number', // Requiere campo 'estado' en modelo Cita
-  // total_no_asistio: 'number', // Requiere campo 'estado' en modelo Cita
-  rows: 'array' // Citas con datos de paciente
+  total_programada: 'number',
+  total_atendido: 'number',
+  total_cancelado: 'number',
+  total_reprogramado: 'number',
+  total_no_asistio: 'number',
+  rows: 'array' // Citas con datos de paciente, doctor y estado
 };
 
 // Reporte de Pacientes
