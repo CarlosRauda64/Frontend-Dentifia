@@ -67,23 +67,36 @@ const ESTADO_FACTURA_LABELS = {
 // Función para formatear fecha (solo fecha, sin hora)
 const formatFecha = (fecha) => {
   if (!fecha) return 'N/A';
-  const date = new Date(fecha);
-  return date.toLocaleDateString('es-SV', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
+  try {
+    const date = new Date(fecha);
+    if (isNaN(date.getTime())) return 'N/A';
+    return date.toLocaleDateString('es-SV', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  } catch (error) {
+    console.warn('Error formateando fecha:', fecha, error);
+    return 'N/A';
+  }
 };
 
 // Función para formatear moneda
 const formatMoneda = (monto) => {
-  if (monto === null || monto === undefined || isNaN(monto)) return '$0.00';
-  return new Intl.NumberFormat('es-SV', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(monto);
+  if (monto === null || monto === undefined) return '$0.00';
+  try {
+    const numValue = parseFloat(monto);
+    if (isNaN(numValue)) return '$0.00';
+    return new Intl.NumberFormat('es-SV', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(numValue);
+  } catch (error) {
+    console.warn('Error formateando moneda:', monto, error);
+    return '$0.00';
+  }
 };
 
 const ReportesHome = () => {
@@ -197,10 +210,10 @@ const ReportesHome = () => {
           busquedaInsumo: filterBusquedaInsumoMov
         };
       } else if (selectedReportType === ReportType.CITAS) {
-        const pacienteIdValue = filterPacienteCitas || selectedPacienteId;
+        // Solo usar filterPacienteCitas para citas, no usar selectedPacienteId como fallback
         filters = {
           ...filters,
-          pacienteId: pacienteIdValue && pacienteIdValue !== '' ? pacienteIdValue : null,
+          pacienteId: filterPacienteCitas && filterPacienteCitas !== '' ? filterPacienteCitas : null,
           estado: filterEstadoCitas
         };
       } else if (selectedReportType === ReportType.ENCUESTAS_SATISFACCION) {
@@ -254,6 +267,20 @@ const ReportesHome = () => {
     // Límite máximo
     limiteMaximo
   ]);
+
+  // Limpiar selecciones de pacientes cuando cambia el tipo de reporte
+  useEffect(() => {
+    // Limpiar todos los estados de selección de pacientes al cambiar el tipo de reporte
+    setSelectedPacienteId('');
+    setFilterPacienteCitas('');
+    setBusquedaPacienteHistorial('');
+    setReportData(null);
+    setError(null);
+    // Resetear la lista filtrada de pacientes para historial clínico
+    if (pacientes.length > 0) {
+      setPacientesFiltradosHistorial(pacientes);
+    }
+  }, [selectedReportType]); // Solo ejecutar cuando cambia el tipo de reporte
 
   // Cargar pacientes al montar el componente
   useEffect(() => {
@@ -309,40 +336,320 @@ const ReportesHome = () => {
 
   // Función para descargar PDF
   const handleDownloadPDF = () => {
-    if (!reportData) return;
+    if (!reportData) {
+      console.error('No hay datos del reporte para descargar');
+      return;
+    }
     
     // Importar dinámicamente las librerías de PDF
     import('jspdf').then(({ default: jsPDF }) => {
       import('jspdf-autotable').then(({ default: autoTable }) => {
-        const doc = new jsPDF();
+        try {
+          const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
         
-        // Título del reporte
-        doc.setFontSize(16);
-        doc.text(reportData.nombreReporte, 14, 22);
+        // Colores del tema
+        const primaryColor = [59, 130, 246]; // Azul
+        const secondaryColor = [229, 231, 235]; // Gris claro
+        const textColor = [31, 41, 55]; // Gris oscuro
         
-        // Información del reporte
-        doc.setFontSize(10);
-        doc.text(`ID: ${reportData.id}`, 14, 30);
-        doc.text(`Generado: ${new Date(reportData.fecha_generacion).toLocaleString()}`, 14, 35);
-        doc.text(`Período: ${reportData.desde} - ${reportData.hasta}`, 14, 40);
+        // Función para agregar encabezado
+        const addHeader = () => {
+          // Fondo del encabezado
+          doc.setFillColor(...primaryColor);
+          doc.rect(0, 0, pageWidth, 40, 'F');
+          
+          // Título del reporte
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(18);
+          doc.setFont('helvetica', 'bold');
+          doc.text(reportData.nombreReporte, 14, 20);
+          
+          // Información del reporte (en blanco sobre fondo azul)
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`ID: ${reportData.id}`, pageWidth - 14, 15, { align: 'right' });
+          doc.text(`Generado: ${new Date(reportData.fecha_generacion).toLocaleString('es-SV')}`, pageWidth - 14, 22, { align: 'right' });
+          doc.text(`Período: ${formatFecha(reportData.desde)} - ${formatFecha(reportData.hasta)}`, pageWidth - 14, 29, { align: 'right' });
+          
+          // Resetear color de texto
+          doc.setTextColor(...textColor);
+        };
         
-        // Agregar estadísticas para encuestas
-        if (reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION) {
-          doc.text(`Total Encuestas: ${reportData.total_encuestas || 0}`, 14, 45);
-          doc.text(`Promedio Puntuación: ${reportData.promedio_puntuacion || '0.00'}/5`, 14, 50);
+        // Función para agregar pie de página
+        const addFooter = (pageNumber, totalPages) => {
+          const footerY = pageHeight - 10;
+          doc.setFontSize(8);
+          doc.setTextColor(128, 128, 128);
+          doc.setFont('helvetica', 'normal');
+          doc.text(
+            `Página ${pageNumber} de ${totalPages} | DentiFIA - Sistema de Gestión Dental`,
+            pageWidth / 2,
+            footerY,
+            { align: 'center' }
+          );
+        };
+        
+        // Agregar encabezado
+        addHeader();
+        
+        // Validar que haya datos
+        if (!reportData.rows || reportData.rows.length === 0) {
+          doc.setFontSize(12);
+          doc.setFont('helvetica', 'italic');
+          doc.setTextColor(128, 128, 128);
+          doc.text('No hay datos para mostrar en este reporte.', 14, 60);
+          doc.save(`${reportData.nombreReporte.replace(/\s+/g, '_')}_${reportData.id}.pdf`);
+          return;
         }
         
-        // Preparar datos para la tabla según el tipo de reporte
+        let startY = 50;
         let columns = Object.keys(reportData.rows[0] || {});
         let columnHeaders = [];
         let tableData = [];
         
-        if (reportData.nombreReporte === ReportType.CITAS) {
-          // Para reporte de citas: ocultar created_at y updated_at, formatear fechas y estados
+        // Manejo especial para Historial Clínico
+        if (reportData.nombreReporte === ReportType.HISTORIAL_CLINICO) {
+          startY = 50;
+          
+          // Información del paciente
+          if (reportData.datos_consolidados?.paciente) {
+            const paciente = reportData.datos_consolidados.paciente;
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(...textColor);
+            doc.text('Información del Paciente', 14, startY);
+            
+            startY += 8;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            
+            const pacienteInfo = [
+              `Nombre: ${paciente.nombre_completo || 'N/A'}`,
+              paciente.dui ? `DUI: ${paciente.dui}` : '',
+              paciente.fecha_nacimiento ? `Fecha de Nacimiento: ${formatFecha(paciente.fecha_nacimiento)}` : '',
+              paciente.sexo ? `Sexo: ${paciente.sexo === 'M' ? 'Masculino' : 'Femenino'}` : '',
+              paciente.telefono ? `Teléfono: ${paciente.telefono}` : '',
+              paciente.email ? `Email: ${paciente.email}` : ''
+            ].filter(Boolean);
+            
+            pacienteInfo.forEach((info, idx) => {
+              doc.text(info, 14, startY + (idx * 6));
+            });
+            
+            startY += pacienteInfo.length * 6 + 10;
+          }
+          
+          // Preparar datos de fichas clínicas - Formato de tarjetas en lugar de tabla
+          if (reportData.rows && reportData.rows.length > 0) {
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Fichas Clínicas (${reportData.rows.length})`, 14, startY);
+            startY += 10;
+            
+            // Renderizar cada ficha clínica como una sección separada
+            reportData.rows.forEach((ficha, index) => {
+              // Verificar si necesitamos una nueva página
+              if (startY > pageHeight - 80) {
+                doc.addPage();
+                addHeader();
+                startY = 50;
+              }
+              
+              // Título de la ficha
+              doc.setFontSize(11);
+              doc.setFont('helvetica', 'bold');
+              doc.setTextColor(...primaryColor);
+              doc.text(`Ficha Clínica #${index + 1}`, 14, startY);
+              
+              startY += 8;
+              
+              // Línea separadora
+              doc.setDrawColor(200, 200, 200);
+              doc.line(14, startY, pageWidth - 14, startY);
+              startY += 6;
+              
+              // Campos de la ficha con formato de lista
+              doc.setFontSize(9);
+              doc.setFont('helvetica', 'normal');
+              doc.setTextColor(...textColor);
+              
+              const fieldLabels = {
+                'numero_expediente': 'Expediente',
+                'fechaCreacion': 'Fecha de Creación',
+                'motivo_consulta': 'Motivo de Consulta',
+                'diagnostico': 'Diagnóstico',
+                'plan_tratamiento': 'Plan de Tratamiento',
+                'estado_tratamiento': 'Estado del Tratamiento',
+                'oclusion': 'Oclusión',
+                'mordida': 'Mordida'
+              };
+              
+              // Orden de campos preferido
+              const fieldOrder = [
+                'numero_expediente',
+                'fechaCreacion',
+                'motivo_consulta',
+                'diagnostico',
+                'oclusion',
+                'mordida',
+                'plan_tratamiento',
+                'estado_tratamiento'
+              ];
+              
+              fieldOrder.forEach(field => {
+                if (ficha[field] && ficha[field] !== 'N/A' && ficha[field] !== null && ficha[field] !== undefined) {
+                  const label = fieldLabels[field] || formatFieldName(field);
+                  let value = String(ficha[field]);
+                  
+                  // Formatear fecha
+                  if (field === 'fechaCreacion') {
+                    value = formatFecha(ficha[field]);
+                  }
+                  
+                  // Formatear estado
+                  if (field === 'estado_tratamiento' && value) {
+                    value = value.charAt(0).toUpperCase() + value.slice(1);
+                  }
+                  
+                  // Mostrar etiqueta en negrita
+                  doc.setFont('helvetica', 'bold');
+                  const labelText = `${label}:`;
+                  doc.text(labelText, 14, startY);
+                  
+                  // Calcular ancho disponible para el valor
+                  const labelWidth = doc.getTextWidth(labelText);
+                  const valueStartX = 14 + labelWidth + 5;
+                  const maxWidth = pageWidth - valueStartX - 14;
+                  
+                  // Dividir texto largo en múltiples líneas
+                  doc.setFont('helvetica', 'normal');
+                  const lines = doc.splitTextToSize(value, maxWidth);
+                  
+                  if (lines.length > 0) {
+                    // Primera línea al lado de la etiqueta
+                    doc.text(lines[0], valueStartX, startY);
+                    startY += 5;
+                    
+                    // Líneas adicionales con indentación
+                    for (let i = 1; i < lines.length; i++) {
+                      if (startY > pageHeight - 30) {
+                        doc.addPage();
+                        addHeader();
+                        startY = 50;
+                      }
+                      doc.text(lines[i], valueStartX, startY);
+                      startY += 5;
+                    }
+                  }
+                  
+                  startY += 4; // Espacio entre campos
+                }
+              });
+              
+              // Espacio entre fichas
+              startY += 8;
+            });
+            
+            // Para historial clínico, no usamos tabla, así que marcamos como completado
+            columns = [];
+            columnHeaders = [];
+            tableData = [];
+          } else {
+            // Si no hay fichas, mostrar mensaje
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'italic');
+            doc.setTextColor(128, 128, 128);
+            doc.text('No se encontraron fichas clínicas para este paciente en el período seleccionado.', 14, startY);
+            doc.save(`${reportData.nombreReporte.replace(/\s+/g, '_')}_${reportData.id}.pdf`);
+            return;
+          }
+        } else if (reportData.nombreReporte === ReportType.FACTURACION) {
+          // Estadísticas de facturación
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(...textColor);
+          
+          const statsY = startY;
+          if (reportData.total_facturas_periodo !== undefined) {
+            doc.text(`Total Facturas: ${reportData.total_facturas_periodo}`, 14, statsY);
+          }
+          if (reportData.total_recaudado_periodo !== undefined) {
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(34, 197, 94); // Verde
+            doc.text(`Total Recaudado: ${formatMoneda(reportData.total_recaudado_periodo)}`, 14, statsY + 6);
+          }
+          if (reportData.total_pendiente_periodo !== undefined) {
+            doc.setTextColor(234, 179, 8); // Amarillo
+            doc.text(`Total Pendiente: ${formatMoneda(reportData.total_pendiente_periodo)}`, 14, statsY + 12);
+          }
+          
+          doc.setTextColor(...textColor);
+          startY = statsY + 20;
+          
+          // Filtrar facturaId y precioTotal (Total Item) para evitar duplicación
+          columns = columns.filter(col => col !== 'facturaId' && col !== 'precioTotal');
+          
+          // Definir orden de columnas para facturación (Total Factura al final)
+          const facturacionColumnOrder = [
+            'facturaCorrelativo',
+            'facturaFecha',
+            'pacienteNombre',
+            'facturaEstado',
+            'descripcion',
+            'cantidad',
+            'precioUnitario',
+            'facturaPrecioTotal' // Total Factura al final
+          ];
+          
+          // Reordenar columnas según el orden definido
+          columns = facturacionColumnOrder.filter(col => columns.includes(col));
+          
+          // Columnas para facturación
+          columnHeaders = columns.map(col => {
+            const headerMap = {
+              'facturaCorrelativo': 'N° Factura',
+              'facturaFecha': 'Fecha',
+              'pacienteNombre': 'Paciente',
+              'facturaEstado': 'Estado',
+              'descripcion': 'Descripción',
+              'cantidad': 'Cant.',
+              'precioUnitario': 'Precio Unit.',
+              'facturaPrecioTotal': 'Total Factura'
+            };
+            return headerMap[col] || formatFieldName(col);
+          });
+          
+          tableData = reportData.rows.map(row => 
+            columns.map(col => {
+              try {
+                const value = row[col];
+                
+                if (col === 'facturaFecha') {
+                  return value ? formatFecha(value) : 'N/A';
+                }
+                
+                if (col === 'precioUnitario' || col === 'facturaPrecioTotal') {
+                  const numValue = parseFloat(value);
+                  return !isNaN(numValue) ? formatMoneda(numValue) : formatMoneda(0);
+                }
+                
+                if (col === 'facturaEstado') {
+                  return ESTADO_FACTURA_LABELS[value] || value || 'N/A';
+                }
+                
+                return value !== null && value !== undefined ? String(value) : '';
+              } catch (error) {
+                console.warn(`Error procesando columna ${col}:`, error);
+                return 'N/A';
+              }
+            })
+          );
+        } else if (reportData.nombreReporte === ReportType.CITAS) {
           columns = columns.filter(key => key !== 'created_at' && key !== 'updated_at');
           
           columnHeaders = columns.map(col => {
-            // Mejorar nombres de columnas
             const headerMap = {
               'id': 'ID',
               'nombre_completo': 'Nombre Completo',
@@ -358,12 +665,10 @@ const ReportesHome = () => {
             columns.map(col => {
               const value = row[col];
               
-              // Formatear fecha_hora
               if (col === 'fecha_hora') {
                 return value ? formatFechaHora(value) : 'N/A';
               }
               
-              // Formatear estado con label
               if (col === 'estado') {
                 return ESTADO_LABELS[value] || value || 'N/A';
               }
@@ -371,60 +676,17 @@ const ReportesHome = () => {
               return value || '';
             })
           );
-        } else if (reportData.nombreReporte === ReportType.FACTURACION) {
-          // Para reporte de facturación: formatear fechas, montos y estados
-          columnHeaders = columns.map(col => {
-            const headerMap = {
-              'facturaId': 'ID Factura',
-              'facturaCorrelativo': 'N° Factura',
-              'facturaFecha': 'Fecha',
-              'facturaPrecioTotal': 'Total Factura',
-              'pacienteNombre': 'Paciente',
-              'facturaEstado': 'Estado',
-              'descripcion': 'Descripción',
-              'cantidad': 'Cant.',
-              'precioUnitario': 'Precio Unit.',
-              'precioTotal': 'Total Item'
-            };
-            return headerMap[col] || formatFieldName(col);
-          });
-          
-          tableData = reportData.rows.map(row => 
-            columns.map(col => {
-              const value = row[col];
-              
-              // Formatear fecha
-              if (col === 'facturaFecha') {
-                return value ? formatFecha(value) : 'N/A';
-              }
-              
-              // Formatear montos
-              if (col === 'precioUnitario' || col === 'precioTotal' || col === 'facturaPrecioTotal') {
-                return value ? formatMoneda(value) : formatMoneda(0);
-              }
-              
-              // Formatear estado
-              if (col === 'facturaEstado') {
-                return ESTADO_FACTURA_LABELS[value] || value || 'N/A';
-              }
-              
-              return value || '';
-            })
-          );
         } else if (reportData.nombreReporte === ReportType.PACIENTES) {
-          // Para reporte de pacientes: formatear fechas y montos
           columnHeaders = columns.map(col => formatFieldName(col));
           
           tableData = reportData.rows.map(row => 
             columns.map(col => {
               const value = row[col];
               
-              // Formatear fechas
               if (col === 'fecha_nacimiento' || col === 'fecha_registro') {
                 return value ? formatFecha(value) : '-';
               }
               
-              // Formatear total facturado
               if (col === 'total_facturado') {
                 return value ? formatMoneda(value) : formatMoneda(0);
               }
@@ -433,8 +695,14 @@ const ReportesHome = () => {
             })
           );
         } else if (reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION) {
-          // Para reporte de encuestas: excluir preguntas_respuestas del PDF
           columns = columns.filter(col => col !== 'preguntas_respuestas');
+          
+          if (reportData.total_encuestas !== undefined) {
+            doc.setFontSize(10);
+            doc.text(`Total Encuestas: ${reportData.total_encuestas || 0}`, 14, startY);
+            doc.text(`Promedio Puntuación: ${reportData.promedio_puntuacion || '0.00'}/5`, 14, startY + 6);
+            startY += 15;
+          }
           
           columnHeaders = columns.map(col => {
             const headerMap = {
@@ -450,14 +718,11 @@ const ReportesHome = () => {
             columns.map(col => {
               const value = row[col];
               
-              // Formatear fecha
               if (col === 'fecha') {
                 return value ? formatFecha(value) : 'N/A';
               }
               
-              // Formatear observaciones: permitir que se ajuste en múltiples líneas
               if (col === 'observaciones' && value) {
-                // Limpiar espacios múltiples
                 return value.trim().replace(/\s+/g, ' ');
               }
               
@@ -465,57 +730,143 @@ const ReportesHome = () => {
             })
           );
         } else {
-          // Para otros reportes: formato genérico
           columnHeaders = columns.map(col => formatFieldName(col));
           tableData = reportData.rows.map(row => 
             columns.map(col => row[col] || '')
           );
         }
         
-        // Calcular startY según si hay estadísticas adicionales
-        let startY = 50;
-        if (reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION) {
-          startY = 55;
-        }
-        
-        // Generar tabla
-        autoTable(doc, {
-          head: [columnHeaders],
-          body: tableData,
-          startY: startY,
-          styles: { 
-            fontSize: reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION ? 7 : 8,
-            cellPadding: reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION ? 2 : 3,
-            overflow: reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION ? 'linebreak' : 'ellipsize',
-            cellWidth: reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION ? 'wrap' : 'auto'
-          },
-          headStyles: { fillColor: [59, 130, 246] },
-          columnStyles: reportData.nombreReporte === ReportType.FACTURACION ? {
-            // Alinear montos a la derecha en facturación
-            precioUnitario: { halign: 'right' },
-            precioTotal: { halign: 'right' },
-            facturaPrecioTotal: { halign: 'right' },
-            cantidad: { halign: 'center' }
-          } : reportData.nombreReporte === ReportType.PACIENTES ? {
-            // Alinear estadísticas numéricas en pacientes
+        // Preparar estilos de columnas según el tipo de reporte
+        let columnStyles = {};
+        if (reportData.nombreReporte === ReportType.FACTURACION) {
+          columnStyles = {
+            precioUnitario: { halign: 'right', cellWidth: 30 },
+            facturaPrecioTotal: { halign: 'right', cellWidth: 35 },
+            cantidad: { halign: 'center', cellWidth: 20 },
+            descripcion: { cellWidth: 50 }
+          };
+        } else if (reportData.nombreReporte === ReportType.PACIENTES) {
+          columnStyles = {
             total_citas: { halign: 'center' },
             total_citas_atendidas: { halign: 'center' },
             total_facturas: { halign: 'center' },
             total_facturado: { halign: 'right' },
             total_expedientes: { halign: 'center' }
-          } : reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION ? {
-            // Estilos especiales para encuestas - usar índices de columna (sin preguntas_respuestas)
-            0: { cellWidth: 20, halign: 'center' }, // id
-            1: { cellWidth: 40, halign: 'center' }, // fecha
-            2: { cellWidth: 80, overflow: 'linebreak' }, // observaciones
-            3: { cellWidth: 50, halign: 'center' } // nivel_satisfaccion
-          } : {}
+          };
+        } else if (reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION) {
+          columnStyles = {
+            0: { cellWidth: 20, halign: 'center' },
+            1: { cellWidth: 40, halign: 'center' },
+            2: { cellWidth: 80, overflow: 'linebreak' },
+            3: { cellWidth: 50, halign: 'center' }
+          };
+        }
+        
+        // Para historial clínico, ya se renderizó el contenido, solo agregar pie de página y guardar
+        if (reportData.nombreReporte === ReportType.HISTORIAL_CLINICO) {
+          // Agregar pie de página en todas las páginas
+          const totalPages = doc.internal.getNumberOfPages();
+          for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i);
+            addFooter(i, totalPages);
+          }
+          
+          // Guardar PDF
+          const fileName = `${reportData.nombreReporte.replace(/\s+/g, '_')}_${reportData.id}.pdf`;
+          doc.save(fileName);
+          return;
+        }
+        
+        // Generar tabla con mejor diseño (solo para otros tipos de reporte)
+        const finalY = autoTable(doc, {
+          head: [columnHeaders],
+          body: tableData,
+          startY: startY,
+          margin: { left: 14, right: 14 },
+          styles: { 
+            fontSize: reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION ? 7 : 8,
+            cellPadding: reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION ? 2 : 3,
+            overflow: reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION ? 'linebreak' : 'ellipsize',
+            cellWidth: reportData.nombreReporte === ReportType.ENCUESTAS_SATISFACCION ? 'wrap' : 'auto',
+            textColor: textColor,
+            lineColor: [200, 200, 200],
+            lineWidth: 0.1
+          },
+          headStyles: { 
+            fillColor: primaryColor,
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            fontSize: 9
+          },
+          alternateRowStyles: {
+            fillColor: [249, 250, 251]
+          },
+          columnStyles: columnStyles,
+          didDrawPage: (data) => {
+            // Agregar encabezado en cada página
+            addHeader();
+            // Agregar pie de página
+            const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
+            const totalPages = doc.internal.getNumberOfPages();
+            addFooter(pageNumber, totalPages);
+          }
         });
+        
+        // Agregar resumen final para facturación
+        if (reportData.nombreReporte === ReportType.FACTURACION && finalY && finalY.finalY) {
+          const summaryY = finalY.finalY + 10;
+          
+          // Línea separadora
+          doc.setDrawColor(200, 200, 200);
+          doc.line(14, summaryY, pageWidth - 14, summaryY);
+          
+          // Resumen
+          doc.setFontSize(11);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(...textColor);
+          doc.text('RESUMEN', 14, summaryY + 8);
+          
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          
+          let currentY = summaryY + 15;
+          if (reportData.total_facturas_periodo !== undefined) {
+            doc.text(`Total de Facturas: ${reportData.total_facturas_periodo}`, pageWidth - 14, currentY, { align: 'right' });
+            currentY += 6;
+          }
+          if (reportData.total_recaudado_periodo !== undefined) {
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(34, 197, 94);
+            doc.text(`Total Recaudado: ${formatMoneda(reportData.total_recaudado_periodo)}`, pageWidth - 14, currentY, { align: 'right' });
+            currentY += 6;
+          }
+          if (reportData.total_pendiente_periodo !== undefined) {
+            doc.setTextColor(234, 179, 8);
+            doc.text(`Total Pendiente: ${formatMoneda(reportData.total_pendiente_periodo)}`, pageWidth - 14, currentY, { align: 'right' });
+          }
+        }
+        
+        // Agregar pie de página en la última página
+        const totalPages = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+          doc.setPage(i);
+          addFooter(i, totalPages);
+        }
         
         // Descargar
         const fileName = `${reportData.nombreReporte.replace(/\s+/g, '_')}_${reportData.id}.pdf`;
         doc.save(fileName);
+        } catch (error) {
+          console.error('Error generando PDF:', error);
+          alert(`Error al generar el PDF: ${error.message || 'Error desconocido'}`);
+        }
+      }).catch((error) => {
+        console.error('Error cargando jspdf-autotable:', error);
+        alert('Error al cargar la librería de PDF. Por favor, recarga la página.');
       });
+    }).catch((error) => {
+      console.error('Error cargando jspdf:', error);
+      alert('Error al cargar la librería de PDF. Por favor, recarga la página.');
     });
   };
 
@@ -1124,23 +1475,47 @@ const ReportesHome = () => {
                           if (reportData.nombreReporte === ReportType.CITAS) {
                             return key !== 'created_at' && key !== 'updated_at';
                           }
+                          // Ocultar facturaId y precioTotal en reporte de facturación
+                          if (reportData.nombreReporte === ReportType.FACTURACION) {
+                            return key !== 'facturaId' && key !== 'precioTotal';
+                          }
                           return true;
+                        })
+                        .sort((a, b) => {
+                          // Ordenar columnas para facturación
+                          if (reportData.nombreReporte === ReportType.FACTURACION) {
+                            const order = [
+                              'facturaCorrelativo',
+                              'facturaFecha',
+                              'pacienteNombre',
+                              'facturaEstado',
+                              'descripcion',
+                              'cantidad',
+                              'precioUnitario',
+                              'facturaPrecioTotal' // Total Factura al final
+                            ];
+                            const indexA = order.indexOf(a);
+                            const indexB = order.indexOf(b);
+                            if (indexA === -1 && indexB === -1) return 0;
+                            if (indexA === -1) return 1;
+                            if (indexB === -1) return -1;
+                            return indexA - indexB;
+                          }
+                          return 0;
                         })
                         .map((key, index) => {
                           // Mejorar nombres de columnas para facturación
                           let headerName = formatFieldName(key);
                           if (reportData.nombreReporte === ReportType.FACTURACION) {
                             const headerMap = {
-                              'facturaId': 'ID Factura',
                               'facturaCorrelativo': 'N° Factura',
                               'facturaFecha': 'Fecha',
-                              'facturaPrecioTotal': 'Total Factura',
                               'pacienteNombre': 'Paciente',
                               'facturaEstado': 'Estado',
                               'descripcion': 'Descripción',
                               'cantidad': 'Cant.',
                               'precioUnitario': 'Precio Unit.',
-                              'precioTotal': 'Total Item'
+                              'facturaPrecioTotal': 'Total Factura'
                             };
                             headerName = headerMap[key] || headerName;
                           }
@@ -1149,7 +1524,7 @@ const ReportesHome = () => {
                               key={index}
                               className={
                                 reportData.nombreReporte === ReportType.FACTURACION && 
-                                (key === 'precioUnitario' || key === 'precioTotal' || key === 'facturaPrecioTotal')
+                                (key === 'precioUnitario' || key === 'facturaPrecioTotal')
                                   ? 'text-right'
                                   : reportData.nombreReporte === ReportType.FACTURACION && key === 'cantidad'
                                   ? 'text-center'
@@ -1169,7 +1544,32 @@ const ReportesHome = () => {
                         if (reportData.nombreReporte === ReportType.CITAS) {
                           return key !== 'created_at' && key !== 'updated_at';
                         }
+                        // Ocultar facturaId y precioTotal en reporte de facturación
+                        if (reportData.nombreReporte === ReportType.FACTURACION) {
+                          return key !== 'facturaId' && key !== 'precioTotal';
+                        }
                         return true;
+                      }).sort((a, b) => {
+                        // Ordenar columnas para facturación
+                        if (reportData.nombreReporte === ReportType.FACTURACION) {
+                          const order = [
+                            'facturaCorrelativo',
+                            'facturaFecha',
+                            'pacienteNombre',
+                            'facturaEstado',
+                            'descripcion',
+                            'cantidad',
+                            'precioUnitario',
+                            'facturaPrecioTotal' // Total Factura al final
+                          ];
+                          const indexA = order.indexOf(a);
+                          const indexB = order.indexOf(b);
+                          if (indexA === -1 && indexB === -1) return 0;
+                          if (indexA === -1) return 1;
+                          if (indexB === -1) return -1;
+                          return indexA - indexB;
+                        }
+                        return 0;
                       });
                       return (
                         <TableRow key={rowIndex} className="bg-white dark:border-gray-700 dark:bg-gray-800">
@@ -1207,7 +1607,7 @@ const ReportesHome = () => {
                             
                             // Formatear montos para reporte de facturación
                             if (reportData.nombreReporte === ReportType.FACTURACION && 
-                                (key === 'precioUnitario' || key === 'precioTotal' || key === 'facturaPrecioTotal')) {
+                                (key === 'precioUnitario' || key === 'facturaPrecioTotal')) {
                               return (
                                 <TableCell key={colIndex} className="text-right font-medium text-gray-900 dark:text-white">
                                   {formatMoneda(value)}
