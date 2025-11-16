@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router'
-import { Avatar, TabItem, Tabs, Button, Modal, ModalHeader, ModalBody, FileInput, Label, TextInput, Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow } from 'flowbite-react'
+import { Avatar, TabItem, Tabs, Button, Modal, ModalHeader, ModalBody, Spinner, FileInput, Label, TextInput, Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow } from 'flowbite-react'
 import { HiClipboardList, HiUserCircle, HiOutlineTrash, HiOutlineDownload, HiOutlineExclamationCircle } from 'react-icons/hi'
 import { MdDashboard } from 'react-icons/md'
 import Navegacion from '../Common/Navegacion.jsx'
-import Loading from '../Common/Loading.jsx'
 import FichaOrtodoncia from '../../fichaOrtodoncia/fichaOrtodoncia.jsx'
 import Odontograma from '../Odontograma/Odontrograma.jsx'
 import { API_URL } from '../../api/api'
@@ -397,8 +396,9 @@ const DatosPaciente = () => {
                 <h1 className="text-2xl font-bold mb-4 dark:text-white">Expediente del Paciente</h1>
 
                 {loading && (
-                    <div className="flex justify-center items-center py-10">
-                        <Loading />
+                    <div className="flex flex-col items-center justify-center py-12 min-h-[400px]">
+                        <Spinner size="xl" className="mb-4" />
+                        <span className="text-lg text-gray-600 dark:text-gray-400">Cargando expediente...</span>
                     </div>
                 )}
 

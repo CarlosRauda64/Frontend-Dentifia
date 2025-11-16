@@ -1,0 +1,12 @@
+{
+  "status": "failed",
+  "started_at": "2025-11-16T00:37:35.595871",
+  "version": "1.0",
+  "completed": false,
+  "failed_at": "2025-11-16T00:37:35.803733",
+  "duration_seconds": 0.207862,
+  "error": {
+    "type": "BugsterError",
+    "message": "No routes found. See supported React.js router practices at: https://docs.bugster.dev"
+  }
+}

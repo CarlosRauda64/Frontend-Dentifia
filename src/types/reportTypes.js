@@ -19,25 +19,29 @@ export const Paciente = {
   updated_at: 'string'
 };
 
-// Estados de citas (mock)
-export const CitaEstado = {
-  PROGRAMADA: 'Programada',
-  ATENDIDO: 'Atendido',
-  CANCELADO: 'Cancelado',
-  REPROGRAMADO: 'Reprogramado',
-  NO_ASISTIO: 'No Asistió'
-};
+// NOTA: CitaEstado fue removido porque el modelo Cita del backend NO tiene campo 'estado'
+// Si se requiere funcionalidad de estados, debe agregarse primero al modelo Django
+// export const CitaEstado = {
+//   PROGRAMADA: 'Programada',
+//   ATENDIDO: 'Atendido',
+//   CANCELADO: 'Cancelado',
+//   REPROGRAMADO: 'Reprogramado',
+//   NO_ASISTIO: 'No Asistió'
+// };
 
-// Cita médica (mock)
+// Cita médica (real - del backend)
+// Basado en Dentifia-Backend/citas/models.py
 export const Cita = {
-  id: 'string',
-  pacienteId: 'string',
-  fecha: 'string', // YYYY-MM-DD
-  hora: 'string', // HH:MM
-  servicioId: 'string',
-  estado: 'string', // CitaEstado
-  notas: 'string',
-  doctorId: 'string'
+  id: 'number', // AutoField
+  paciente: 'object', // ForeignKey a Paciente (puede ser null)
+  nombre_completo: 'string', // CharField, nullable
+  fecha_hora: 'string', // DateTimeField (formato ISO)
+  motivo: 'string', // TextField, nullable
+  doctor: 'number', // ForeignKey a Usuario (puede ser null)
+  doctor_nombre: 'string', // SerializerMethodField - nombre completo del doctor
+  estado: 'string', // CharField con choices: programada, atendida, cancelada, reprogramada, no_asistio
+  created_at: 'string', // DateTimeField
+  updated_at: 'string' // DateTimeField
 };
 
 // Factura (real - del backend)
@@ -70,28 +74,32 @@ export const Insumo = {
 };
 
 // Movimiento de stock (real - del backend)
+// Basado en Dentifia-Backend/inventario/models.py
 export const MovimientoStock = {
-  id: 'number',
-  insumo: 'number', // ID del insumo
-  tipo: 'string', // 'entrada' o 'salida'
-  cantidad: 'number',
-  fecha: 'string', // YYYY-MM-DD
-  motivo: 'string',
-  usuario: 'number' // ID del usuario
+  id: 'number', // AutoField
+  insumo: 'number', // ForeignKey a Insumo (ID del insumo)
+  tipo: 'string', // CharField - 'entrada' o 'salida'
+  fecha: 'string', // DateField (YYYY-MM-DD)
+  cantidad: 'number', // IntegerField
+  usuario: 'number', // ForeignKey a Usuario (ID del usuario, nullable)
+  nombre_usuario: 'string', // CharField - snapshot del nombre del usuario
+  rol_usuario: 'string', // CharField - snapshot del rol del usuario
+  activo: 'boolean' // BooleanField
 };
 
-// Encuesta de satisfacción (mock)
+// Encuesta de satisfacción (real - del backend)
+// Basado en Dentifia-Backend/encuestas/models.py
 export const Encuesta = {
-  id: 'string',
-  pacienteId: 'string',
-  servicioId: 'string',
-  fecha: 'string', // YYYY-MM-DD
-  puntuacionGeneral: 'number', // 1-5
-  comentarios: 'string',
-  preguntas: 'array' // Preguntas específicas
+  id: 'number', // AutoField
+  fecha: 'string', // DateField (formato YYYY-MM-DD)
+  observaciones: 'string', // CharField
+  nivel_satisfaccion: 'number', // IntegerField
+  preguntas_respuestas: 'object' // JSONField - objeto con preguntas como keys y respuestas como values
 };
 
-// Servicio (mock)
+// Servicio (MOCK TEMPORAL - no existe en el backend)
+// Este tipo se usa solo para datos de demostración en reportes.
+// Si se requiere funcionalidad de servicios, debe crearse el modelo en Django primero.
 export const Servicio = {
   id: 'string',
   nombre: 'string',
@@ -124,11 +132,12 @@ export const ReporteBase = {
 export const ReporteCitasData = {
   ...ReporteBase,
   total_citas: 'number',
+  total_programada: 'number',
   total_atendido: 'number',
   total_cancelado: 'number',
   total_reprogramado: 'number',
   total_no_asistio: 'number',
-  rows: 'array' // Citas con datos de paciente y servicio
+  rows: 'array' // Citas con datos de paciente, doctor y estado
 };
 
 // Reporte de Pacientes

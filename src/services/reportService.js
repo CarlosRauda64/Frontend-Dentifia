@@ -2,7 +2,8 @@
 // Integra datos reales del backend con datos mock para módulos faltantes
 
 import { API_URL } from '../api/api';
-import { ReportType, CitaEstado } from '../types/reportTypes';
+import { ReportType } from '../types/reportTypes';
+// NOTA: CitaEstado fue removido porque el modelo Cita no tiene campo 'estado'
 
 // Datos mock para módulos faltantes
 const mockServicios = [
@@ -13,21 +14,104 @@ const mockServicios = [
   { id: 's-5', nombre: 'Extracción Simple', tipo: 'Cirugía', duracionEstimadaMin: 60, costoBase: 120 },
 ];
 
+// Datos mock temporales para reporte de citas
+// NOTA: Estos datos usan la estructura real del modelo Cita del backend.
+// Estructura basada en Dentifia-Backend/citas/models.py
+// Campos: id, paciente (FK), nombre_completo, fecha_hora, motivo, created_at, updated_at
+// NOTA: El modelo actual NO tiene campos 'estado', 'doctor', ni 'servicio'
 const mockCitas = [
-  { id: 'c-1', pacienteId: 'p-1', servicioId: 's-1', fecha: '2024-07-01', hora: '09:00', estado: CitaEstado.ATENDIDO, notas: 'Control anual', doctorId: 'doc-1' },
-  { id: 'c-2', pacienteId: 'p-2', servicioId: 's-2', fecha: '2024-07-01', hora: '10:00', estado: CitaEstado.ATENDIDO, doctorId: 'doc-1' },
-  { id: 'c-3', pacienteId: 'p-3', servicioId: 's-3', fecha: '2024-07-02', hora: '11:00', estado: CitaEstado.CANCELADO, notas: 'Paciente llamó para cancelar', doctorId: 'doc-2' },
-  { id: 'c-4', pacienteId: 'p-1', servicioId: 's-1', fecha: '2024-07-08', hora: '09:00', estado: CitaEstado.REPROGRAMADO, notas: 'Reprogramada para el 15/07', doctorId: 'doc-1' },
-  { id: 'c-5', pacienteId: 'p-4', servicioId: 's-4', fecha: '2024-07-10', hora: '14:00', estado: CitaEstado.PROGRAMADA, doctorId: 'doc-2' },
-  { id: 'c-6', pacienteId: 'p-2', servicioId: 's-5', fecha: '2023-12-15', hora: '15:00', estado: CitaEstado.ATENDIDO, notas: 'Extracción muela del juicio', doctorId: 'doc-1' },
-  { id: 'c-7', pacienteId: 'p-3', servicioId: 's-1', fecha: '2024-06-20', hora: '08:30', estado: CitaEstado.NO_ASISTIO, doctorId: 'doc-2' },
+  { 
+    id: 1, 
+    paciente: { id: 1, nombres: 'Juan', apellidos: 'Pérez' }, 
+    nombre_completo: 'Juan Pérez',
+    fecha_hora: '2024-07-01T09:00:00Z', 
+    motivo: 'Control anual',
+    created_at: '2024-06-25T10:00:00Z',
+    updated_at: '2024-06-25T10:00:00Z'
+  },
+  { 
+    id: 2, 
+    paciente: { id: 2, nombres: 'María', apellidos: 'González' }, 
+    nombre_completo: 'María González',
+    fecha_hora: '2024-07-01T10:00:00Z', 
+    motivo: 'Limpieza dental',
+    created_at: '2024-06-25T11:00:00Z',
+    updated_at: '2024-06-25T11:00:00Z'
+  },
+  { 
+    id: 3, 
+    paciente: { id: 3, nombres: 'Carlos', apellidos: 'Rodríguez' }, 
+    nombre_completo: 'Carlos Rodríguez',
+    fecha_hora: '2024-07-02T11:00:00Z', 
+    motivo: 'Consulta general',
+    created_at: '2024-06-26T09:00:00Z',
+    updated_at: '2024-06-26T09:00:00Z'
+  },
+  { 
+    id: 4, 
+    paciente: { id: 1, nombres: 'Juan', apellidos: 'Pérez' }, 
+    nombre_completo: 'Juan Pérez',
+    fecha_hora: '2024-07-08T09:00:00Z', 
+    motivo: 'Seguimiento',
+    created_at: '2024-07-01T10:00:00Z',
+    updated_at: '2024-07-01T10:00:00Z'
+  },
+  { 
+    id: 5, 
+    paciente: { id: 4, nombres: 'Ana', apellidos: 'Martínez' }, 
+    nombre_completo: 'Ana Martínez',
+    fecha_hora: '2024-07-10T14:00:00Z', 
+    motivo: 'Blanqueamiento',
+    created_at: '2024-07-05T08:00:00Z',
+    updated_at: '2024-07-05T08:00:00Z'
+  },
+  { 
+    id: 6, 
+    paciente: { id: 2, nombres: 'María', apellidos: 'González' }, 
+    nombre_completo: 'María González',
+    fecha_hora: '2023-12-15T15:00:00Z', 
+    motivo: 'Extracción muela del juicio',
+    created_at: '2023-12-10T10:00:00Z',
+    updated_at: '2023-12-10T10:00:00Z'
+  },
+  { 
+    id: 7, 
+    paciente: { id: 3, nombres: 'Carlos', apellidos: 'Rodríguez' }, 
+    nombre_completo: 'Carlos Rodríguez',
+    fecha_hora: '2024-06-20T08:30:00Z', 
+    motivo: 'Consulta de rutina',
+    created_at: '2024-06-15T14:00:00Z',
+    updated_at: '2024-06-15T14:00:00Z'
+  },
 ];
 
+// Datos mock temporales para reporte de encuestas
+// NOTA: Estos datos usan la estructura real del modelo Encuesta del backend.
+// Estructura basada en Dentifia-Backend/encuestas/models.py
+// Campos: id, observaciones, nivel_satisfaccion
+// NOTA: El modelo actual NO tiene campos 'paciente', 'servicio', ni 'fecha'
+// Si se requieren estos campos, deben agregarse primero al modelo Django.
 const mockEncuestas = [
-  { id: 'e-1', pacienteId: 'p-1', servicioId: 's-1', fecha: '2024-07-01', puntuacionGeneral: 5, comentarios: 'Excelente atención, muy profesional.' },
-  { id: 'e-2', pacienteId: 'p-2', servicioId: 's-2', fecha: '2024-07-01', puntuacionGeneral: 4, comentarios: 'Todo bien, aunque la espera fue un poco larga.' },
-  { id: 'e-3', pacienteId: 'p-1', servicioId: 's-1', fecha: '2023-11-05', puntuacionGeneral: 5, comentarios: 'Siempre satisfecho con el servicio.' },
-  { id: 'e-4', pacienteId: 'p-4', servicioId: 's-4', fecha: '2024-07-10', puntuacionGeneral: 3, comentarios: 'El procedimiento fue doloroso pero el resultado es bueno.' },
+  { 
+    id: 1, 
+    observaciones: 'Excelente atención, muy profesional.',
+    nivel_satisfaccion: 5
+  },
+  { 
+    id: 2, 
+    observaciones: 'Todo bien, aunque la espera fue un poco larga.',
+    nivel_satisfaccion: 4
+  },
+  { 
+    id: 3, 
+    observaciones: 'Siempre satisfecho con el servicio.',
+    nivel_satisfaccion: 5
+  },
+  { 
+    id: 4, 
+    observaciones: 'El procedimiento fue doloroso pero el resultado es bueno.',
+    nivel_satisfaccion: 3
+  },
 ];
 
 // Función auxiliar para verificar si una fecha está en el rango
@@ -70,11 +154,13 @@ const formatCurrency = (amount) => {
 export const generateReport = async (reportType, desde, hasta, filters = {}, accessToken = null) => {
   const reportId = `REP-${Date.now()}`;
   const fecha_generacion = new Date().toISOString();
+  // Límite máximo de recuperaciones (por defecto 20, excepto para historial clínico)
+  const limiteMaximo = filters.limiteMaximo !== undefined ? filters.limiteMaximo : 20;
 
   try {
     switch (reportType) {
       case ReportType.CITAS:
-        return await generateCitasReport(reportId, fecha_generacion, desde, hasta);
+        return await generateCitasReport(reportId, fecha_generacion, desde, hasta, filters.pacienteId, filters.estado, limiteMaximo, accessToken);
       
       case ReportType.PACIENTES:
         return await generatePacientesReport(
@@ -82,9 +168,9 @@ export const generateReport = async (reportType, desde, hasta, filters = {}, acc
           fecha_generacion, 
           desde, 
           hasta, 
-          filters.sexo, 
           filters.rangoEdad, 
           filters.busquedaNombre,
+          limiteMaximo,
           accessToken
         );
       
@@ -109,11 +195,12 @@ export const generateReport = async (reportType, desde, hasta, filters = {}, acc
           filters.montoMinimo,
           filters.montoMaximo,
           filters.pacienteId,
+          limiteMaximo,
           accessToken
         );
       
       case ReportType.ENCUESTAS_SATISFACCION:
-        return await generateEncuestasReport(reportId, fecha_generacion, desde, hasta);
+        return await generateEncuestasReport(reportId, fecha_generacion, desde, hasta, limiteMaximo, accessToken);
       
       case ReportType.STOCK_INSUMOS:
         return await generateStockReport(
@@ -123,6 +210,7 @@ export const generateReport = async (reportType, desde, hasta, filters = {}, acc
           hasta, 
           filters.stockBajo,
           filters.busquedaInsumo,
+          limiteMaximo,
           accessToken
         );
       
@@ -136,6 +224,7 @@ export const generateReport = async (reportType, desde, hasta, filters = {}, acc
           filters.estadoMovimiento,
           filters.usuarioMovimiento,
           filters.busquedaInsumo,
+          limiteMaximo,
           accessToken
         );
       
@@ -148,61 +237,150 @@ export const generateReport = async (reportType, desde, hasta, filters = {}, acc
   }
 };
 
-// Reporte de Citas (Mock)
-const generateCitasReport = async (reportId, fecha_generacion, desde, hasta) => {
-  const citasFiltradas = mockCitas
-    .filter(c => isInDateRange(c.fecha, desde, hasta))
-    .map(c => {
-      const servicio = mockServicios.find(s => s.id === c.servicioId);
-      return {
-        ...c,
-        servicioNombre: servicio?.nombre || 'N/A',
-        servicioTipo: servicio?.tipo || 'N/A'
-      };
-    });
-
-  return {
-    id: reportId,
-    nombreReporte: ReportType.CITAS,
-    fecha_generacion,
-    desde,
-    hasta,
-    total_citas: citasFiltradas.length,
-    total_atendido: citasFiltradas.filter(c => c.estado === CitaEstado.ATENDIDO).length,
-    total_cancelado: citasFiltradas.filter(c => c.estado === CitaEstado.CANCELADO).length,
-    total_reprogramado: citasFiltradas.filter(c => c.estado === CitaEstado.REPROGRAMADO).length,
-    total_no_asistio: citasFiltradas.filter(c => c.estado === CitaEstado.NO_ASISTIO).length,
-    rows: citasFiltradas
-  };
-};
-
-// Reporte de Pacientes (Real - Backend)
-const generatePacientesReport = async (reportId, fecha_generacion, desde, hasta, sexo, rangoEdad, busquedaNombre, accessToken) => {
+// Reporte de Citas (Real - Backend)
+const generateCitasReport = async (reportId, fecha_generacion, desde, hasta, pacienteId = null, estado = null, limiteMaximo = 20, accessToken = null) => {
   try {
-    const response = await fetch(`${API_URL}/pacientes/`, {
+    // Construir URL con filtros
+    let url = `${API_URL}/citas/listar/`;
+    const params = new URLSearchParams();
+    
+    if (desde) params.append('desde', desde);
+    if (hasta) params.append('hasta', hasta);
+    if (pacienteId && pacienteId !== '' && pacienteId !== 'undefined' && pacienteId !== null) {
+      params.append('paciente_id', pacienteId);
+    }
+    
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+    
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+    
+    const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-      }
+      headers: headers
     });
     
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
     
-    const data = await response.json();
-    const pacientes = data.results || data;
+    let citas = await response.json();
+    
+    // Filtrar por estado si se especifica (filtro en frontend ya que el backend no lo soporta)
+    if (estado && estado !== '') {
+      citas = citas.filter(c => c.estado === estado);
+    }
+    
+    // Aplicar límite máximo de recuperaciones
+    if (limiteMaximo && limiteMaximo > 0) {
+      citas = citas.slice(0, limiteMaximo);
+    }
+    
+    // Formatear citas para el reporte
+    const citasFormateadas = citas.map(c => ({
+      id: c.id,
+      nombre_completo: c.nombre_completo || (c.paciente_nombres && c.paciente_apellidos ? `${c.paciente_nombres} ${c.paciente_apellidos}`.trim() : 'Sin paciente'),
+      fecha_hora: c.fecha_hora,
+      motivo: c.motivo || '',
+      doctor_nombre: c.doctor_nombre || 'Sin asignar',
+      estado: c.estado || 'programada',
+      created_at: c.created_at,
+      updated_at: c.updated_at
+    }));
+
+    // Calcular contadores por estado
+    const total_atendido = citasFormateadas.filter(c => c.estado === 'atendida').length;
+    const total_cancelado = citasFormateadas.filter(c => c.estado === 'cancelada').length;
+    const total_reprogramado = citasFormateadas.filter(c => c.estado === 'reprogramada').length;
+    const total_no_asistio = citasFormateadas.filter(c => c.estado === 'no_asistio').length;
+    const total_programada = citasFormateadas.filter(c => c.estado === 'programada').length;
+
+    return {
+      id: reportId,
+      nombreReporte: ReportType.CITAS,
+      fecha_generacion,
+      desde,
+      hasta,
+      total_citas: citasFormateadas.length,
+      total_programada,
+      total_atendido,
+      total_cancelado,
+      total_reprogramado,
+      total_no_asistio,
+      rows: citasFormateadas
+    };
+  } catch (error) {
+    console.error('Error obteniendo citas:', error);
+    throw new Error('Error al obtener datos de citas');
+  }
+};
+
+// Reporte de Pacientes (Real - Backend)
+const generatePacientesReport = async (reportId, fecha_generacion, desde, hasta, rangoEdad, busquedaNombre, limiteMaximo = 20, accessToken) => {
+  try {
+    // Obtener todos los pacientes con paginación para asegurar datos completos
+    let allPacientes = [];
+    let nextUrl = `${API_URL}/pacientes/`;
+    
+    // Recorrer todas las páginas para obtener todos los pacientes
+    while (nextUrl) {
+      const response = await fetch(nextUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      const pacientes = data.results || (Array.isArray(data) ? data : []);
+      allPacientes = allPacientes.concat(pacientes);
+      
+      // Verificar si hay siguiente página
+      nextUrl = data.next || null;
+    }
+    
+    // Ahora obtener los datos completos de cada paciente (con serializer completo)
+    const pacientesCompletos = await Promise.all(
+      allPacientes.map(async (p) => {
+        try {
+          const detailResponse = await fetch(`${API_URL}/pacientes/${p.id}/`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`
+            }
+          });
+          
+          if (detailResponse.ok) {
+            return await detailResponse.json();
+          }
+          // Si falla, usar los datos básicos
+          return p;
+        } catch (error) {
+          console.warn(`Error obteniendo detalles del paciente ${p.id}:`, error);
+          return p;
+        }
+      })
+    );
     
     // Aplicar filtros
-    let pacientesFiltrados = pacientes.filter(p => 
+    let pacientesFiltrados = pacientesCompletos.filter(p => 
       isInDateRange(p.created_at?.split('T')[0], desde, hasta)
     );
-
-    // Filtro por sexo
-    if (sexo) {
-      pacientesFiltrados = pacientesFiltrados.filter(p => p.sexo === sexo);
-    }
 
     // Filtro por rango de edad
     if (rangoEdad) {
@@ -229,30 +407,138 @@ const generatePacientesReport = async (reportId, fecha_generacion, desde, hasta,
     if (busquedaNombre) {
       const busqueda = busquedaNombre.toLowerCase();
       pacientesFiltrados = pacientesFiltrados.filter(p => {
-        const nombreCompleto = `${p.nombres} ${p.apellidos}`.toLowerCase();
+        const nombreCompleto = `${p.nombres || ''} ${p.apellidos || ''}`.toLowerCase();
         return nombreCompleto.includes(busqueda);
       });
     }
 
+    // Obtener todas las facturas una sola vez (más eficiente)
+    let todasFacturas = [];
+    try {
+      const facturasResponse = await fetch(`${API_URL}/facturacion/facturas/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      
+      if (facturasResponse.ok) {
+        const facturasData = await facturasResponse.json();
+        todasFacturas = Array.isArray(facturasData) ? facturasData : (facturasData.results || []);
+      }
+    } catch (error) {
+      console.warn('Error obteniendo facturas:', error);
+    }
+    
+    // Obtener estadísticas de citas y facturas para cada paciente
+    const pacientesConEstadisticas = await Promise.all(
+      pacientesFiltrados.map(async (p) => {
+        try {
+          // Obtener citas del paciente
+          const citasResponse = await fetch(`${API_URL}/citas/listar/?paciente_id=${p.id}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`
+            }
+          });
+          
+          let citas = [];
+          if (citasResponse.ok) {
+            citas = await citasResponse.json();
+          }
+          
+          // Filtrar facturas por paciente desde la lista completa
+          // El campo paciente se serializa como ID numérico cuando es ForeignKey
+          const facturas = todasFacturas.filter(f => {
+            if (!f.paciente) return false; // Si no tiene paciente asignado, no cuenta
+            
+            // El campo paciente puede ser:
+            // - Un número (ID directo)
+            // - Un objeto con propiedad id
+            // - null/undefined
+            const pacienteId = f.paciente;
+            
+            if (typeof pacienteId === 'number') {
+              return pacienteId === p.id;
+            }
+            
+            if (typeof pacienteId === 'object' && pacienteId !== null) {
+              return pacienteId.id === p.id;
+            }
+            
+            // Comparación por string como fallback
+            return String(pacienteId) === String(p.id);
+          });
+          
+          // Calcular estadísticas
+          // Total de citas: todas las citas del paciente
+          const totalCitas = citas.length;
+          
+          // Total de citas atendidas: solo las que tienen estado 'atendida'
+          const totalCitasAtendidas = citas.filter(c => {
+            const estado = c.estado || '';
+            return estado.toLowerCase() === 'atendida';
+          }).length;
+          
+          // Total de facturas: todas las facturas del paciente
+          const totalFacturas = facturas.length;
+          
+          // Total facturado: suma de montos de facturas con estado 'Pagada'
+          const totalFacturado = facturas
+            .filter(f => {
+              const estado = f.estado || '';
+              return estado.toLowerCase() === 'pagada';
+            })
+            .reduce((sum, f) => {
+              const monto = parseFloat(f.monto_total || 0);
+              return sum + (isNaN(monto) ? 0 : monto);
+            }, 0);
+          
+          return {
+            id: p.id,
+            nombre: p.nombre_completo || `${p.nombres || ''} ${p.apellidos || ''}`.trim(),
+            dui: p.dui || '',
+            fecha_nacimiento: p.fecha_nacimiento || null,
+            fecha_registro: p.created_at?.split('T')[0] || p.created_at || null,
+            total_citas: totalCitas,
+            total_citas_atendidas: totalCitasAtendidas,
+            total_facturas: totalFacturas,
+            total_facturado: totalFacturado
+          };
+        } catch (error) {
+          console.warn(`Error obteniendo estadísticas del paciente ${p.id}:`, error);
+          // Retornar datos básicos sin estadísticas
+          return {
+            id: p.id,
+            nombre: p.nombre_completo || `${p.nombres || ''} ${p.apellidos || ''}`.trim(),
+            dui: p.dui || '',
+            fecha_nacimiento: p.fecha_nacimiento || null,
+            fecha_registro: p.created_at?.split('T')[0] || p.created_at || null,
+            total_citas: 0,
+            total_citas_atendidas: 0,
+            total_facturas: 0,
+            total_facturado: 0
+          };
+        }
+      })
+    );
+    
+    // Aplicar límite máximo de recuperaciones
+    let pacientesLimitados = pacientesConEstadisticas;
+    if (limiteMaximo && limiteMaximo > 0) {
+      pacientesLimitados = pacientesConEstadisticas.slice(0, limiteMaximo);
+    }
+    
     return {
       id: reportId,
       nombreReporte: ReportType.PACIENTES,
       fecha_generacion,
       desde,
       hasta,
-      total_pacientes: pacientesFiltrados.length,
-      rows: pacientesFiltrados.map(p => ({
-        id: p.id,
-        nombre: p.nombre_completo || `${p.nombres} ${p.apellidos}`,
-        fecha_nacimiento: p.fecha_nacimiento,
-        fecha_registro: p.created_at?.split('T')[0] || p.created_at,
-        telefono: p.telefono,
-        celular: p.celular,
-        email: p.email,
-        direccion: p.direccion,
-        alergias: p.datos_medicos?.alergias ? [p.datos_medicos.alergias] : [],
-        medicamentos: p.datos_medicos?.medicamentos ? [p.datos_medicos.medicamentos] : []
-      }))
+      total_pacientes: pacientesLimitados.length,
+      rows: pacientesLimitados
     };
   } catch (error) {
     console.error('Error obteniendo pacientes:', error);
@@ -274,13 +560,15 @@ const calcularEdad = (fechaNacimiento) => {
 };
 
 // Reporte de Historial Clínico (Real - Backend)
+// Consolida datos de pacientes, expedientes y fichas clínicas
 const generateHistorialClinicoReport = async (reportId, fecha_generacion, desde, hasta, pacienteId, accessToken) => {
   try {
     if (!pacienteId) {
       throw new Error('Se requiere seleccionar un paciente para el historial clínico');
     }
 
-    const response = await fetch(`${API_URL}/pacientes/${pacienteId}/`, {
+    // Obtener datos del paciente
+    const pacienteResponse = await fetch(`${API_URL}/pacientes/${pacienteId}/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -288,30 +576,116 @@ const generateHistorialClinicoReport = async (reportId, fecha_generacion, desde,
       }
     });
     
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    if (!pacienteResponse.ok) {
+      throw new Error(`Error ${pacienteResponse.status}: ${pacienteResponse.statusText}`);
     }
     
-    const paciente = await response.json();
+    const paciente = await pacienteResponse.json();
 
-    // Mock de fichas clínicas basadas en datos médicos del paciente
-    const fichasClinicas = [
-      {
-        id: `ficha-${pacienteId}-1`,
+    // Obtener expedientes del paciente
+    let expedientes = [];
+    try {
+      const expedientesResponse = await fetch(`${API_URL}/expediente/expedientes/?paciente=${pacienteId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      
+      if (expedientesResponse.ok) {
+        const expedientesData = await expedientesResponse.json();
+        expedientes = Array.isArray(expedientesData) ? expedientesData : (expedientesData.results || []);
+      }
+    } catch (error) {
+      console.warn('Error obteniendo expedientes:', error);
+    }
+
+    // Obtener fichas de ortodoncia para cada expediente
+    const fichasClinicas = [];
+    for (const expediente of expedientes) {
+      try {
+        // Usar el endpoint correcto: /expediente/fichas-ortodoncia/ con filtro expediente
+        const fichasResponse = await fetch(`${API_URL}/expediente/fichas-ortodoncia/?expediente=${expediente.id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          }
+        });
+        
+        if (fichasResponse.ok) {
+          const fichasData = await fichasResponse.json();
+          const fichas = Array.isArray(fichasData) ? fichasData : (fichasData.results || []);
+          
+          fichas.forEach(ficha => {
+            fichasClinicas.push({
+              id: ficha.id,
+              expediente_id: expediente.id,
+              numero_expediente: expediente.numero_expediente,
+              pacienteId: pacienteId,
+              fechaCreacion: ficha.created_at?.split('T')[0] || expediente.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+              motivo_consulta: ficha.motivo_consulta_inicial || 'N/A',
+              diagnostico: ficha.diagnostico || 'N/A',
+              oclusion: ficha.oclusion || 'N/A',
+              mordida: ficha.mordida || 'N/A',
+              plan_tratamiento: ficha.plan_tratamiento || 'N/A',
+              estado_tratamiento: ficha.estado_tratamiento || 'N/A',
+              pacienteNombre: paciente.nombre_completo || `${paciente.nombres} ${paciente.apellidos}`
+            });
+          });
+        }
+      } catch (error) {
+        console.warn(`Error obteniendo fichas para expediente ${expediente.id}:`, error);
+      }
+    }
+
+    // Si no hay fichas, crear una entrada con datos básicos del paciente
+    if (fichasClinicas.length === 0) {
+      fichasClinicas.push({
+        id: `ficha-${pacienteId}-basica`,
+        expediente_id: expedientes[0]?.id || null,
+        numero_expediente: expedientes[0]?.numero_expediente || 'Sin expediente',
         pacienteId: pacienteId,
         fechaCreacion: paciente.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
-        motivo: 'Consulta inicial',
-        ultimaVisita: paciente.datos_medicos?.ultimaVisita || 'N/A',
+        motivo_consulta: 'Consulta inicial',
         diagnostico: 'Evaluación general',
-        planTratamiento: 'Seguimiento según necesidad',
-        observaciones: 'Paciente en buen estado general',
+        oclusion: 'N/A',
+        mordida: 'N/A',
+        plan_tratamiento: 'Seguimiento según necesidad',
+        estado_tratamiento: 'N/A',
         pacienteNombre: paciente.nombre_completo || `${paciente.nombres} ${paciente.apellidos}`
-      }
-    ];
+      });
+    }
 
+    // Filtrar por rango de fechas
     const fichasFiltradas = fichasClinicas.filter(f => 
       isInDateRange(f.fechaCreacion, desde, hasta)
     );
+
+    // Consolidar datos personales y antecedentes
+    const datosConsolidados = {
+      paciente: {
+        id: paciente.id,
+        nombres: paciente.nombres,
+        apellidos: paciente.apellidos,
+        nombre_completo: paciente.nombre_completo || `${paciente.nombres} ${paciente.apellidos}`,
+        dui: paciente.dui || '',
+        fecha_nacimiento: paciente.fecha_nacimiento,
+        sexo: paciente.sexo || '',
+        telefono: paciente.telefono,
+        celular: paciente.celular || '',
+        email: paciente.email || '',
+        direccion: paciente.direccion || ''
+      },
+      antecedentes: paciente.datos_medicos || {},
+      expedientes: expedientes.map(e => ({
+        id: e.id,
+        numero_expediente: e.numero_expediente,
+        created_at: e.created_at
+      })),
+      total_fichas: fichasFiltradas.length
+    };
 
     return {
       id: reportId,
@@ -320,6 +694,7 @@ const generateHistorialClinicoReport = async (reportId, fecha_generacion, desde,
       desde,
       hasta,
       total_fichas: fichasFiltradas.length,
+      datos_consolidados: datosConsolidados,
       rows: fichasFiltradas
     };
   } catch (error) {
@@ -329,7 +704,7 @@ const generateHistorialClinicoReport = async (reportId, fecha_generacion, desde,
 };
 
 // Reporte de Facturación (Real - Backend)
-const generateFacturacionReport = async (reportId, fecha_generacion, desde, hasta, estadoFactura, metodoPago, montoMinimo, montoMaximo, pacienteId, accessToken) => {
+const generateFacturacionReport = async (reportId, fecha_generacion, desde, hasta, estadoFactura, metodoPago, montoMinimo, montoMaximo, pacienteId, limiteMaximo = 20, accessToken) => {
   try {
     const response = await fetch(`${API_URL}/facturacion/facturas/`, {
       method: 'GET',
@@ -400,6 +775,12 @@ const generateFacturacionReport = async (reportId, fecha_generacion, desde, hast
       .filter(f => f.estado === 'Pendiente')
       .reduce((sum, f) => sum + parseFloat(f.monto_total), 0);
 
+    // Aplicar límite máximo de recuperaciones
+    let facturacionRowsLimitados = facturacionRows;
+    if (limiteMaximo && limiteMaximo > 0) {
+      facturacionRowsLimitados = facturacionRows.slice(0, limiteMaximo);
+    }
+
     return {
       id: reportId,
       nombreReporte: ReportType.FACTURACION,
@@ -409,7 +790,7 @@ const generateFacturacionReport = async (reportId, fecha_generacion, desde, hast
       total_facturas_periodo: facturasFiltradas.length,
       total_recaudado_periodo: totalRecaudado,
       total_pendiente_periodo: totalPendiente,
-      rows: facturacionRows
+      rows: facturacionRowsLimitados
     };
   } catch (error) {
     console.error('Error obteniendo facturación:', error);
@@ -417,35 +798,91 @@ const generateFacturacionReport = async (reportId, fecha_generacion, desde, hast
   }
 };
 
-// Reporte de Encuestas (Mock)
-const generateEncuestasReport = async (reportId, fecha_generacion, desde, hasta) => {
-  const encuestasFiltradas = mockEncuestas
-    .filter(e => isInDateRange(e.fecha, desde, hasta))
-    .map(e => {
-      const servicio = mockServicios.find(s => s.id === e.servicioId);
+// Reporte de Encuestas (Real - Backend)
+const generateEncuestasReport = async (reportId, fecha_generacion, desde, hasta, limiteMaximo = 20, accessToken = null) => {
+  try {
+    const response = await fetch(`${API_URL}/encuestas/listar`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    let encuestas = Array.isArray(data) ? data : (data.results || []);
+    
+    // Filtrar por rango de fechas si se proporciona
+    if (desde || hasta) {
+      encuestas = encuestas.filter(e => {
+        if (!e.fecha) return false;
+        const fechaEncuesta = new Date(e.fecha);
+        if (desde) {
+          const desdeDate = new Date(desde);
+          desdeDate.setHours(0, 0, 0, 0);
+          if (fechaEncuesta < desdeDate) return false;
+        }
+        if (hasta) {
+          const hastaDate = new Date(hasta);
+          hastaDate.setHours(23, 59, 59, 999);
+          if (fechaEncuesta > hastaDate) return false;
+        }
+        return true;
+      });
+    }
+    
+    const encuestasFormateadas = encuestas.map(e => {
+      // Formatear preguntas_respuestas como lista numerada para mejor legibilidad
+      let preguntasFormateadas = '';
+      if (e.preguntas_respuestas && typeof e.preguntas_respuestas === 'object') {
+        const preguntasArray = Object.entries(e.preguntas_respuestas).map(([pregunta, respuesta], index) => 
+          `${index + 1}. ${pregunta}\n   → ${respuesta}`
+        );
+        preguntasFormateadas = preguntasArray.join('\n\n');
+      }
+      
       return {
-        ...e,
-        servicioNombre: servicio?.nombre || 'N/A',
-        servicioTipo: servicio?.tipo || 'N/A'
+        id: e.id,
+        fecha: e.fecha || null,
+        observaciones: e.observaciones || 'N/A',
+        nivel_satisfaccion: `${e.nivel_satisfaccion || 0}/5`,
+        preguntas_respuestas: preguntasFormateadas || 'N/A'
       };
     });
 
-  const totalPuntuacion = encuestasFiltradas.reduce((sum, e) => sum + e.puntuacionGeneral, 0);
+    // Aplicar límite máximo de recuperaciones
+    let encuestasFormateadasLimitadas = encuestasFormateadas;
+    if (limiteMaximo && limiteMaximo > 0) {
+      encuestasFormateadasLimitadas = encuestasFormateadas.slice(0, limiteMaximo);
+    }
 
-  return {
-    id: reportId,
-    nombreReporte: ReportType.ENCUESTAS_SATISFACCION,
-    fecha_generacion,
-    desde,
-    hasta,
-    total_encuestas: encuestasFiltradas.length,
-    promedio_puntuacion: encuestasFiltradas.length > 0 ? totalPuntuacion / encuestasFiltradas.length : 0,
-    rows: encuestasFiltradas
-  };
+    // Calcular promedio antes de formatear nivel_satisfaccion como string
+    const encuestasParaPromedio = limiteMaximo && limiteMaximo > 0 ? encuestas.slice(0, limiteMaximo) : encuestas;
+    const totalPuntuacion = encuestasParaPromedio.reduce((sum, e) => sum + (e.nivel_satisfaccion || 0), 0);
+    const promedioPuntuacion = encuestasParaPromedio.length > 0 ? totalPuntuacion / encuestasParaPromedio.length : 0;
+
+    return {
+      id: reportId,
+      nombreReporte: ReportType.ENCUESTAS_SATISFACCION,
+      fecha_generacion,
+      desde,
+      hasta,
+      total_encuestas: encuestasFormateadasLimitadas.length,
+      promedio_puntuacion: promedioPuntuacion.toFixed(2),
+      rows: encuestasFormateadasLimitadas
+    };
+  } catch (error) {
+    console.error('Error obteniendo encuestas:', error);
+    throw new Error('Error al obtener datos de encuestas');
+  }
 };
 
 // Reporte de Stock de Insumos (Real - Backend)
-const generateStockReport = async (reportId, fecha_generacion, desde, hasta, stockBajo, busquedaInsumo, accessToken) => {
+const generateStockReport = async (reportId, fecha_generacion, desde, hasta, stockBajo, busquedaInsumo, limiteMaximo = 20, accessToken) => {
   try {
     const response = await fetch(`${API_URL}/inventario/insumos/`, {
       method: 'GET',
@@ -479,15 +916,21 @@ const generateStockReport = async (reportId, fecha_generacion, desde, hasta, sto
       );
     }
 
+    // Aplicar límite máximo de recuperaciones
+    let insumosLimitados = insumosActivos;
+    if (limiteMaximo && limiteMaximo > 0) {
+      insumosLimitados = insumosActivos.slice(0, limiteMaximo);
+    }
+
     return {
       id: reportId,
       nombreReporte: ReportType.STOCK_INSUMOS,
       fecha_generacion,
       desde: 'Estado actual', // Cambiado para indicar que es estado actual
       hasta: 'Estado actual', // Cambiado para indicar que es estado actual
-      total_productos_distintos: insumosActivos.length,
+      total_productos_distintos: insumosLimitados.length,
       valor_total_stock: 0, // No calculado por ahora
-      rows: insumosActivos.map(i => ({
+      rows: insumosLimitados.map(i => ({
         id: i.id,
         nombre: i.nombre,
         descripcion: i.descripcion,
@@ -501,7 +944,7 @@ const generateStockReport = async (reportId, fecha_generacion, desde, hasta, sto
 };
 
 // Reporte de Movimientos de Inventario (Real - Backend)
-const generateMovimientosReport = async (reportId, fecha_generacion, desde, hasta, tipoMovimiento, estadoMovimiento, usuarioMovimiento, busquedaInsumo, accessToken) => {
+const generateMovimientosReport = async (reportId, fecha_generacion, desde, hasta, tipoMovimiento, estadoMovimiento, usuarioMovimiento, busquedaInsumo, limiteMaximo = 20, accessToken) => {
   try {
     const response = await fetch(`${API_URL}/inventario/movimientos_stock/`, {
       method: 'GET',
@@ -550,11 +993,17 @@ const generateMovimientosReport = async (reportId, fecha_generacion, desde, hast
       );
     }
 
-    const totalEntradas = movimientosFiltrados
+    // Aplicar límite máximo de recuperaciones
+    let movimientosLimitados = movimientosFiltrados;
+    if (limiteMaximo && limiteMaximo > 0) {
+      movimientosLimitados = movimientosFiltrados.slice(0, limiteMaximo);
+    }
+
+    const totalEntradas = movimientosLimitados
       .filter(m => m.tipo === 'entrada')
       .reduce((sum, m) => sum + m.cantidad, 0);
 
-    const totalSalidas = movimientosFiltrados
+    const totalSalidas = movimientosLimitados
       .filter(m => m.tipo === 'salida')
       .reduce((sum, m) => sum + m.cantidad, 0);
 
@@ -564,10 +1013,10 @@ const generateMovimientosReport = async (reportId, fecha_generacion, desde, hast
       fecha_generacion,
       desde,
       hasta,
-      total_cambios: movimientosFiltrados.length,
+      total_cambios: movimientosLimitados.length,
       total_entradas_cantidad: totalEntradas,
       total_salidas_cantidad: totalSalidas,
-      rows: movimientosFiltrados.map(m => ({
+      rows: movimientosLimitados.map(m => ({
         id: m.id,
         fecha: m.fecha,
         tipo: m.tipo,
