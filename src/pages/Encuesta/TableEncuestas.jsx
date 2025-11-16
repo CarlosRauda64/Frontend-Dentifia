@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow, Modal, ModalBody, ModalHeader, Button, Toast, ToastToggle } from "flowbite-react";
 import { useAuth } from "../../auth/useAuth";
 import { API_URL } from '../../api/api';
-import { HiOutlinePencilAlt, HiOutlineTrash, HiOutlineExclamationCircle,HiOutlineEmojiSad,HiOutlineEmojiHappy,HiOutlineHeart} from "react-icons/hi";
+import { HiOutlinePencilAlt, HiOutlineTrash, HiOutlineExclamationCircle,HiOutlineEmojiSad,HiOutlineEmojiHappy,HiOutlineHeart, HiEye } from "react-icons/hi";
 import { useNavigate } from "react-router";
 
 const TableEncuestas = () => {
@@ -11,6 +11,9 @@ const TableEncuestas = () => {
     const [openModal, setOpenModal] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
+    const [detailsOpen, setDetailsOpen] = useState(false);
+    const [detailsEncuesta, setDetailsEncuesta] = useState(null);
+    const tableRef = useRef(null)
 
     const navigate = useNavigate();
     const auth = useAuth();
@@ -18,6 +21,30 @@ const TableEncuestas = () => {
     const modalHandler = (encuesta) => {
         setOpenModal(true);
         setEncuesta(encuesta);
+    }
+
+    const openDetails = (enc) => {
+        setDetailsEncuesta(enc)
+        setDetailsOpen(true)
+    }
+
+    const closeDetails = () => {
+        setDetailsEncuesta(null)
+        setDetailsOpen(false)
+    }
+
+    const closeAndScrollToTable = () => {
+        setDetailsEncuesta(null)
+        setDetailsOpen(false)
+        try {
+            if (tableRef?.current) {
+                tableRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+            }
+        } catch (e) {
+            // ignore
+        }
     }
 
     const aceptarModal = () => {
@@ -79,13 +106,12 @@ const TableEncuestas = () => {
 
     return (
         <>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" ref={tableRef}>
                 <Table hoverable className="text-center">
                     <TableHead>
                         <TableRow>
                             <TableHeadCell >Nivel de Satisfaccion</TableHeadCell>
-                            <TableHeadCell className="max-xl:hidden">Observaciones</TableHeadCell>
-                            <TableHeadCell>Eliminar</TableHeadCell>
+                            <TableHeadCell>Acciones</TableHeadCell>
                         </TableRow>
                     </TableHead>
                     <TableBody className="divide-y">
@@ -94,19 +120,45 @@ const TableEncuestas = () => {
 
                             <TableRow key={encuesta.id} className="bg-white dark:border-gray-700 dark:bg-gray-800">
                                 <TableCell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                                    {encuesta.nivel_satisfaccion <=2 ? <HiOutlineEmojiSad size={25} className="mx-auto text-red-500"/> : encuesta.nivel_satisfaccion ===5 ? <HiOutlineHeart size={25} className="mx-auto text-blue-500"/> : <HiOutlineEmojiHappy size={25} className="mx-auto text-green-500"/>}
+                                    {encuesta.nivel_satisfaccion <=1 ? <HiOutlineEmojiSad size={25} className="mx-auto text-red-500"/> : encuesta.nivel_satisfaccion ===3 ? <HiOutlineHeart size={25} className="mx-auto text-blue-500"/> : <HiOutlineEmojiHappy size={25} className="mx-auto text-green-500"/>}
                                 </TableCell>
-                                <TableCell className="max-xl:hidden">{encuesta.observaciones}</TableCell>
                                 <TableCell>
-                                    <HiOutlineTrash size={25} className="cursor-pointer text-gray-500 hover:text-gray-700 mx-auto"
-                                        onClick={() => modalHandler(encuesta)}
-                                    />
+                                    <div className="flex items-center justify-center gap-4">
+                                        <HiEye
+                                            size={20}
+                                            className="cursor-pointer text-blue-600 hover:text-blue-800"
+                                            onClick={() => openDetails(encuesta)}
+                                            title="Ver observaciones"
+                                        />
+                                        <HiOutlineTrash
+                                            size={20}
+                                            className="cursor-pointer text-gray-500 hover:text-gray-700"
+                                            onClick={() => modalHandler(encuesta)}
+                                            title="Eliminar encuesta"
+                                        />
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
             </div>
+            {detailsOpen && (
+                <Modal show={detailsOpen} size="lg" onClose={closeDetails} popup position="center">
+                    <ModalHeader />
+                    <ModalBody>
+                        <div>
+                            <h3 className="text-lg font-semibold mb-2">Observaciones</h3>
+                            <div className="p-3 border rounded bg-white dark:bg-gray-900 max-h-[60vh] overflow-auto text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                                {detailsEncuesta?.observaciones || 'No hay observaciones.'}
+                            </div>
+                            <div className="mt-3 flex justify-center">
+                                <Button color="gray" onClick={closeAndScrollToTable}>Volver a la tabla</Button>
+                            </div>
+                        </div>
+                    </ModalBody>
+                </Modal>
+            )}
             {openModal && (
                 <Modal show={openModal} size="md" onClose={() => setOpenModal(false)} popup position="center">
                     <ModalHeader />
@@ -114,7 +166,7 @@ const TableEncuestas = () => {
                         <div className="text-center">
                             <HiOutlineExclamationCircle className="mx-auto mb-4 h-14 w-14 text-gray-400 dark:text-gray-200" />
                             <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-                                ¿Estás seguro de que deseas eliminar esta encuesta? <span className="font-semibold">{encuesta.observaciones}</span>?
+                                ¿Estás seguro de que deseas eliminar esta encuesta?
                             </h3>
                             <div className="flex justify-center gap-4">
                                 <Button color="green" onClick={() => aceptarModal()}>

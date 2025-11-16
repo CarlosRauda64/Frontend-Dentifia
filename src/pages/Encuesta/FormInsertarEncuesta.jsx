@@ -26,6 +26,7 @@ const FormEncuesta = () => {
     const {
         register,
         handleSubmit,
+        control,
         formState: { errors },
         reset,
     } = useForm();
@@ -83,8 +84,8 @@ const FormEncuesta = () => {
                             <input
                                 type="range"
                                 id="nivel_satisfaccion"
-                                min="0"
-                                max="5"
+                                min="1"
+                                max="3"
                                 step="1"
                                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
                                 {...register("nivel_satisfaccion", {
@@ -103,28 +104,41 @@ const FormEncuesta = () => {
                         {errors.nivel_satisfaccion && <span className="font-medium text-red-500">{errors.nivel_satisfaccion.message}</span>}
                     </div>
 
-                    {/* Observaciones Input */}
+                    {/* Observaciones Input (max 128 chars + contador) */}
                     <div className="max-w-md w-full">
                         <div className="mb-2 block">
                             <Label htmlFor="observaciones">Observaciones</Label>
                         </div>
-                        <Textarea
-                            id="observaciones"
-                            type="text"
-                            placeholder="Ingrese sus observaciones"
-                            
-                            {...register("observaciones", {
-                                required: {
-                                    value: true,
-                                    message: "Este campo es obligatorio"
-                                },
-                            })}
+                        <Controller
+                            name="observaciones"
+                            control={control}
+                            defaultValue={''}
+                            render={({ field }) => (
+                                <>
+                                    <Textarea
+                                        id="observaciones"
+                                        placeholder="Ingrese sus observaciones"
+                                        value={field.value}
+                                        onChange={(e) => {
+                                            const v = e.target.value
+                                            if (v.length <= 128) {
+                                                field.onChange(v)
+                                            }
+                                        }}
+                                    />
+                                    <div className="text-xs text-gray-500 mt-1">{(field.value || '').length}/128</div>
+                                </>
+                            )}
+                            rules={{ required: { value: true, message: 'Este campo es obligatorio' } }}
                         />
                         {errors.observaciones && <span className="font-medium text-red-500">{errors.observaciones.message}</span>}
                     </div>
 
-                    {/* Submit Button */}
-                    <div className="flex justify-end mt-4">
+                    {/* Submit + Cancel Buttons */}
+                    <div className="flex justify-end gap-3 mt-4">
+                        <Button type="button" color="gray" onClick={() => navigate('/encuestas')}>
+                            Volver a la tabla
+                        </Button>
                         <Button type="submit" color="blue">
                             Enviar Encuesta
                         </Button>
