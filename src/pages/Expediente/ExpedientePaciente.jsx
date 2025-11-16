@@ -273,12 +273,12 @@ const DatosPaciente = () => {
                                         </>
                                     )}
 
-                                    <Modal show={showVersionModal} size="xl" onClose={closeVersionModal} popup position="center">
+                                    <Modal show={showVersionModal} size="8xl" onClose={closeVersionModal} popup position="center">
                                         <ModalHeader />
                                         <ModalBody>
                                                 <div className="space-y-3">
                                                     <div className="flex items-center justify-between">
-                                                        <h4 className="text-lg font-semibold">Detalles de la versión</h4>
+                                                        <h4 className="text-lg font-semibold text-black dark:text-white">Detalles de la versión</h4>
                                                         <div className="text-sm text-gray-500">{selectedVersion ? new Date(selectedVersion.created_at).toLocaleString('es-SV') : ''}</div>
                                                     </div>
                                                     <div className="text-sm text-gray-700 dark:text-gray-200">
@@ -286,7 +286,7 @@ const DatosPaciente = () => {
 
                                                         <div className="border rounded p-2 bg-white dark:bg-gray-800">
                                                             {selectedVersion ? (
-                                                                <div className="max-h-[70vh] overflow-auto">
+                                                                <div className="max-h-[70vh]">
                                                                     <Odontograma
                                                                         expedienteId={expediente.id}
                                                                         odontograma={{ id: expediente?.odontograma?.id ?? null, versiones: [selectedVersion] }}

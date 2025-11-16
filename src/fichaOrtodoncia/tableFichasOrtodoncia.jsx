@@ -650,7 +650,7 @@ const TableFichas = ({ expedienteId, onRefresh }) => {
                                                 )}
                                             </div>
                                             <Button
-                                                color="failure"
+                                                color="red"
                                                 size="xs"
                                                 onClick={() => eliminarNota(nota.id)}
                                                 isProcessing={deletingNotaId === nota.id}
@@ -671,10 +671,9 @@ const TableFichas = ({ expedienteId, onRefresh }) => {
                 setOpenCreateNotaModal(false)
                 resetNuevaNota()
             }} popup position="center">
-                <ModalHeader />
-                <ModalBody>
+                <ModalBody className="pt-4 dark:bg-gray-800">
                     <div className="text-left">
-                        <h3 className="mb-3 text-lg font-semibold">Crear nota de progreso</h3>
+                        <h3 className="mb-3 text-lg font-semibold text-black dark:text-white">Crear nota de progreso</h3>
                         <div className="flex flex-col gap-3">
                             <div>
                                 <div className="mb-2 block">
@@ -716,20 +715,6 @@ const TableFichas = ({ expedienteId, onRefresh }) => {
                                     value={newNota.procedimiento_realizado}
                                     onChange={(e) => setNewNota((prev) => ({ ...prev, procedimiento_realizado: e.target.value }))}
                                     shadow
-                                    className="bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
-                                />
-                            </div>
-
-                            <div>
-                                <div className="mb-2 block">
-                                    <Label htmlFor="odontograma_comentarios">Comentarios del odontograma (opcional)</Label>
-                                </div>
-                                <Textarea
-                                    id="odontograma_comentarios"
-                                    rows={2}
-                                    placeholder="Comentarios sobre el odontograma"
-                                    value={newNota.odontograma_comentarios}
-                                    onChange={(e) => setNewNota((prev) => ({ ...prev, odontograma_comentarios: e.target.value }))}
                                     className="bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
                                 />
                             </div>

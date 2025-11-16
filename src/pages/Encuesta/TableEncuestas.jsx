@@ -148,7 +148,7 @@ const TableEncuestas = () => {
                     <ModalHeader />
                     <ModalBody>
                         <div>
-                            <h3 className="text-lg font-semibold mb-2">Observaciones</h3>
+                            <h3 className="text-lg font-semibold mb-2 text-black dark:text-white">Observaciones</h3>
                             <div className="p-3 border rounded bg-white dark:bg-gray-900 max-h-[60vh] overflow-auto text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
                                 {detailsEncuesta?.observaciones || 'No hay observaciones.'}
                             </div>
